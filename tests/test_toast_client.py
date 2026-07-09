@@ -60,6 +60,36 @@ class TestWindows:
         assert windows[1] == (dt.date(2025, 1, 1), dt.date(2025, 12, 31))
 
 
+class TestRetryAfter:
+    def test_429_honors_retry_after_header(self, monkeypatch):
+        from toast_client import ToastAnalyticsClient
+
+        client = ToastAnalyticsClient("https://example.test", "id", "secret", "TYPE")
+        client._token = "tok"
+
+        class FakeResponse:
+            def __init__(self, status_code, headers=None, payload=None):
+                self.status_code = status_code
+                self.headers = headers or {}
+                self._payload = payload
+
+            def json(self):
+                return self._payload
+
+        responses = iter([
+            FakeResponse(429, headers={"Retry-After": "7"}),
+            FakeResponse(200, payload=[]),
+        ])
+        sleeps = []
+        monkeypatch.setattr(
+            client._session, "request", lambda *a, **kw: next(responses)
+        )
+        monkeypatch.setattr("toast_client.time.sleep", sleeps.append)
+
+        assert client._request("GET", "/era/v1/menu/some-guid") == []
+        assert sleeps == [12]  # Retry-After 7s + 5s buffer
+
+
 class TestValidateDailyTotalsRows:
     GOOD_ROW = {"businessDate": "20260701", "restaurantGuid": "abc-123"}
 

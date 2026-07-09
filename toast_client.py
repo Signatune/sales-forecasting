@@ -149,7 +149,13 @@ class ToastAnalyticsClient:
                 self.login()
                 continue
             if response.status_code == 429 or response.status_code >= 500:
-                wait = 120 if response.status_code == 429 else 30
+                # Toast tells us when the rate-limit window resets
+                # (doc.toasttab.com/doc/devguide/apiRateLimiting.html)
+                retry_after = response.headers.get("Retry-After", "")
+                if retry_after.isdigit():
+                    wait = min(int(retry_after) + 5, 3600)
+                else:
+                    wait = 120 if response.status_code == 429 else 30
                 print(
                     f"  HTTP {response.status_code} from {path}, retrying in {wait}s"
                 )
