@@ -89,6 +89,34 @@ class TestRetryAfter:
         assert client._request("GET", "/era/v1/menu/some-guid") == []
         assert sleeps == [12]  # Retry-After 7s + 5s buffer
 
+    def test_connection_error_retries_instead_of_crashing(self, monkeypatch):
+        import requests
+
+        from toast_client import ToastAnalyticsClient
+
+        client = ToastAnalyticsClient("https://example.test", "id", "secret", "TYPE")
+        client._token = "tok"
+
+        class OkResponse:
+            status_code = 200
+            headers = {}
+
+            def json(self):
+                return []
+
+        calls = iter([requests.ConnectionError("died during sleep"), OkResponse()])
+
+        def fake_request(*a, **kw):
+            result = next(calls)
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        monkeypatch.setattr(client._session, "request", fake_request)
+        monkeypatch.setattr("toast_client.time.sleep", lambda s: None)
+
+        assert client._request("GET", "/era/v1/menu/some-guid") == []
+
 
 class TestValidateDailyTotalsRows:
     GOOD_ROW = {"businessDate": "20260701", "restaurantGuid": "abc-123"}

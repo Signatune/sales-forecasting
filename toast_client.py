@@ -138,13 +138,20 @@ class ToastAnalyticsClient:
         # is already spent, so wait on a deadline rather than an attempt count.
         deadline = time.monotonic() + 3900
         while time.monotonic() < deadline:
-            response = self._session.request(
-                method,
-                f"{self._base_url}{path}",
-                json=body,
-                headers={"Authorization": f"Bearer {self._token}"},
-                timeout=HTTP_TIMEOUT_SECONDS,
-            )
+            try:
+                response = self._session.request(
+                    method,
+                    f"{self._base_url}{path}",
+                    json=body,
+                    headers={"Authorization": f"Bearer {self._token}"},
+                    timeout=HTTP_TIMEOUT_SECONDS,
+                )
+            except requests.RequestException as exc:
+                # e.g. a connection that died while the machine slept —
+                # the pull should survive a laptop lid-close, not crash on wake
+                print(f"  {type(exc).__name__} from {path}, retrying in 30s")
+                time.sleep(30)
+                continue
             if response.status_code == 401:
                 self.login()
                 continue
