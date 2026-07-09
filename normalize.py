@@ -196,8 +196,9 @@ def main() -> None:
         info = json.loads(restaurants_files[-1].read_text())
         for r in unlisted_active_restaurants(info):
             print(
-                "WARNING: active restaurant not included in Sales history: "
-                f"{r['restaurantName']!r} ({r['restaurantGuid']})"
+                "note: excluding out-of-scope active restaurant "
+                f"{r['restaurantName']!r} ({r['restaurantGuid']}) — Sales "
+                "history covers Cambridge and Brookline only"
             )
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

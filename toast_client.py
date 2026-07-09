@@ -334,8 +334,9 @@ def pull_history(raw_dir: Path = RAW_DIR) -> None:
     save_raw(raw_dir, "restaurants_information", restaurants)
     for r in unlisted_active_restaurants(restaurants):
         print(
-            f"WARNING: active restaurant out of scope: {r['restaurantName']!r} "
-            f"({r['restaurantGuid']})"
+            f"note: excluding out-of-scope active restaurant "
+            f"{r['restaurantName']!r} ({r['restaurantGuid']}) — Sales history "
+            "covers Cambridge and Brookline only"
         )
 
     today = dt.datetime.now(RESTAURANT_TZ).date()
