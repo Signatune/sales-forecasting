@@ -345,7 +345,9 @@ def pull_history(raw_dir: Path = RAW_DIR) -> None:
     print(f"history spans {earliest}..{max(sales_dates)} "
           f"({len(sales_dates)} sales days)")
 
-    windows = week_windows(earliest, today)
+    # newest first: the recent history the pilot's forecast and backtest
+    # need arrives in the first hour; older years back-fill afterwards
+    windows = list(reversed(week_windows(earliest, today)))
     missing_dates: set = set()
     for i, (start, end) in enumerate(windows, 1):
         if is_window_captured(raw_dir, "menu_week", start, end):
