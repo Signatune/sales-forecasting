@@ -1,0 +1,19 @@
+[project]
+name = "sales-forecasting"
+version = "0.1.0"
+description = "Sales forecasting scripts"
+requires-python = ">=3.9"
+dependencies = [
+    "requests",
+    "pandas",
+    "pyarrow",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

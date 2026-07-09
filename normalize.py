@@ -1,0 +1,212 @@
+"""Normalize raw Toast Analytics menu reports into canonical Sales records.
+
+Reads the timestamped raw week reports saved by toast_client.py under
+data/raw/, keeps only bagel-family modifier rows for the in-scope
+restaurants, and writes one Sales record per (Product, Date, Quantity) to
+data/sales_history.parquet.
+
+Bagel Sales in Toast are recorded as modifiers only — there is no menu item
+per flavor. The three main flavors each have two modifiers (one used on
+sandwiches, one for bulk orders); a Product's daily Sales is the sum of its
+modifiers' quantities across both locations.
+"""
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Dict, Iterable, List, Set
+
+import pandas as pd
+
+RAW_DIR = Path(__file__).parent / "data" / "raw"
+OUTPUT_PATH = Path(__file__).parent / "data" / "sales_history.parquet"
+
+# Scope is the Cambridge and Brookline locations only (see ticket 01).
+INCLUDED_RESTAURANTS = {
+    "28e5b269-1c1c-45df-81a8-1d268c005dfa": "Cambridge",
+    "9ae70079-b9cd-4b92-8457-c86bc823188f": "Brookline",
+}
+
+# Product -> the Toast modifier names whose quantities make up its Sales.
+# Names confirmed against live menu reports on 2026-07-09; matching is by
+# name (not GUID) because the same modifier name exists under multiple
+# GUIDs (e.g. two distinct "plain, bulk" modifiers).
+BAGEL_MODIFIER_NAMES: Dict[str, tuple] = {
+    "plain": ("plain bagel", "plain, bulk"),
+    "sesame": ("sesame bagel", "sesame, bulk"),
+    "everything": ("everything bagel", "everything, bulk"),
+    "cinnamon raisin": ("cinnamon raisin bagel (wednesdays only!)",),
+    "pumpernickel": ("pumpernickel bagel (thursdays only!)",),
+    "gluten-free plain": (
+        "gluten-free plain bagel (original sunshine, contains wheat, must be toasted)",
+        "plain gluten-free",
+    ),
+    "gluten-free everything": (
+        "gluten-free everything bagel (original sunshine, contains wheat, must be toasted)",
+        "everything gluten-free",
+    ),
+}
+
+_MODIFIER_TO_PRODUCT = {
+    name: product
+    for product, names in BAGEL_MODIFIER_NAMES.items()
+    for name in names
+}
+
+# Modifier names that look like a bagel flavor we don't map yet (a new
+# rotating flavor, a renamed modifier). Surfaced so drift is loud.
+_BAGELISH = re.compile(r"bagel|(, |^)bulk$|gluten-free$")
+
+_REQUIRED_ROW_FIELDS = {
+    "businessDate": str,
+    "modifierName": str,
+    "modifierGuid": str,
+    "quantitySold": (int, float),
+    "restaurantGuid": str,
+}
+
+
+class UnexpectedShapeError(RuntimeError):
+    """The Toast response does not look like a modifier-grouped menu report."""
+
+
+def validate_modifier_rows(rows, source: str = "response") -> None:
+    """Raise UnexpectedShapeError unless rows is a list of well-formed
+    modifier report rows. An empty list is valid (closed days)."""
+    if not isinstance(rows, list):
+        raise UnexpectedShapeError(
+            f"{source}: expected a JSON array of report rows, got {type(rows).__name__}"
+        )
+    for i, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise UnexpectedShapeError(f"{source}: row {i} is not an object")
+        for field, types in _REQUIRED_ROW_FIELDS.items():
+            if field not in row:
+                raise UnexpectedShapeError(f"{source}: row {i} is missing {field!r}")
+            if not isinstance(row[field], types):
+                raise UnexpectedShapeError(
+                    f"{source}: row {i} field {field!r} has unexpected type "
+                    f"{type(row[field]).__name__} (value {row[field]!r})"
+                )
+        if not re.fullmatch(r"\d{8}", row["businessDate"]):
+            raise UnexpectedShapeError(
+                f"{source}: row {i} businessDate {row['businessDate']!r} "
+                "is not YYYYMMDD"
+            )
+
+
+def normalize_sales(rows: List[dict]) -> pd.DataFrame:
+    """Canonical Sales records from modifier report rows: one row per
+    (product, date, quantity), summed over each Product's modifiers and
+    over the in-scope restaurants."""
+    validate_modifier_rows(rows)
+    records = {}
+    for row in rows:
+        if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
+            continue
+        product = _MODIFIER_TO_PRODUCT.get(row["modifierName"].strip().lower())
+        if product is None:
+            continue
+        key = (product, row["businessDate"])
+        records[key] = records.get(key, 0.0) + float(row["quantitySold"])
+    df = pd.DataFrame(
+        [
+            {"product": product, "date": date, "quantity": quantity}
+            for (product, date), quantity in records.items()
+        ],
+        columns=["product", "date", "quantity"],
+    )
+    df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
+    return df.sort_values(["date", "product"], ignore_index=True)
+
+
+def find_unmapped_bagelish(rows: List[dict]) -> Dict[str, float]:
+    """Bagel-looking modifier names not in BAGEL_MODIFIER_NAMES, with total
+    quantities — new flavors or renames that would otherwise vanish silently."""
+    validate_modifier_rows(rows)
+    unmapped: Dict[str, float] = {}
+    for row in rows:
+        if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
+            continue
+        name = row["modifierName"].strip().lower()
+        if name in _MODIFIER_TO_PRODUCT or not _BAGELISH.search(name):
+            continue
+        unmapped[name] = unmapped.get(name, 0.0) + float(row["quantitySold"])
+    return unmapped
+
+
+def unlisted_active_restaurants(restaurants_info: List[dict]) -> List[dict]:
+    """Active, non-test restaurants that are not in scope — surfaced so a
+    new location can't silently be missing from the Sales history."""
+    if not isinstance(restaurants_info, list):
+        raise UnexpectedShapeError(
+            "restaurants-information: expected a JSON array, got "
+            f"{type(restaurants_info).__name__}"
+        )
+    return [
+        r
+        for r in restaurants_info
+        if r.get("active")
+        and not r.get("testMode")
+        and r.get("restaurantGuid") not in INCLUDED_RESTAURANTS
+    ]
+
+
+def latest_report_files(raw_dir: Path, prefix: str) -> List[Path]:
+    """The most recently captured raw file per report window, sorted by
+    window. Filenames look like {prefix}_{start}_{end}__{fetchedAt}.json."""
+    by_window: Dict[str, Path] = {}
+    for path in sorted(raw_dir.glob(f"{prefix}_*__*.json")):
+        window = path.name.split("__")[0]
+        by_window[window] = path  # sorted order: later capture wins
+    return [by_window[w] for w in sorted(by_window)]
+
+
+def load_sales_rows(raw_dir: Path = RAW_DIR) -> List[dict]:
+    files = latest_report_files(raw_dir, "menu_week")
+    if not files:
+        raise FileNotFoundError(
+            f"no menu_week raw reports under {raw_dir} — run toast_client.py first"
+        )
+    rows: List[dict] = []
+    for path in files:
+        content = json.loads(path.read_text())
+        validate_modifier_rows(content, source=path.name)
+        rows.extend(content)
+    return rows
+
+
+def main() -> None:
+    rows = load_sales_rows()
+    df = normalize_sales(rows)
+    if df.empty:
+        raise UnexpectedShapeError(
+            "normalization produced zero Sales records — refusing to write "
+            "an empty sales history"
+        )
+
+    unmapped = find_unmapped_bagelish(rows)
+    if unmapped:
+        print("WARNING: bagel-looking modifiers not mapped to any Product:")
+        for name, qty in sorted(unmapped.items(), key=lambda kv: -kv[1]):
+            print(f"  {qty:>10.1f}  {name!r}")
+
+    restaurants_files = latest_report_files(RAW_DIR, "restaurants_information")
+    if restaurants_files:
+        info = json.loads(restaurants_files[-1].read_text())
+        for r in unlisted_active_restaurants(info):
+            print(
+                "WARNING: active restaurant not included in Sales history: "
+                f"{r['restaurantName']!r} ({r['restaurantGuid']})"
+            )
+
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(OUTPUT_PATH, index=False)
+    print(
+        f"wrote {len(df)} Sales records for {df['product'].nunique()} Products, "
+        f"{df['date'].min().date()}..{df['date'].max().date()} -> {OUTPUT_PATH}"
+    )
+
+
+if __name__ == "__main__":
+    sys.exit(main())

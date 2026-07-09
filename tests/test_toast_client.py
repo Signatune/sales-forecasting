@@ -1,0 +1,77 @@
+import datetime as dt
+
+import pytest
+
+from toast_client import (
+    ToastAuthError,
+    is_window_captured,
+    load_credentials,
+    week_windows,
+    year_windows,
+)
+
+ENV_TEXT = """{
+  "userAccessType": "TOAST_MACHINE_CLIENT",
+  "clientId": "abc123",
+  "clientSecret": "s3cret",
+}
+
+restaurantGUID = IQID_3
+URL = https://ws-api.toasttab.com
+"""
+
+
+class TestLoadCredentials:
+    def test_parses_json_ish_env_file(self, tmp_path):
+        env = tmp_path / ".env"
+        env.write_text(ENV_TEXT)
+        creds = load_credentials(env)
+        assert creds == {
+            "userAccessType": "TOAST_MACHINE_CLIENT",
+            "clientId": "abc123",
+            "clientSecret": "s3cret",
+            "baseUrl": "https://ws-api.toasttab.com",
+        }
+
+    def test_missing_secret_fails_loudly(self, tmp_path):
+        env = tmp_path / ".env"
+        env.write_text(ENV_TEXT.replace("clientSecret", "clientTypo"))
+        with pytest.raises(ToastAuthError, match="clientSecret"):
+            load_credentials(env)
+
+    def test_missing_file_fails_loudly(self, tmp_path):
+        with pytest.raises(ToastAuthError, match="not found"):
+            load_credentials(tmp_path / ".env")
+
+
+class TestWindows:
+    def test_week_windows_cover_range_without_overlap(self):
+        windows = week_windows(dt.date(2026, 6, 1), dt.date(2026, 7, 9))
+        assert windows[0] == (dt.date(2026, 6, 1), dt.date(2026, 6, 7))
+        assert windows[-1] == (dt.date(2026, 7, 6), dt.date(2026, 7, 9))
+        for (_, prev_end), (next_start, _) in zip(windows, windows[1:]):
+            assert next_start == prev_end + dt.timedelta(days=1)
+
+    def test_year_windows_walk_backwards_from_today(self):
+        windows = year_windows(dt.date(2026, 7, 9))
+        assert windows[0] == (dt.date(2026, 1, 1), dt.date(2026, 7, 9))
+        assert windows[1] == (dt.date(2025, 1, 1), dt.date(2025, 12, 31))
+
+
+class TestIsWindowCaptured:
+    def test_settled_window_with_capture_after_end(self, tmp_path):
+        (tmp_path / "menu_week_20260601_20260607__20260701T000000Z.json").write_text("[]")
+        assert is_window_captured(
+            tmp_path, "menu_week", dt.date(2026, 6, 1), dt.date(2026, 6, 7)
+        )
+
+    def test_window_captured_on_its_last_day_is_repulled(self, tmp_path):
+        (tmp_path / "menu_week_20260706_20260709__20260709T120000Z.json").write_text("[]")
+        assert not is_window_captured(
+            tmp_path, "menu_week", dt.date(2026, 7, 6), dt.date(2026, 7, 9)
+        )
+
+    def test_uncaptured_window(self, tmp_path):
+        assert not is_window_captured(
+            tmp_path, "menu_week", dt.date(2026, 6, 1), dt.date(2026, 6, 7)
+        )
