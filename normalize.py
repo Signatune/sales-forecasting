@@ -1,20 +1,22 @@
 """Normalize raw Toast Analytics menu reports into canonical Sales records.
 
-Reads the timestamped raw week reports saved by toast_client.py under
-data/raw/, keeps only bagel-family modifier rows for the in-scope
-restaurants, and writes one Sales record per (Product, Date, Quantity) to
-data/sales_history.parquet.
+Reads the timestamped raw reports under data/raw/ — Analytics week reports
+saved by toast_client.py, plus orders-derived aggregates saved by
+toast_orders.py for dates no week report covers — keeps only bagel-family
+modifier rows for the in-scope restaurants, and writes one Sales record per
+(Product, Date, Quantity) to data/sales_history.parquet.
 
 Bagel Sales in Toast are recorded as modifiers only — there is no menu item
 per flavor. The three main flavors each have two modifiers (one used on
 sandwiches, one for bulk orders); a Product's daily Sales is the sum of its
 modifiers' quantities across both locations.
 """
+import datetime as dt
 import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Set
+from typing import Dict, List, Set
 
 import pandas as pd
 
@@ -162,17 +164,42 @@ def latest_report_files(raw_dir: Path, prefix: str) -> List[Path]:
     return [by_window[w] for w in sorted(by_window)]
 
 
+def _week_window_dates(path: Path) -> Set[str]:
+    """Every business date inside a menu_week file's window (from its
+    filename): the report is authoritative for all of them, including days
+    with no rows (closed days)."""
+    match = re.fullmatch(r"menu_week_(\d{8})_(\d{8})__.*\.json", path.name)
+    if not match:
+        raise UnexpectedShapeError(f"unrecognized raw filename: {path.name}")
+    start = dt.datetime.strptime(match.group(1), "%Y%m%d").date()
+    end = dt.datetime.strptime(match.group(2), "%Y%m%d").date()
+    return {
+        f"{start + dt.timedelta(days=i):%Y%m%d}"
+        for i in range((end - start).days + 1)
+    }
+
+
 def load_sales_rows(raw_dir: Path = RAW_DIR) -> List[dict]:
-    files = latest_report_files(raw_dir, "menu_week")
-    if not files:
+    """All modifier rows: Analytics week reports first, then orders-derived
+    aggregates (toast_orders.py) for dates no week report covers."""
+    week_files = latest_report_files(raw_dir, "menu_week")
+    orders_files = latest_report_files(raw_dir, "orders_agg")
+    if not week_files and not orders_files:
         raise FileNotFoundError(
-            f"no menu_week raw reports under {raw_dir} — run toast_client.py first"
+            f"no menu_week or orders_agg raw reports under {raw_dir} — "
+            "run ingest.py or toast_orders.py first"
         )
     rows: List[dict] = []
-    for path in files:
+    covered: Set[str] = set()
+    for path in week_files:
         content = json.loads(path.read_text())
         validate_modifier_rows(content, source=path.name)
         rows.extend(content)
+        covered |= _week_window_dates(path)
+    for path in orders_files:
+        content = json.loads(path.read_text())
+        validate_modifier_rows(content, source=path.name)
+        rows.extend(r for r in content if r["businessDate"] not in covered)
     return rows
 
 

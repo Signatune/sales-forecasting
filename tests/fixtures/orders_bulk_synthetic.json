@@ -1,0 +1,70 @@
+[
+  {
+    "guid": "order-1", "businessDate": 20260707, "voided": false, "deleted": false,
+    "checks": [
+      {
+        "guid": "check-1", "voided": false, "deleted": false,
+        "selections": [
+          {
+            "guid": "sel-1", "displayName": "Nova Lox Sandwich", "quantity": 2.0, "voided": false,
+            "modifiers": [
+              {
+                "guid": "mod-1", "displayName": "everything bagel", "quantity": 1.0, "voided": false,
+                "item": {"guid": "item-everything"},
+                "modifiers": [
+                  {"guid": "mod-1a", "displayName": "toasted", "quantity": 1.0, "voided": false, "item": {"guid": "item-toasted"}, "modifiers": []}
+                ]
+              },
+              {"guid": "mod-2", "displayName": "add capers", "quantity": 1.0, "voided": false, "item": {"guid": "item-capers"}, "modifiers": []}
+            ]
+          },
+          {
+            "guid": "sel-2", "displayName": "Bagel", "quantity": 1.0, "voided": false,
+            "modifiers": [
+              {"guid": "mod-3", "displayName": "plain, bulk", "quantity": 6.0, "voided": false, "item": {"guid": "item-plain-bulk"}, "modifiers": []}
+            ]
+          },
+          {
+            "guid": "sel-3", "displayName": "Voided Sandwich", "quantity": 1.0, "voided": true,
+            "modifiers": [
+              {"guid": "mod-4", "displayName": "plain bagel", "quantity": 1.0, "voided": false, "item": {"guid": "item-plain"}, "modifiers": []}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "guid": "order-2-fully-voided", "businessDate": 20260707, "voided": true, "deleted": false,
+    "checks": [
+      {
+        "guid": "check-2", "voided": false, "deleted": false,
+        "selections": [
+          {
+            "guid": "sel-4", "displayName": "Sandwich", "quantity": 1.0, "voided": false,
+            "modifiers": [
+              {"guid": "mod-5", "displayName": "sesame bagel", "quantity": 3.0, "voided": false, "item": {"guid": "item-sesame"}, "modifiers": []}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "guid": "order-3", "businessDate": 20260707, "voided": false, "deleted": false,
+    "checks": [
+      {
+        "guid": "check-3", "voided": false, "deleted": false,
+        "selections": [
+          {
+            "guid": "sel-5", "displayName": "Sandwich", "quantity": 1.0, "voided": false,
+            "modifiers": [
+              {"guid": "mod-6", "displayName": "sesame bagel", "quantity": 1.0, "voided": true, "item": {"guid": "item-sesame"}, "modifiers": []},
+              {"guid": "mod-7", "displayName": "everything bagel", "quantity": 1.0, "voided": false, "item": {"guid": "item-everything"}, "modifiers": []}
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

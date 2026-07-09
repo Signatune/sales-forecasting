@@ -142,6 +142,53 @@ class TestUnmappedBagelish:
         assert find_unmapped_bagelish(rows) == {"asiago bagel (fridays only!)": 7.0}
 
 
+class TestMergedSources:
+    """Analytics week reports win for dates they cover; orders-derived
+    aggregates fill the remaining dates only."""
+
+    CAMBRIDGE = "28e5b269-1c1c-45df-81a8-1d268c005dfa"
+
+    def row(self, date, qty):
+        return {
+            "restaurantGuid": self.CAMBRIDGE,
+            "businessDate": date,
+            "modifierGuid": "g",
+            "modifierName": "plain bagel",
+            "quantitySold": qty,
+        }
+
+    def test_orders_rows_only_fill_uncovered_dates(self, tmp_path):
+        from normalize import load_sales_rows
+
+        (tmp_path / "menu_week_20260706_20260709__20260710T000000Z.json").write_text(
+            json.dumps([self.row("20260707", 100.0)])
+        )
+        (tmp_path / "orders_agg_202606__20260710T000000Z.json").write_text(
+            json.dumps([
+                self.row("20260707", 999.0),  # covered by the week window: ignored
+                self.row("20260601", 55.0),   # uncovered: used
+            ])
+        )
+        df = normalize_sales(load_sales_rows(tmp_path))
+        by_date = {str(d.date()): q for d, q in zip(df["date"], df["quantity"])}
+        assert by_date == {"2026-07-07": 100.0, "2026-06-01": 55.0}
+
+    def test_week_windows_cover_their_empty_days(self, tmp_path):
+        """A closed day inside a pulled week must not be back-filled from
+        orders data (the week report is authoritative for its whole window)."""
+        from normalize import load_sales_rows
+
+        (tmp_path / "menu_week_20260706_20260709__20260710T000000Z.json").write_text(
+            json.dumps([self.row("20260707", 100.0)])
+        )
+        (tmp_path / "orders_agg_202607__20260801T000000Z.json").write_text(
+            json.dumps([self.row("20260708", 42.0)])  # inside the week window
+        )
+        df = normalize_sales(load_sales_rows(tmp_path))
+        assert len(df) == 1
+        assert df["quantity"].iloc[0] == 100.0
+
+
 class TestLatestReportFiles:
     def test_picks_latest_capture_per_window(self, tmp_path):
         (tmp_path / "menu_week_20260601_20260607__20260701T000000Z.json").write_text("[]")
