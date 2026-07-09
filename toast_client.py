@@ -134,7 +134,10 @@ class ToastAnalyticsClient:
     def _request(self, method: str, path: str, body=None):
         if self._token is None:
             self.login()
-        for attempt in range(8):
+        # 429s can persist for most of an hour when the rate-limit budget
+        # is already spent, so wait on a deadline rather than an attempt count.
+        deadline = time.monotonic() + 3900
+        while time.monotonic() < deadline:
             response = self._session.request(
                 method,
                 f"{self._base_url}{path}",
@@ -158,7 +161,7 @@ class ToastAnalyticsClient:
                     f"{response.text[:500]}"
                 )
             return response.json()
-        raise UnexpectedShapeError(f"{method} {path}: retries exhausted")
+        raise UnexpectedShapeError(f"{method} {path}: retries exhausted after 65min")
 
     def restaurants_information(self) -> list:
         return self._request("GET", "/era/v1/restaurants-information")
@@ -245,6 +248,28 @@ def week_windows(earliest: dt.date, today: dt.date) -> List[Tuple[dt.date, dt.da
     return windows
 
 
+def validate_daily_totals_rows(rows, source: str) -> None:
+    """Daily-totals reports carry no modifier fields; check just the shape
+    _sales_dates_in relies on, so drift raises clearly instead of KeyError."""
+    if not isinstance(rows, list):
+        raise UnexpectedShapeError(
+            f"{source}: expected a JSON array of report rows, got {type(rows).__name__}"
+        )
+    for i, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise UnexpectedShapeError(f"{source}: row {i} is not an object")
+        for field in ("businessDate", "restaurantGuid"):
+            if not isinstance(row.get(field), str):
+                raise UnexpectedShapeError(
+                    f"{source}: row {i} is missing string field {field!r}: "
+                    f"{row.get(field)!r}"
+                )
+        if not re.fullmatch(r"\d{8}", row["businessDate"]):
+            raise UnexpectedShapeError(
+                f"{source}: row {i} businessDate {row['businessDate']!r} is not YYYYMMDD"
+            )
+
+
 def _sales_dates_in(rows: list) -> set:
     return {
         row["businessDate"]
@@ -256,8 +281,13 @@ def _sales_dates_in(rows: list) -> set:
 def discover_sales_dates(client: ToastAnalyticsClient, raw_dir: Path,
                          today: dt.date) -> set:
     """Every business date with any sales, from restaurant-level daily
-    totals, walking calendar years backwards until an empty year."""
+    totals, walking calendar years backwards.
+
+    Stops only after two consecutive empty years: the API returns [] both
+    for a report that is still processing and for a window with no sales,
+    so a single empty year is not proof that history has ended."""
     sales_dates: set = set()
+    empty_years = 0
     for start, end in year_windows(today):
         cached = sorted(raw_dir.glob(f"daily_totals_{start:%Y%m%d}_{end:%Y%m%d}__*.json"))
         if cached and is_window_captured(raw_dir, "daily_totals", start, end):
@@ -266,14 +296,17 @@ def discover_sales_dates(client: ToastAnalyticsClient, raw_dir: Path,
             print(f"daily totals {start}..{end}: requesting")
             guid = client.create_menu_report(start, end)
             rows = client.fetch_report(guid)
-            if not isinstance(rows, list):
-                raise UnexpectedShapeError(f"daily totals {start}..{end}: {rows!r}")
             save_raw(raw_dir, f"daily_totals_{start:%Y%m%d}_{end:%Y%m%d}", rows)
+        validate_daily_totals_rows(rows, source=f"daily totals {start}..{end}")
         dates = _sales_dates_in(rows)
         print(f"daily totals {start}..{end}: {len(dates)} sales days")
-        if not dates:
-            break
-        sales_dates |= dates
+        if dates:
+            empty_years = 0
+            sales_dates |= dates
+        else:
+            empty_years += 1
+            if empty_years >= 2:
+                break
     if not sales_dates:
         raise UnexpectedShapeError(
             "no sales days found in any year window — wrong credentials or "

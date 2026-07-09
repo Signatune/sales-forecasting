@@ -2,10 +2,12 @@ import datetime as dt
 
 import pytest
 
+from normalize import UnexpectedShapeError
 from toast_client import (
     ToastAuthError,
     is_window_captured,
     load_credentials,
+    validate_daily_totals_rows,
     week_windows,
     year_windows,
 )
@@ -56,6 +58,27 @@ class TestWindows:
         windows = year_windows(dt.date(2026, 7, 9))
         assert windows[0] == (dt.date(2026, 1, 1), dt.date(2026, 7, 9))
         assert windows[1] == (dt.date(2025, 1, 1), dt.date(2025, 12, 31))
+
+
+class TestValidateDailyTotalsRows:
+    GOOD_ROW = {"businessDate": "20260701", "restaurantGuid": "abc-123"}
+
+    def test_valid_rows_pass(self):
+        validate_daily_totals_rows([self.GOOD_ROW], source="test")
+        validate_daily_totals_rows([], source="test")
+
+    def test_not_a_list_raises(self):
+        with pytest.raises(UnexpectedShapeError, match="JSON array"):
+            validate_daily_totals_rows({"status": "PROCESSING"}, source="test")
+
+    def test_missing_restaurant_guid_raises(self):
+        with pytest.raises(UnexpectedShapeError, match="restaurantGuid"):
+            validate_daily_totals_rows([{"businessDate": "20260701"}], source="test")
+
+    def test_bad_business_date_raises(self):
+        broken = dict(self.GOOD_ROW, businessDate="2026-07-01")
+        with pytest.raises(UnexpectedShapeError, match="businessDate"):
+            validate_daily_totals_rows([broken], source="test")
 
 
 class TestIsWindowCaptured:
