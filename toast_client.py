@@ -115,11 +115,19 @@ class ToastAnalyticsClient:
         )
 
     def login(self) -> None:
-        response = self._session.post(
-            f"{self._base_url}/authentication/v1/authentication/login",
-            json=self._login_body,
-            timeout=HTTP_TIMEOUT_SECONDS,
-        )
+        for attempt in range(5):
+            try:
+                response = self._session.post(
+                    f"{self._base_url}/authentication/v1/authentication/login",
+                    json=self._login_body,
+                    timeout=HTTP_TIMEOUT_SECONDS,
+                )
+                break
+            except requests.RequestException as exc:
+                if attempt == 4:
+                    raise ToastAuthError(f"Toast login unreachable: {exc}") from exc
+                print(f"  {type(exc).__name__} during login, retrying in 30s")
+                time.sleep(30)
         if response.status_code != 200:
             raise ToastAuthError(
                 f"Toast login failed: HTTP {response.status_code}: {response.text[:500]}"
