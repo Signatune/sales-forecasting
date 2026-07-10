@@ -19,6 +19,13 @@ notebook = [
     "matplotlib",
     "jupyter",
 ]
+# The ETS / Holt-Winters candidate in model_comparison.py only, imported lazily
+# and registered opt-in via candidates_with_ets(). Nothing under test requires
+# it — the ETS tests importorskip it — so the suite still runs on a `dev`-only
+# install and compare_models' default candidates never touch statsmodels.
+experiment = [
+    "statsmodels",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

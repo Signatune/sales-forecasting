@@ -476,3 +476,90 @@ class TestMain:
         assert "seasonal_naive" in out
         assert "moving_average" in out
         assert "pinball@95" in out
+
+
+class TestEtsDependencyGate:
+    """The statsmodels gate: a dev-only install (no statsmodels) can still
+    import this module and run compare_models on the defaults. statsmodels IS
+    installed here so we can't uninstall it — instead we pin the guard's
+    contract: ETS is never in the default candidate set, and the opt-in registry
+    is what conditionally adds it."""
+
+    def test_ets_is_absent_from_the_default_candidates(self):
+        # compare_models defaults to POOLISH_CANDIDATES; if ETS were in it, a
+        # machine without statsmodels would call it and fail.
+        assert "ets" not in model_comparison.POOLISH_CANDIDATES
+
+    def test_default_compare_models_does_not_score_ets(self):
+        history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
+
+        comparison = compare_models(history, eval_weeks=1, warmup_weeks=1)
+
+        assert "ets" not in set(comparison["model"])
+        assert comparison["pinball"].notna().all()
+
+    def test_the_opt_in_registry_is_a_superset_of_the_defaults(self):
+        # Whether or not statsmodels is present, the registry never drops a
+        # default candidate.
+        registry = model_comparison.candidates_with_ets()
+
+        assert set(model_comparison.POOLISH_CANDIDATES) <= set(registry)
+
+
+class TestEtsForecast:
+    """The Holt-Winters / ETS candidate. Exact ETS arithmetic by hand is
+    impractical, so these pin the contract — shape, scope, leak-freeness,
+    scoring — not the fitted internals."""
+
+    def test_conforms_to_the_demand_forecast_shape(self):
+        pytest.importorskip("statsmodels")
+        history = sales(varieties("2026-01-01", 150, (5.0, 3.0, 2.0)))
+
+        result = model_comparison.ets_forecast(history, dt.date(2026, 6, 1))
+
+        assert list(result.columns) == ["product", "date", "forecast_quantity"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["forecast_quantity"].dtype == float
+        assert set(result["product"]) <= set(forecast.FORECAST_PRODUCTS)
+        assert not result.empty
+
+    def test_a_forecast_never_sees_the_day_it_forecasts(self):
+        # plain sells 10 every day for a year, then jumps to 1000 from
+        # 2026-01-01. Forecasting 2026-01-03 at lead 3 (as_of 2026-01-01) trains
+        # only on the tens strictly before the jump, so the point forecast must
+        # stay near 10, nowhere near the 1000 it would leak if it saw as_of on.
+        pytest.importorskip("statsmodels")
+        history = sales(
+            daily("plain", "2025-01-01", 365, 10.0)  # .. 2025-12-31
+            + daily("plain", "2026-01-01", 5, 1000.0)  # .. 2026-01-05
+        )
+        target = pd.Timestamp("2026-01-03")
+
+        result = model_comparison.ets_forecast(history, dt.date(2026, 1, 1))
+        row = result[(result["product"] == "plain") & (result["date"] == target)]
+
+        assert len(row) == 1
+        assert row["forecast_quantity"].iloc[0] < 100.0  # ~10, not 1000
+
+    def test_scores_a_finite_pinball_through_compare_models(self):
+        pytest.importorskip("statsmodels")
+        history = sales(varieties("2026-02-01", 130, (5.0, 3.0, 2.0)))
+
+        comparison = compare_models(
+            history,
+            candidates={"ets": model_comparison.ets_forecast},
+            eval_weeks=1,
+            warmup_weeks=1,
+        )
+
+        assert list(comparison["model"]) == ["ets"]
+        assert comparison["pinball"].notna().all()
+        assert comparison["pinball"].iloc[0] >= 0.0
+
+    def test_the_registry_wires_ets_in_when_statsmodels_is_present(self):
+        pytest.importorskip("statsmodels")
+        assert model_comparison.statsmodels_available()
+
+        registry = model_comparison.candidates_with_ets()
+
+        assert registry.get("ets") is model_comparison.ets_forecast

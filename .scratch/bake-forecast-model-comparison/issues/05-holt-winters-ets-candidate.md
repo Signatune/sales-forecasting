@@ -1,6 +1,6 @@
 # Holt-Winters / ETS candidate
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 
