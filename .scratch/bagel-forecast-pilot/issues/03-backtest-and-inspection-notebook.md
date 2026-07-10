@@ -24,3 +24,26 @@ Include the pilot's human demo surface: a notebook charting forecast-vs-actual p
 ## Blocked by
 
 - `02-demand-forecast-and-family-rollup.md`
+
+## Comments
+
+### Inherited from ticket 02 (2026-07-10)
+
+Ticket 02 narrowed forecast scope to five Products; `cinnamon raisin` and
+`pumpernickel` are in `sales_history.parquet` but not forecast (see
+`forecast.SKIPPED_PRODUCTS`).
+
+**The family MAPE must compare like with like.** The family-level Sales Forecast
+sums five Products. Scoring it against an actual family total that sums all
+seven would charge the model for ~5.8 units/day it never tried to forecast.
+Filter actuals to `forecast.FORECAST_PRODUCTS` before computing the family MAPE.
+
+`forecast.forecast_demand(sales, as_of)` already refuses to see Sales on or
+after `as_of`, so replaying a past `as_of` over the full history is leak-free —
+`tests/test_forecast.py::TestHistoryCutoff` pins this. The backtest does not
+need to pre-trim the history it passes in.
+
+Note also that MAPE is undefined where an actual is zero. `gluten-free plain`
+records no Sales on 41 of 854 open days, and `roll_up_sales_forecast` omits a
+Product entirely on a weekday it never sold, so both zero actuals and absent
+forecast rows are reachable in the holdout.

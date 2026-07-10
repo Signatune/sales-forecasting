@@ -52,9 +52,14 @@ Toast Analytics API
   → data/sales_history.parquet  (canonical Sales records)
   → forecast.py (seasonal-naive model)
   → data/demand_forecast.parquet  (per-Product Demand Forecast)
-  → summed → family-level Sales Forecast
+  → summed → data/sales_forecast.parquet  (family-level Sales Forecast)
   → backtest.py compares vs. held-out actuals
 ```
+
+The family-level Sales Forecast is persisted rather than left in memory: ticket
+03's backtest consumes it, and `CONTEXT.md` treats it as a concept distinct from
+the per-Product Demand Forecast. It covers only the Products in
+`forecast.FORECAST_PRODUCTS` — see ticket 02's Comments.
 
 ## Testing
 
