@@ -1,6 +1,6 @@
 # Pandas candidate models for the Poolish total
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 

@@ -11,15 +11,19 @@ import pandas as pd
 import pytest
 
 import backtest
+import forecast
 import model_comparison
 from model_comparison import (
     WHEAT_TOTAL,
     actual_totals,
     compare_models,
     evaluation_window,
+    ewma_forecast,
     forecast_totals,
     p95_buffer,
     pinball,
+    seasonal_trend_forecast,
+    trailing_window_forecast,
     wape,
     wheat_total,
 )
@@ -227,19 +231,27 @@ class TestForecastTotals:
 
 
 class TestCompareModels:
-    def test_ranks_the_seeded_candidates_on_pinball(self):
-        # Every variety sells a flat quantity all history, so both models
-        # forecast the total exactly (residuals zero, no buffer) and score a
-        # perfect pinball of zero.
+    def test_ranks_the_registered_candidates_on_pinball(self):
+        # Every variety sells a flat quantity all history, so every candidate
+        # forecasts the total exactly (residuals zero, no buffer) and scores a
+        # perfect pinball of zero. Asserted as a superset so a later ticket
+        # adding ETS does not break this.
         history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
 
         comparison = compare_models(history, eval_weeks=1, warmup_weeks=1)
 
         assert list(comparison.columns) == ["model", "pinball", "mape", "days"]
-        assert set(comparison["model"]) == {"seasonal_naive", "moving_average"}
-        assert comparison["pinball"].tolist() == pytest.approx([0.0, 0.0])
-        assert comparison["mape"].tolist() == pytest.approx([0.0, 0.0])
-        assert comparison["days"].tolist() == [7, 7]
+        assert {
+            "seasonal_naive",
+            "moving_average",
+            "trailing_window",
+            "ewma",
+            "seasonal_trend",
+        } <= set(comparison["model"])
+        n = len(comparison)
+        assert comparison["pinball"].tolist() == pytest.approx([0.0] * n)
+        assert comparison["mape"].tolist() == pytest.approx([0.0] * n)
+        assert comparison["days"].tolist() == [7] * n
         # Sorted best (lowest pinball) first.
         assert comparison["pinball"].is_monotonic_increasing
 
@@ -256,6 +268,196 @@ class TestCompareModels:
         # Both are exact here, so this simply pins that the frame carries a
         # finite pinball per candidate rather than a NaN.
         assert comparison["pinball"].notna().all()
+
+
+def mondays(product, quantities, start="2026-06-01"):
+    """One Sale per week on the same weekday (2026-06-01 is a Monday), oldest
+    first — the same-weekday series each candidate below reduces over."""
+    first = pd.Timestamp(start)
+    return [(product, first + pd.Timedelta(weeks=n), q) for n, q in enumerate(quantities)]
+
+
+def _quantity_on(frame, date):
+    """The single forecast_quantity a candidate emitted for `date`."""
+    row = frame.loc[frame["date"] == pd.Timestamp(date), "forecast_quantity"]
+    assert len(row) == 1
+    return float(row.iloc[0])
+
+
+def _equal_weight_mean(history, as_of, date):
+    """The incumbent forecast.forecast_demand's same-weekday mean for `date` —
+    the high-biased baseline the recency-aware models must beat downward."""
+    return _quantity_on(forecast.forecast_demand(history, as_of), date)
+
+
+class TestTrailingWindowSeasonalNaive:
+    """Same-weekday mean over only the last N weeks — it must ignore older ones."""
+
+    def test_averages_only_the_last_n_same_weekday_observations(self):
+        # Six declining Mondays; with a 3-week window only the last three count.
+        # last 3 = (70 + 60 + 50) / 3 = 60; the 100/90/80 are outside the window.
+        history = sales(mondays("plain", [100.0, 90.0, 80.0, 70.0, 60.0, 50.0]))
+        as_of = dt.date(2026, 7, 7)  # after the last Monday 2026-07-06
+        target = "2026-07-13"  # the next Monday, inside as_of+2..as_of+7
+
+        result = trailing_window_forecast(history, as_of, weeks=3)
+
+        assert _quantity_on(result, target) == pytest.approx(60.0)
+
+    def test_forecasts_below_the_equal_weight_mean_on_a_declining_series(self):
+        # Trimming the stale high tail puts the window mean (60) below the
+        # incumbent's all-history same-weekday mean (450 / 6 = 75).
+        history = sales(mondays("plain", [100.0, 90.0, 80.0, 70.0, 60.0, 50.0]))
+        as_of = dt.date(2026, 7, 7)
+        target = "2026-07-13"
+
+        windowed = _quantity_on(trailing_window_forecast(history, as_of, weeks=3), target)
+
+        assert _equal_weight_mean(history, as_of, target) == pytest.approx(75.0)
+        assert windowed < _equal_weight_mean(history, as_of, target)
+
+    def test_ignores_sales_on_or_after_as_of(self):
+        history = sales(
+            daily("plain", "2026-06-01", 32, quantity=10.0)  # .. 2026-07-02
+            + [("plain", "2026-07-03", 900.0)]  # as_of: the day is not over
+            + [("plain", "2026-07-05", 900.0)]  # a target date's own actuals
+        )
+
+        result = trailing_window_forecast(history, dt.date(2026, 7, 3))
+
+        assert result["forecast_quantity"].unique() == pytest.approx([10.0])
+
+    def test_forecasts_only_the_forecast_products(self):
+        history = sales(
+            daily("plain", "2026-06-01", 30) + daily("cinnamon raisin", "2026-06-01", 30)
+        )
+
+        result = trailing_window_forecast(history, dt.date(2026, 7, 3))
+
+        assert set(result["product"]) == {"plain"}
+
+    def test_matches_the_shape_of_a_demand_forecast(self):
+        history = sales(daily("plain", "2026-06-01", 30))
+
+        result = trailing_window_forecast(history, dt.date(2026, 7, 9))
+
+        assert list(result.columns) == ["product", "date", "forecast_quantity"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["forecast_quantity"].dtype == float
+
+
+class TestEwmaSeasonalNaive:
+    """Same-weekday mean with recent observations weighted above old ones."""
+
+    def test_weights_recent_same_weekday_sales_above_old(self):
+        # Four declining Mondays 40,30,20,10 (oldest->newest), half-life 1 obs
+        # -> alpha 0.5. adjust=True weights newest->oldest 1, .5, .25, .125:
+        #   (10*1 + 20*.5 + 30*.25 + 40*.125) / (1 + .5 + .25 + .125)
+        #   = 32.5 / 1.875 = 17.3333 — pulled far below the equal mean of 25.
+        history = sales(mondays("plain", [40.0, 30.0, 20.0, 10.0]))
+        as_of = dt.date(2026, 6, 23)  # after the last Monday 2026-06-22
+        target = "2026-06-29"  # the next Monday
+
+        result = ewma_forecast(history, as_of, halflife=1)
+
+        assert _quantity_on(result, target) == pytest.approx(17.333333, rel=1e-5)
+        assert _equal_weight_mean(history, as_of, target) == pytest.approx(25.0)
+
+    def test_forecasts_below_the_equal_weight_mean_on_a_declining_series(self):
+        # With the documented default half-life, recency-weighting still lands
+        # below the incumbent's equal-weight same-weekday mean on a decline.
+        history = sales(mondays("plain", [100.0, 90.0, 80.0, 70.0, 60.0, 50.0]))
+        as_of = dt.date(2026, 7, 7)
+        target = "2026-07-13"
+
+        weighted = _quantity_on(ewma_forecast(history, as_of), target)
+
+        assert weighted < _equal_weight_mean(history, as_of, target)
+
+    def test_ignores_sales_on_or_after_as_of(self):
+        history = sales(
+            daily("plain", "2026-06-01", 32, quantity=10.0)
+            + [("plain", "2026-07-03", 900.0)]
+            + [("plain", "2026-07-05", 900.0)]
+        )
+
+        result = ewma_forecast(history, dt.date(2026, 7, 3))
+
+        assert result["forecast_quantity"].unique() == pytest.approx([10.0])
+
+    def test_forecasts_only_the_forecast_products(self):
+        history = sales(
+            daily("plain", "2026-06-01", 30) + daily("cinnamon raisin", "2026-06-01", 30)
+        )
+
+        result = ewma_forecast(history, dt.date(2026, 7, 3))
+
+        assert set(result["product"]) == {"plain"}
+
+    def test_matches_the_shape_of_a_demand_forecast(self):
+        history = sales(daily("plain", "2026-06-01", 30))
+
+        result = ewma_forecast(history, dt.date(2026, 7, 9))
+
+        assert list(result.columns) == ["product", "date", "forecast_quantity"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["forecast_quantity"].dtype == float
+
+
+class TestSeasonalTrend:
+    """A same-weekday level plus a fitted linear drift — it catches the decline
+    the equal-weight incumbent projects flat."""
+
+    def test_extrapolates_a_linear_decline_below_the_equal_weight_mean(self):
+        # A perfectly linear decline: quantity = 100 - day_index over 40 days
+        # from 2026-06-01. OLS recovers slope -1, intercept 100, zero residual
+        # (so zero seasonal offset). Target 2026-07-13 is day_index 42:
+        #   forecast = 100 - 42 = 58.
+        # The incumbent's Monday mean over 100,93,86,79,72,65 is 495/6 = 82.5 —
+        # the trend projects forward past every one of those, so it lands below.
+        history = sales(
+            [("plain", pd.Timestamp("2026-06-01") + pd.Timedelta(days=i), 100.0 - i)
+             for i in range(40)]
+        )
+        as_of = dt.date(2026, 7, 11)  # after the last day 2026-07-10
+        target = "2026-07-13"
+
+        result = seasonal_trend_forecast(history, as_of)
+
+        assert _quantity_on(result, target) == pytest.approx(58.0)
+        assert _equal_weight_mean(history, as_of, target) == pytest.approx(82.5)
+        assert _quantity_on(result, target) < _equal_weight_mean(history, as_of, target)
+
+    def test_ignores_sales_on_or_after_as_of(self):
+        # Flat 10s before as_of -> slope 0, level 10; the 900s on and after
+        # as_of are never in the fit, so the forecast stays 10.
+        history = sales(
+            daily("plain", "2026-06-01", 32, quantity=10.0)
+            + [("plain", "2026-07-03", 900.0)]
+            + [("plain", "2026-07-05", 900.0)]
+        )
+
+        result = seasonal_trend_forecast(history, dt.date(2026, 7, 3))
+
+        assert result["forecast_quantity"].to_numpy() == pytest.approx(10.0)
+
+    def test_forecasts_only_the_forecast_products(self):
+        history = sales(
+            daily("plain", "2026-06-01", 30) + daily("cinnamon raisin", "2026-06-01", 30)
+        )
+
+        result = seasonal_trend_forecast(history, dt.date(2026, 7, 3))
+
+        assert set(result["product"]) == {"plain"}
+
+    def test_matches_the_shape_of_a_demand_forecast(self):
+        history = sales(daily("plain", "2026-06-01", 30))
+
+        result = seasonal_trend_forecast(history, dt.date(2026, 7, 9))
+
+        assert list(result.columns) == ["product", "date", "forecast_quantity"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["forecast_quantity"].dtype == float
 
 
 class TestMain:

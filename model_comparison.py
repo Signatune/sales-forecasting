@@ -31,6 +31,7 @@ import datetime as dt
 import sys
 from typing import Callable, Dict, List, Union
 
+import numpy as np
 import pandas as pd
 
 import backtest
@@ -65,12 +66,161 @@ POOLISH_LEAD = 3
 # The Service Level the Poolish total is buffered and scored at.
 SERVICE_LEVEL = 0.95
 
-# The two models the pilot already ran, wired first so the tracer-bullet table
-# has real numbers. Later tickets add the pandas candidates and ETS by dropping
-# entries in here — the evaluator treats every entry identically.
+# Trailing-window seasonal-naive: same-weekday mean over only the last N weeks.
+# 8 weeks is ~two months — enough same-weekday observations (8) to average
+# without one odd week swinging the forecast, but short enough that a Sale from
+# over a year ago, ~8% higher on the downtrend, no longer drags the forecast up.
+# A tuning choice; the equal-weight incumbent is this with an unbounded window.
+TRAILING_WINDOW_WEEKS = 8
+
+# EWMA seasonal-naive: same-weekday mean with exponentially-decaying weights.
+# A 3-week half-life halves a same-weekday Sale's weight every 3 observations, so
+# the forecast tracks recent Demand closely while still smoothing across roughly
+# a quarter of history. Shorter than the trailing window's hard 8-week cutoff
+# because the decay tapers the old Sales' influence rather than truncating it.
+EWMA_HALFLIFE_WEEKS = 3
+
+
+# --- Pure-pandas candidate models ------------------------------------------
+#
+# Three point-forecast candidates, each the same
+# (sales, as_of) -> DataFrame[product, date, forecast_quantity] callable as
+# forecast.forecast_demand: a per-variety Demand Forecast over
+# forecast.FORECAST_PRODUCTS for forecast.target_dates(as_of), read from the
+# leak-free forecast.history_before cutoff. They exist to expose the incumbent's
+# structural high bias — it averages every same-weekday Sale with equal weight,
+# so on Demand trending down ~8%/yr it keeps forecasting the higher past. Each of
+# these lets recent Sales pull the forecast down toward where Demand is now. They
+# emit POINT forecasts only; the evaluator buffers to P95 and scores pinball@95.
+
+
+def _in_scope_history(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
+    """Leak-free Sales strictly before as_of, narrowed to the three baked
+    varieties — the shared front of every candidate below. history_before
+    applies no Product scope (callers select what they emit), so each candidate
+    must, exactly as forecast_demand and moving_average_forecast do."""
+    history = forecast.history_before(sales, as_of)
+    return history[history["product"].isin(forecast.FORECAST_PRODUCTS)]
+
+
+def _demand_forecast_frame(records: List[dict]) -> pd.DataFrame:
+    """Shape point-forecast records into the Demand Forecast contract: exactly
+    the columns, dtypes and ordering forecast.forecast_demand returns, so a
+    candidate's output is indistinguishable from the incumbent's downstream."""
+    frame = pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
+    frame["date"] = pd.to_datetime(frame["date"])
+    frame["forecast_quantity"] = frame["forecast_quantity"].astype(float)
+    return frame.sort_values(["date", "product"], ignore_index=True)
+
+
+def trailing_window_forecast(
+    sales: pd.DataFrame, as_of: dt.date, weeks: int = TRAILING_WINDOW_WEEKS
+) -> pd.DataFrame:
+    """Same-weekday mean over only the last `weeks` observations of each variety.
+
+    Like forecast.forecast_demand it averages a variety's recorded Sales on the
+    target's weekday — but only the most recent `weeks` of them, dropping older
+    same-weekday Sales entirely. On a declining series that trims the high, stale
+    tail the equal-weight incumbent keeps averaging in, so the forecast sits
+    closer to where Demand is now. A variety with no Sales on the target's
+    weekday yields no row, exactly as the incumbent — no evidence to average.
+    """
+    history = _in_scope_history(sales, as_of)
+    records = []
+    for target in forecast.target_dates(as_of):
+        weekday = target.dayofweek
+        for product in forecast.FORECAST_PRODUCTS:
+            same_weekday = history[
+                (history["product"] == product)
+                & (history["date"].dt.dayofweek == weekday)
+            ].sort_values("date")
+            if same_weekday.empty:
+                continue
+            recent = same_weekday["quantity"].tail(weeks)
+            records.append(
+                {"product": product, "date": target, "forecast_quantity": float(recent.mean())}
+            )
+    return _demand_forecast_frame(records)
+
+
+def ewma_forecast(
+    sales: pd.DataFrame, as_of: dt.date, halflife: float = EWMA_HALFLIFE_WEEKS
+) -> pd.DataFrame:
+    """Recency-weighted same-weekday mean: a variety's same-weekday Sales in date
+    order reduced by an exponentially-weighted mean whose weight halves every
+    `halflife` observations (pandas ewm, adjust=True).
+
+    The most recent same-weekday Sale counts most and older ones fade smoothly,
+    so — unlike the incumbent's equal weighting — a declining series is forecast
+    below its all-history same-weekday mean, tracking the downtrend rather than
+    the (higher) distant past. A variety that never sold on the target's weekday
+    yields no row, mirroring the incumbent.
+    """
+    history = _in_scope_history(sales, as_of)
+    records = []
+    for target in forecast.target_dates(as_of):
+        weekday = target.dayofweek
+        for product in forecast.FORECAST_PRODUCTS:
+            same_weekday = history[
+                (history["product"] == product)
+                & (history["date"].dt.dayofweek == weekday)
+            ].sort_values("date")
+            if same_weekday.empty:
+                continue
+            weighted = same_weekday["quantity"].ewm(halflife=halflife, adjust=True).mean()
+            records.append(
+                {"product": product, "date": target, "forecast_quantity": float(weighted.iloc[-1])}
+            )
+    return _demand_forecast_frame(records)
+
+
+def seasonal_trend_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
+    """A same-weekday level plus a fitted linear drift.
+
+    For each variety, fit one ordinary-least-squares line to its whole Sales
+    history against calendar day (numpy.polyfit degree 1) — that slope is the
+    ~8%/yr downtrend the equal-weight incumbent is blind to. The per-weekday
+    seasonal level is the mean of the de-trended residuals on that weekday, and a
+    target's forecast is the line extrapolated to the target date plus its
+    weekday's seasonal level. Because the line is projected forward past all
+    history, a declining series forecasts below its backward-looking same-weekday
+    mean. A variety with under two distinct Sales dates (no slope to fit) or a
+    weekday it never sold on (no seasonal level) yields no row, as the incumbent.
+    """
+    history = _in_scope_history(sales, as_of)
+    records = []
+    for product in forecast.FORECAST_PRODUCTS:
+        variety = history[history["product"] == product].sort_values("date")
+        if variety["date"].nunique() < 2:
+            continue
+        origin = variety["date"].min()
+        day_index = (variety["date"] - origin).dt.days.to_numpy(dtype=float)
+        quantity = variety["quantity"].to_numpy(dtype=float)
+        slope, intercept = np.polyfit(day_index, quantity, 1)
+        residual = quantity - (intercept + slope * day_index)
+        seasonal = pd.Series(residual).groupby(
+            variety["date"].dt.dayofweek.to_numpy()
+        ).mean()
+        for target in forecast.target_dates(as_of):
+            weekday = target.dayofweek
+            if weekday not in seasonal.index:
+                continue
+            t = (target - origin).days
+            level = intercept + slope * t + seasonal.loc[weekday]
+            records.append(
+                {"product": product, "date": target, "forecast_quantity": float(level)}
+            )
+    return _demand_forecast_frame(records)
+
+
+# The pilot's two models, then the pure-pandas candidates. The evaluator treats
+# every entry identically — a later ticket drops ETS in here the same way.
 POOLISH_CANDIDATES: Dict[str, Model] = {
     "seasonal_naive": forecast.forecast_demand,
     "moving_average": backtest.moving_average_forecast,
+    "trailing_window": trailing_window_forecast,
+    "ewma": ewma_forecast,
+    "seasonal_trend": seasonal_trend_forecast,
 }
 
 
