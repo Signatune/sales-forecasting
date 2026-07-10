@@ -5,3 +5,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ipynb_checkpoints/
+
+# Rendered from exploration.ipynb, which already carries the same charts:
+#   .venv/bin/jupyter nbconvert --to html --output-dir notebooks notebooks/exploration.ipynb
+notebooks/*.html
