@@ -1,0 +1,139 @@
+/Users/mamalehsdeli/Documents/Claude/sales-forecasting/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Traceback (most recent call last):
+  File "/Users/mamalehsdeli/Documents/Claude/sales-forecasting/toast_orders.py", line 257, in <module>
+    sys.exit(pull_orders_history())
+  File "/Users/mamalehsdeli/Documents/Claude/sales-forecasting/toast_orders.py", line 218, in pull_orders_history
+    creds = load_standard_credentials()
+  File "/Users/mamalehsdeli/Documents/Claude/sales-forecasting/toast_orders.py", line 52, in load_standard_credentials
+    raise ToastAuthError(f"{env_path} is missing the {name} line")
+toast_client.ToastAuthError: /Users/mamalehsdeli/Documents/Claude/sales-forecasting/.env is missing the STANDARD_CLIENT_ID line
+/Users/mamalehsdeli/Documents/Claude/sales-forecasting/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+authenticated against Toast (standard key)
+orders 202607: 2033 orders -> 1154 modifier rows
+orders 202606: 13431 orders -> 7231 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20260510&pageSize=100&page=1, retrying in 30s
+orders 202605: 14909 orders -> 7786 modifier rows
+orders 202604: 14676 orders -> 7534 modifier rows
+orders 202603: 14171 orders -> 7696 modifier rows
+orders 202602: 10872 orders -> 6286 modifier rows
+orders 202601: 11980 orders -> 7125 modifier rows
+orders 202512: 13931 orders -> 7450 modifier rows
+orders 202511: 13999 orders -> 7173 modifier rows
+orders 202510: 14574 orders -> 7563 modifier rows
+orders 202509: 14493 orders -> 7366 modifier rows
+orders 202508: 13390 orders -> 7441 modifier rows
+orders 202507: 12710 orders -> 6957 modifier rows
+orders 202506: 13259 orders -> 7536 modifier rows
+orders 202505: 14765 orders -> 8029 modifier rows
+orders 202504: 15646 orders -> 7848 modifier rows
+orders 202503: 14849 orders -> 8358 modifier rows
+orders 202502: 12914 orders -> 7562 modifier rows
+orders 202501: 13729 orders -> 8293 modifier rows
+orders 202412: 14724 orders -> 8507 modifier rows
+orders 202411: 14929 orders -> 8209 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20241010&pageSize=100&page=2, retrying in 30s
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20241011&pageSize=100&page=2, retrying in 30s
+  ConnectionError from /orders/v2/ordersBulk?businessDate=20241011&pageSize=100&page=2, retrying in 30s
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20241011&pageSize=100&page=3, retrying in 30s
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20241011&pageSize=100&page=1, retrying in 30s
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20241025&pageSize=100&page=1, retrying in 30s
+orders 202410: 16507 orders -> 8898 modifier rows
+orders 202409: 14661 orders -> 8207 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20240829&pageSize=100&page=2, retrying in 30s
+orders 202408: 14148 orders -> 8433 modifier rows
+orders 202407: 13581 orders -> 8309 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20240621&pageSize=100&page=1, retrying in 30s
+orders 202406: 14473 orders -> 8743 modifier rows
+orders 202405: 15107 orders -> 9100 modifier rows
+orders 202404: 16115 orders -> 8813 modifier rows
+orders 202403: 16106 orders -> 8845 modifier rows
+orders 202402: 14596 orders -> 8385 modifier rows
+orders 202401: 14082 orders -> 8480 modifier rows
+orders 202312: 16601 orders -> 8837 modifier rows
+orders 202311: 14694 orders -> 8181 modifier rows
+orders 202310: 16605 orders -> 8831 modifier rows
+orders 202309: 16971 orders -> 8624 modifier rows
+orders 202308: 15420 orders -> 8126 modifier rows
+orders 202307: 15009 orders -> 7942 modifier rows
+orders 202306: 15883 orders -> 8123 modifier rows
+orders 202305: 16117 orders -> 8354 modifier rows
+  ConnectionError from /orders/v2/ordersBulk?businessDate=20230423&pageSize=100&page=2, retrying in 30s
+orders 202304: 17295 orders -> 8496 modifier rows
+orders 202303: 15361 orders -> 8224 modifier rows
+orders 202302: 13374 orders -> 7403 modifier rows
+orders 202301: 13870 orders -> 8084 modifier rows
+orders 202212: 15752 orders -> 8334 modifier rows
+orders 202211: 15485 orders -> 8175 modifier rows
+orders 202210: 17439 orders -> 8697 modifier rows
+orders 202209: 16610 orders -> 8405 modifier rows
+orders 202208: 14919 orders -> 8157 modifier rows
+orders 202207: 13898 orders -> 7795 modifier rows
+  ConnectionError from /orders/v2/ordersBulk?businessDate=20220603&pageSize=100&page=1, retrying in 30s
+orders 202206: 14627 orders -> 8050 modifier rows
+  ConnectionError from /orders/v2/ordersBulk?businessDate=20220514&pageSize=100&page=2, retrying in 30s
+orders 202205: 15961 orders -> 8452 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20220401&pageSize=100&page=3, retrying in 30s
+  ConnectionError from /orders/v2/ordersBulk?businessDate=20220410&pageSize=100&page=1, retrying in 30s
+orders 202204: 16842 orders -> 8124 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20220317&pageSize=100&page=2, retrying in 30s
+orders 202203: 15123 orders -> 7854 modifier rows
+orders 202202: 11710 orders -> 6777 modifier rows
+orders 202201: 10424 orders -> 6365 modifier rows
+orders 202112: 15925 orders -> 7759 modifier rows
+orders 202111: 16635 orders -> 7830 modifier rows
+orders 202110: 18000 orders -> 8202 modifier rows
+orders 202109: 17214 orders -> 7848 modifier rows
+orders 202108: 16873 orders -> 8097 modifier rows
+orders 202107: 9101 orders -> 4568 modifier rows
+orders 202106: 7786 orders -> 4323 modifier rows
+orders 202105: 8048 orders -> 4198 modifier rows
+orders 202104: 7821 orders -> 4096 modifier rows
+orders 202103: 8199 orders -> 4137 modifier rows
+orders 202102: 6901 orders -> 3539 modifier rows
+orders 202101: 7241 orders -> 3563 modifier rows
+orders 202012: 7118 orders -> 3285 modifier rows
+orders 202011: 6333 orders -> 2935 modifier rows
+orders 202010: 5946 orders -> 2889 modifier rows
+orders 202009: 6045 orders -> 2755 modifier rows
+orders 202008: 4459 orders -> 2459 modifier rows
+orders 202007: 3065 orders -> 1789 modifier rows
+orders 202006: 1528 orders -> 1003 modifier rows
+orders 202005: 32 orders -> 11 modifier rows
+orders 202004: 84 orders -> 14 modifier rows
+orders 202003: 4031 orders -> 2056 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20200212&pageSize=100&page=2, retrying in 30s
+orders 202002: 8048 orders -> 4304 modifier rows
+orders 202001: 8176 orders -> 4329 modifier rows
+orders 201912: 8026 orders -> 4587 modifier rows
+orders 201911: 8509 orders -> 4247 modifier rows
+orders 201910: 9516 orders -> 4477 modifier rows
+orders 201909: 8211 orders -> 4421 modifier rows
+orders 201908: 8881 orders -> 4308 modifier rows
+orders 201907: 7739 orders -> 4158 modifier rows
+orders 201906: 7913 orders -> 4106 modifier rows
+orders 201905: 7800 orders -> 4620 modifier rows
+orders 201904: 7911 orders -> 4379 modifier rows
+orders 201903: 7526 orders -> 4449 modifier rows
+orders 201902: 6600 orders -> 4152 modifier rows
+  ConnectionError from /orders/v2/ordersBulk?businessDate=20190128&pageSize=100&page=1, retrying in 30s
+orders 201901: 6738 orders -> 4388 modifier rows
+orders 201812: 8396 orders -> 5153 modifier rows
+  ReadTimeout from /orders/v2/ordersBulk?businessDate=20181125&pageSize=100&page=2, retrying in 30s
+orders 201811: 7726 orders -> 4626 modifier rows
+orders 201810: 8206 orders -> 4957 modifier rows
+orders 201809: 8621 orders -> 5125 modifier rows
+orders 201808: 10437 orders -> 5878 modifier rows
+orders 201807: 9870 orders -> 5682 modifier rows
+orders 201806: 9837 orders -> 5567 modifier rows
+orders 201805: 9889 orders -> 5524 modifier rows
+orders 201804: 9017 orders -> 5564 modifier rows
+orders 201803: 9051 orders -> 5403 modifier rows
+orders 201802: 7933 orders -> 5010 modifier rows
+orders 201801: 8392 orders -> 5290 modifier rows
+orders 201712: 9076 orders -> 5825 modifier rows
+orders 201711: 9002 orders -> 5147 modifier rows
+  HTTP 500 from /orders/v2/ordersBulk?businessDate=20171002&pageSize=100&page=1, retrying in 30s
+orders 201710: 9539 orders -> 5295 modifier rows
+orders 201709: 9438 orders -> 5458 modifier rows
