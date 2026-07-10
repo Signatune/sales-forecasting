@@ -370,8 +370,17 @@ def pull_history(raw_dir: Path = RAW_DIR) -> None:
         guid = client.create_menu_report(start, end, group_by=["MODIFIER"],
                                          time_range="week")
         rows = client.fetch_report(guid)
-        validate_modifier_rows(rows, source=f"week report {start}..{end}")
-        save_raw(raw_dir, f"menu_week_{start:%Y%m%d}_{end:%Y%m%d}", rows)
+        window = f"{start:%Y%m%d}_{end:%Y%m%d}"
+        try:
+            validate_modifier_rows(rows, source=f"week report {start}..{end}")
+        except UnexpectedShapeError:
+            # A response that fails validation is the evidence of what Toast
+            # changed. Keep it — under a name the next run will not mistake
+            # for a good capture, and normalize.py will not read as Sales.
+            path = save_raw(raw_dir, f"rejected_menu_week_{window}", rows)
+            print(f"saved the offending response to {path}")
+            raise
+        save_raw(raw_dir, f"menu_week_{window}", rows)
 
         expected = {
             d for d in sales_dates

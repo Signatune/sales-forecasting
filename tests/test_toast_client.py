@@ -139,6 +139,85 @@ class TestValidateDailyTotalsRows:
             validate_daily_totals_rows([broken], source="test")
 
 
+class TestRawSavedBeforeValidation:
+    """A week report that fails validation is the single most valuable
+    response to have on disk — it is the evidence of what Toast changed.
+    Save it before inspecting it, or a shape surprise destroys itself."""
+
+    def _fake_pull(self, monkeypatch, raw_dir, rows):
+        import toast_client
+
+        today = dt.datetime.now(toast_client.RESTAURANT_TZ).date()
+
+        class FakeClient:
+            def __init__(self, *a, **kw):
+                pass
+
+            def login(self):
+                pass
+
+            def restaurants_information(self):
+                return []
+
+            def create_menu_report(self, *a, **kw):
+                return "report-guid"
+
+            def fetch_report(self, guid):
+                return rows
+
+        monkeypatch.setattr(toast_client, "load_credentials", lambda: {
+            "baseUrl": "https://example.test", "clientId": "i",
+            "clientSecret": "s", "userAccessType": "T",
+        })
+        monkeypatch.setattr(toast_client, "ToastAnalyticsClient", FakeClient)
+        monkeypatch.setattr(
+            toast_client, "discover_sales_dates",
+            lambda client, raw_dir, today: {f"{today:%Y%m%d}"},
+        )
+        toast_client.pull_history(raw_dir)
+        return today
+
+    def test_unexpected_shape_still_leaves_the_raw_response_on_disk(
+        self, monkeypatch, tmp_path
+    ):
+        garbage = [{"modifierName": "plain bagel"}]  # no businessDate etc.
+        with pytest.raises(UnexpectedShapeError):
+            self._fake_pull(monkeypatch, tmp_path, garbage)
+
+        saved = list(tmp_path.glob("rejected_menu_week_*__*.json"))
+        assert len(saved) == 1, "the offending week report was not saved"
+        import json
+        assert json.loads(saved[0].read_text()) == garbage
+
+    def test_rejected_response_is_not_mistaken_for_a_good_capture(
+        self, monkeypatch, tmp_path
+    ):
+        """It must not satisfy is_window_captured, or the next run skips the
+        week forever; and normalize must not read it as Sales data."""
+        import toast_client
+        from normalize import latest_report_files
+
+        with pytest.raises(UnexpectedShapeError):
+            self._fake_pull(monkeypatch, tmp_path, [{"modifierName": "plain bagel"}])
+
+        today = dt.datetime.now(toast_client.RESTAURANT_TZ).date()
+        assert not is_window_captured(tmp_path, "menu_week", today, today)
+        assert latest_report_files(tmp_path, "menu_week") == []
+
+    def test_good_response_is_saved_too(self, monkeypatch, tmp_path):
+        import toast_client
+        today = dt.datetime.now(toast_client.RESTAURANT_TZ).date()
+        rows = [{
+            "restaurantGuid": "28e5b269-1c1c-45df-81a8-1d268c005dfa",
+            "businessDate": f"{today:%Y%m%d}",
+            "modifierGuid": "g",
+            "modifierName": "plain bagel",
+            "quantitySold": 5.0,
+        }]
+        self._fake_pull(monkeypatch, tmp_path, rows)
+        assert len(list(tmp_path.glob("menu_week_*__*.json"))) == 1
+
+
 class TestIsWindowCaptured:
     def test_settled_window_with_capture_after_end(self, tmp_path):
         (tmp_path / "menu_week_20260601_20260607__20260701T000000Z.json").write_text("[]")

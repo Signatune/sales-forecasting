@@ -10,6 +10,12 @@ Bagel Sales in Toast are recorded as modifiers only — there is no menu item
 per flavor. The three main flavors each have two modifiers (one used on
 sandwiches, one for bulk orders); a Product's daily Sales is the sum of its
 modifiers' quantities across both locations.
+
+Two facts about Toast modifiers shape everything below. Modifier names are
+edited in place, so one Product spans several spellings over the history
+(see BAGEL_MODIFIER_NAMES). And "modifier" covers both configured menu
+entities and free text a guest or server types on a check — only the former
+carry a modifierGuid, and only the former are Sales.
 """
 import datetime as dt
 import json
@@ -30,22 +36,39 @@ INCLUDED_RESTAURANTS = {
 }
 
 # Product -> the Toast modifier names whose quantities make up its Sales.
-# Names confirmed against live menu reports on 2026-07-09; matching is by
+# Confirmed against the full pulled history on 2026-07-10; matching is by
 # name (not GUID) because the same modifier name exists under multiple
 # GUIDs (e.g. two distinct "plain, bulk" modifiers).
+#
+# Toast modifier names are edited in place, so a Product's history spans
+# several spellings. Every historical name a Product ever had must stay
+# listed here: drop one and that Product's Sales series takes a phantom step
+# change on the day of the rename. Renames seen so far are marked below with
+# the window each name was live.
 BAGEL_MODIFIER_NAMES: Dict[str, tuple] = {
-    "plain": ("plain bagel", "plain, bulk"),
+    "plain": (
+        "plain bagel",
+        "plain, bulk",
+        "plain bagel [allergens: wheat]",  # 2025-02-06 only
+    ),
     "sesame": ("sesame bagel", "sesame, bulk"),
     "everything": ("everything bagel", "everything, bulk"),
     "cinnamon raisin": ("cinnamon raisin bagel (wednesdays only!)",),
-    "pumpernickel": ("pumpernickel bagel (thursdays only!)",),
+    "pumpernickel": (
+        "pumpernickel bagel (thursdays only!)",
+        "pumpernickel bagel - (thursdays only!)",  # ..2025-04-10
+    ),
     "gluten-free plain": (
         "gluten-free plain bagel (original sunshine, contains wheat, must be toasted)",
         "plain gluten-free",
+        "gluten free plain bagel (original sunshine, contains wheat, must be toasted)",  # ..2025-02-26
+        "gluten free plain bagel (must be toasted)",  # ..2024-05-30
     ),
     "gluten-free everything": (
         "gluten-free everything bagel (original sunshine, contains wheat, must be toasted)",
         "everything gluten-free",
+        "gluten free everything bagel (original sunshine, contains wheat, must be toasted)",  # ..2025-03-08
+        "gluten free everything bagel (must be toasted)",  # ..2024-05-16
     ),
 }
 
@@ -55,6 +78,19 @@ _MODIFIER_TO_PRODUCT = {
     for name in names
 }
 
+# Configured bagel modifiers deliberately left out of the Sales history.
+# Listed so they are a recorded decision rather than a warning on every run.
+EXCLUDED_MODIFIER_NAMES = frozenset({
+    # A June promo: ~440 units across 21 sales-days over three summers, under
+    # a fresh date-scoped name each run. Too sparse to forecast (ticket 01).
+    "rainbow bagel",
+    "rainbow bagel (june 8th & 9th)",
+    "rainbow bagel (only june 28th)",
+    "rainbow bagel (available 6/14-6/15)",
+    "rainbow bagel (available 6/14 & 6/15)",
+    "rainbow bagel (6/1-6/7 only)",
+})
+
 # Modifier names that look like a bagel flavor we don't map yet (a new
 # rotating flavor, a renamed modifier). Surfaced so drift is loud.
 _BAGELISH = re.compile(r"bagel|(, |^)bulk$|gluten-free$")
@@ -62,10 +98,23 @@ _BAGELISH = re.compile(r"bagel|(, |^)bulk$|gluten-free$")
 _REQUIRED_ROW_FIELDS = {
     "businessDate": str,
     "modifierName": str,
-    "modifierGuid": str,
     "quantitySold": (int, float),
     "restaurantGuid": str,
 }
+
+# Toast assigns a modifierGuid only to configured menu entities. Open text a
+# guest or server types on a check ("Light on the hazelnut please!") arrives
+# as a modifier row with no GUID at all from the Analytics API, and with this
+# sentinel from toast_orders.py. Absent is therefore fine; present-but-wrong-
+# type is still drift.
+_OPTIONAL_ROW_FIELDS = {"modifierGuid": str}
+_UNKNOWN_GUID = "unknown"
+
+
+def _is_configured_modifier(row: dict) -> bool:
+    """Whether the row is a menu entity rather than text someone typed. Only
+    configured modifiers can be Product Sales, or evidence of shape drift."""
+    return row.get("modifierGuid", _UNKNOWN_GUID) != _UNKNOWN_GUID
 
 
 class UnexpectedShapeError(RuntimeError):
@@ -90,6 +139,12 @@ def validate_modifier_rows(rows, source: str = "response") -> None:
                     f"{source}: row {i} field {field!r} has unexpected type "
                     f"{type(row[field]).__name__} (value {row[field]!r})"
                 )
+        for field, types in _OPTIONAL_ROW_FIELDS.items():
+            if field in row and not isinstance(row[field], types):
+                raise UnexpectedShapeError(
+                    f"{source}: row {i} field {field!r} has unexpected type "
+                    f"{type(row[field]).__name__} (value {row[field]!r})"
+                )
         if not re.fullmatch(r"\d{8}", row["businessDate"]):
             raise UnexpectedShapeError(
                 f"{source}: row {i} businessDate {row['businessDate']!r} "
@@ -105,6 +160,8 @@ def normalize_sales(rows: List[dict]) -> pd.DataFrame:
     records = {}
     for row in rows:
         if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
+            continue
+        if not _is_configured_modifier(row):
             continue
         product = _MODIFIER_TO_PRODUCT.get(row["modifierName"].strip().lower())
         if product is None:
@@ -130,8 +187,12 @@ def find_unmapped_bagelish(rows: List[dict]) -> Dict[str, float]:
     for row in rows:
         if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
             continue
+        if not _is_configured_modifier(row):
+            continue
         name = row["modifierName"].strip().lower()
-        if name in _MODIFIER_TO_PRODUCT or not _BAGELISH.search(name):
+        if name in _MODIFIER_TO_PRODUCT or name in EXCLUDED_MODIFIER_NAMES:
+            continue
+        if not _BAGELISH.search(name):
             continue
         unmapped[name] = unmapped.get(name, 0.0) + float(row["quantitySold"])
     return unmapped

@@ -1,0 +1,19 @@
+[
+  {
+    "restaurantGuid": "9ae70079-b9cd-4b92-8457-c86bc823188f",
+    "restaurantName": "Mamaleh's Delicatessen ",
+    "restaurantLocationName": "Brookline",
+    "restaurantLocationCode": "",
+    "businessDate": "20260425",
+    "netSalesAmount": 0.0,
+    "grossSalesAmount": 0.0,
+    "discountAmount": 0.0,
+    "refundAmount": 0.0,
+    "voidAmount": 0.0,
+    "quantitySold": 0.0,
+    "averagePrice": 0.0,
+    "wasteCount": 0.0,
+    "wasteAmount": 0.0,
+    "modifierName": "Light on the hazelnut please! "
+  }
+]

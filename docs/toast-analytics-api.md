@@ -70,6 +70,22 @@ Modifier-grouped rows (the ones bagel Sales live in):
   usually `0.0` because most modifiers are free-of-charge line items.
 - **The same `modifierName` can exist under multiple GUIDs** (we see two
   distinct `"plain, bulk"` modifiers). Aggregate by name, not GUID.
+- **`modifierGuid` is absent on open-text modifiers.** Toast treats free text
+  a guest or server types on a check (`"Light on the hazelnut please! "`,
+  `"dana"`, `"cut in half"`) as a modifier row like any other, but assigns a
+  GUID only to configured menu entities. Presence of `modifierGuid` is the
+  only reliable way to tell a real menu modifier from typed text — the names
+  are not distinguishable (guests type `"everything bagel"` verbatim). Over
+  our history, ~11k distinct open-text names appear. `toast_orders.py`
+  reproduces this from the Orders API, where such modifiers have no `item`,
+  as the sentinel `modifierGuid: "unknown"`.
+- **`modifierName` is edited in place, and the history is not rewritten.** A
+  renamed modifier keeps its GUID but every past row shows the old name, so
+  one Product's Sales span several spellings. Seen so far: `"gluten free …"`
+  → `"gluten-free …"` (Feb–Mar 2025) and `"pumpernickel bagel - (thursdays
+  only!)"` → `"pumpernickel bagel (thursdays only!)"` (Apr 2025). Both
+  spellings are live for days-to-weeks around a cutover. Match on the union
+  of a Product's historical names, never on the current one alone.
 
 `GET /era/v1/restaurants-information` lists the management group:
 `restaurantGuid`, `restaurantName`, `active`, `testMode`, `archived`.

@@ -5,6 +5,9 @@ Fixtures are unmodified API captures:
   week report (20260703-20260709, groupBy=MODIFIER), captured 2026-07-09.
 - restaurants_information_sample.json: GET /era/v1/restaurants-information,
   captured 2026-07-09.
+- menu_week_freetext_modifier_row.json: the one row of the 20260425-20260501
+  week report (captured 2026-07-10) that carries no modifierGuid — an
+  open-text modifier typed by a server rather than a configured menu entity.
 """
 import copy
 import json
@@ -15,6 +18,7 @@ import pytest
 
 from normalize import (
     BAGEL_MODIFIER_NAMES,
+    EXCLUDED_MODIFIER_NAMES,
     INCLUDED_RESTAURANTS,
     UnexpectedShapeError,
     find_unmapped_bagelish,
@@ -35,6 +39,11 @@ def week_rows():
 @pytest.fixture()
 def restaurants():
     return json.loads((FIXTURES / "restaurants_information_sample.json").read_text())
+
+
+@pytest.fixture()
+def freetext_rows():
+    return json.loads((FIXTURES / "menu_week_freetext_modifier_row.json").read_text())
 
 
 class TestGoldenNormalization:
@@ -129,6 +138,48 @@ class TestShapeValidation:
             validate_modifier_rows(broken)
 
 
+class TestFreeTextModifiers:
+    """Open-text modifiers a server types on a check ("Light on the hazelnut
+    please!") carry no modifierGuid — Toast only assigns GUIDs to configured
+    menu entities. They must not stop a pull: normalization matches on
+    modifierName and never reads the GUID."""
+
+    def test_row_without_modifier_guid_is_valid(self, freetext_rows):
+        assert "modifierGuid" not in freetext_rows[0]
+        validate_modifier_rows(freetext_rows)
+
+    def test_modifier_guid_still_type_checked_when_present(self, week_rows):
+        broken = copy.deepcopy(week_rows)
+        broken[0]["modifierGuid"] = 12345
+        with pytest.raises(UnexpectedShapeError, match="modifierGuid"):
+            validate_modifier_rows(broken)
+
+    def test_free_text_modifier_is_not_a_bagel_product(self, week_rows, freetext_rows):
+        rows = copy.deepcopy(week_rows) + freetext_rows
+        assert normalize_sales(rows).equals(normalize_sales(week_rows))
+
+    def test_free_text_modifier_is_not_flagged_as_unmapped_bagelish(
+        self, freetext_rows
+    ):
+        assert find_unmapped_bagelish(freetext_rows) == {}
+
+    def test_typing_a_product_name_as_free_text_is_not_a_sale(self, week_rows):
+        """A guest note that happens to read "everything bagel" is not Toast
+        selling an everything bagel. Only configured menu modifiers are Sales."""
+        rows = copy.deepcopy(week_rows)
+        for guid in (None, "unknown"):  # Analytics omits it; toast_orders.py sentinel
+            note = copy.deepcopy(rows[0])
+            note["modifierName"] = "everything bagel"
+            note["quantitySold"] = 500.0
+            if guid is None:
+                del note["modifierGuid"]
+            else:
+                note["modifierGuid"] = guid
+            rows.append(note)
+
+        assert normalize_sales(rows).equals(normalize_sales(week_rows))
+
+
 class TestUnmappedBagelish:
     def test_real_sample_has_no_unmapped_bagel_modifiers(self, week_rows):
         assert find_unmapped_bagelish(week_rows) == {}
@@ -140,6 +191,102 @@ class TestUnmappedBagelish:
         novel["quantitySold"] = 7.0
         rows.append(novel)
         assert find_unmapped_bagelish(rows) == {"asiago bagel (fridays only!)": 7.0}
+
+    def test_free_text_is_not_drift(self, week_rows):
+        """Guests and servers type bagel-shaped sentences into open-text
+        modifiers ("please slice all bagels."). Toast gives those no
+        modifierGuid; toast_orders.py records them as 'unknown'. Neither is a
+        configured menu entity, so neither is Toast changing its shape."""
+        rows = copy.deepcopy(week_rows)
+        analytics_freetext = copy.deepcopy(rows[0])
+        analytics_freetext["modifierName"] = "please slice all bagels."
+        del analytics_freetext["modifierGuid"]
+        orders_freetext = copy.deepcopy(rows[0])
+        orders_freetext["modifierName"] = "fresh bagels please"
+        orders_freetext["modifierGuid"] = "unknown"
+        rows += [analytics_freetext, orders_freetext]
+
+        assert find_unmapped_bagelish(rows) == {}
+
+    def test_deliberately_excluded_modifiers_are_not_drift(self, week_rows):
+        """Rainbow bagel is a configured Product we chose not to forecast
+        (ticket 01). It must not nag on every run as if it were new."""
+        rows = copy.deepcopy(week_rows)
+        rainbow = copy.deepcopy(rows[0])
+        rainbow["modifierName"] = "Rainbow Bagel (6/1-6/7 only)"
+        rainbow["quantitySold"] = 145.0
+        rows.append(rainbow)
+        assert find_unmapped_bagelish(rows) == {}
+
+
+class TestHistoricalModifierNames:
+    """Toast modifier names were edited in place over the pulled history.
+    Each rename must fold into the Product it always was, or the Sales series
+    shows a phantom step change on the day of the rename."""
+
+    def _row(self, week_rows, name, date, qty):
+        row = copy.deepcopy(week_rows[0])
+        row["restaurantGuid"] = next(iter(INCLUDED_RESTAURANTS))
+        row["modifierName"] = name
+        row["businessDate"] = date
+        row["quantitySold"] = qty
+        return row
+
+    @pytest.mark.parametrize(
+        "old_name,current_name,product",
+        [
+            (
+                "gluten free everything bagel (original sunshine, contains wheat, must be toasted)",
+                "gluten-free everything bagel (original sunshine, contains wheat, must be toasted)",
+                "gluten-free everything",
+            ),
+            (
+                "gluten free plain bagel (original sunshine, contains wheat, must be toasted)",
+                "gluten-free plain bagel (original sunshine, contains wheat, must be toasted)",
+                "gluten-free plain",
+            ),
+            (
+                "gluten free everything bagel (must be toasted)",
+                "gluten-free everything bagel (original sunshine, contains wheat, must be toasted)",
+                "gluten-free everything",
+            ),
+            (
+                "gluten free plain bagel (must be toasted)",
+                "gluten-free plain bagel (original sunshine, contains wheat, must be toasted)",
+                "gluten-free plain",
+            ),
+            (
+                "pumpernickel bagel - (thursdays only!)",
+                "pumpernickel bagel (thursdays only!)",
+                "pumpernickel",
+            ),
+            ("plain bagel [allergens: wheat]", "plain bagel", "plain"),
+        ],
+    )
+    def test_old_and_current_names_are_the_same_product(
+        self, week_rows, old_name, current_name, product
+    ):
+        rows = [
+            self._row(week_rows, old_name, "20240601", 10.0),
+            self._row(week_rows, current_name, "20260601", 4.0),
+        ]
+        df = normalize_sales(rows)
+        assert set(df["product"]) == {product}
+        assert df["quantity"].tolist() == [10.0, 4.0]
+
+    def test_rename_on_the_same_day_sums_into_one_record(self, week_rows):
+        """Both spellings were live during the 2025-02/03 cutover."""
+        rows = [
+            self._row(week_rows, "gluten free plain bagel (original sunshine, contains wheat, must be toasted)", "20250227", 3.0),
+            self._row(week_rows, "gluten-free plain bagel (original sunshine, contains wheat, must be toasted)", "20250227", 5.0),
+        ]
+        df = normalize_sales(rows)
+        assert len(df) == 1
+        assert df["quantity"].iloc[0] == 8.0
+
+    def test_rainbow_bagel_is_not_a_product(self, week_rows):
+        rows = [self._row(week_rows, "rainbow bagel (6/1-6/7 only)", "20260601", 145.0)]
+        assert normalize_sales(rows).empty
 
 
 class TestMergedSources:
