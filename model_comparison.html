@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poolish Bake — Model Comparison</title>
+<style>
+  :root {
+    --paper:   #FBFAF6;
+    --raised:  #FFFFFF;
+    --ink:     #211D17;
+    --muted:   #7A7264;
+    --faint:   #9A9284;
+    --line:    #E7E1D6;
+    --line-2:  #F0ECE3;
+    --accent:  #BE7C1E;   /* honey — the winning model */
+    --accent-soft: #F6EAD2;
+    --good:    #3F7D4E;
+    --poor:    #B5462F;
+    --bar-track: #EFE9DE;
+    --shadow: 0 1px 2px rgba(33,29,23,.05), 0 8px 24px -12px rgba(33,29,23,.18);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:   #16140F;
+      --raised:  #201D16;
+      --ink:     #F2ECE0;
+      --muted:   #A79E8E;
+      --faint:   #7C7364;
+      --line:    #322D24;
+      --line-2:  #29251D;
+      --accent:  #E0A54A;
+      --accent-soft: #3A2E17;
+      --good:    #6FB57F;
+      --poor:    #E07A5F;
+      --bar-track: #2A251D;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#FBFAF6; --raised:#FFFFFF; --ink:#211D17; --muted:#7A7264; --faint:#9A9284;
+    --line:#E7E1D6; --line-2:#F0ECE3; --accent:#BE7C1E; --accent-soft:#F6EAD2;
+    --good:#3F7D4E; --poor:#B5462F; --bar-track:#EFE9DE;
+    --shadow:0 1px 2px rgba(33,29,23,.05), 0 8px 24px -12px rgba(33,29,23,.18);
+  }
+  :root[data-theme="dark"] {
+    --paper:#16140F; --raised:#201D16; --ink:#F2ECE0; --muted:#A79E8E; --faint:#7C7364;
+    --line:#322D24; --line-2:#29251D; --accent:#E0A54A; --accent-soft:#3A2E17;
+    --good:#6FB57F; --poor:#E07A5F; --bar-track:#2A251D;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.1rem, 4vw, 2rem) 4rem;
+  }
+
+  /* ---- Header ---- */
+  header { border-bottom: 1px solid var(--line); padding-bottom: 1.6rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .7rem;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+    line-height: 1.08;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 .6rem;
+  }
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 1.02rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 1.4rem;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .45rem;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: .34rem .8rem;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+  .chip b {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: -.01em;
+  }
+
+  section { margin-top: 2.8rem; }
+  .kicker {
+    font-family: var(--mono);
+    font-size: .74rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 1rem;
+  }
+
+  /* ---- Winner callout ---- */
+  .winner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.4rem;
+    align-items: center;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 14px;
+    padding: 1.5rem 1.7rem;
+    box-shadow: var(--shadow);
+  }
+  .winner .score {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.4rem, 7vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -.02em;
+  }
+  .winner .score small {
+    display: block;
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: .5rem;
+    font-weight: 500;
+  }
+  .winner .who h3 {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 0 0 .3rem;
+  }
+  .winner .who p {
+    margin: 0;
+    color: var(--muted);
+    font-size: .93rem;
+    max-width: 54ch;
+  }
+
+  /* ---- Bar chart ---- */
+  .chart {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.5rem 1.6rem 1.2rem;
+    box-shadow: var(--shadow);
+  }
+  .bars { display: flex; flex-direction: column; gap: .95rem; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 12.5rem 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+  .bar-label {
+    font-size: .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    min-width: 0;
+  }
+  .bar-label .name { font-weight: 600; }
+  .bar-label .tag {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .bar-track {
+    position: relative;
+    background: var(--bar-track);
+    border-radius: 6px;
+    height: 30px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: .6rem;
+    color: #fff;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: .82rem;
+    font-weight: 600;
+    min-width: 3ch;
+    transition: none;
+  }
+  .bar-fill.best {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 70%, transparent), var(--accent));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, black 20%);
+  }
+  .bar-fill.worst {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--poor) 55%, transparent), var(--poor));
+  }
+  .chart-axis {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0 0 13.5rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--faint);
+    border-top: 1px solid var(--line-2);
+    padding-top: .5rem;
+  }
+  .chart-note {
+    margin: .9rem 0 0;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  /* ---- Table ---- */
+  .table-scroll { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; background: var(--raised); font-size: .92rem; min-width: 560px; }
+  thead th {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 600;
+    padding: .95rem 1rem;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  thead th:first-child, tbody td:first-child { text-align: left; }
+  thead th.model-col { text-align: left; }
+  tbody td {
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--line-2);
+    text-align: right;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td.model-col {
+    text-align: left;
+    font-family: var(--sans);
+  }
+  .rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem; height: 1.5rem;
+    border-radius: 50%;
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 600;
+    background: var(--line-2);
+    color: var(--muted);
+    margin-right: .7rem;
+  }
+  tr.is-best .rank { background: var(--accent); color: #fff; }
+  .model-col .name { font-weight: 600; }
+  .model-col .desc { color: var(--faint); font-size: .78rem; display: block; margin-top: .1rem; }
+  tr.is-best td { background: color-mix(in srgb, var(--accent-soft) 60%, transparent); }
+  .pill {
+    display: inline-block;
+    font-size: .72rem;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+  .pill.best { background: var(--accent-soft); color: var(--accent); }
+  .delta-pos { color: var(--poor); }
+  .primary { color: var(--ink); font-weight: 600; }
+
+  /* ---- Methodology ---- */
+  .method {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.1rem;
+  }
+  .method .card {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+  }
+  .method h4 {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    margin: 0 0 .4rem;
+  }
+  .method p { margin: 0; color: var(--muted); font-size: .88rem; }
+  .method .card .k {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: .5rem;
+  }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    color: var(--faint);
+    font-size: .8rem;
+    font-family: var(--mono);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.2rem;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 620px) {
+    .bar-row { grid-template-columns: 1fr; gap: .4rem; }
+    .chart-axis { margin-left: 0; }
+    .winner { grid-template-columns: 1fr; text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Rolling-origin evaluation · Poolish total</p>
+    <h1>Which model decides the Poolish bake?</h1>
+    <p class="lede">
+      Six candidates replayed over the last 26 weeks, each forecasting the summed
+      Wheat Dough Demand three days ahead from only prior Sales, then buffered to a
+      95% Service Level and ranked on pinball loss — the metric that penalises a
+      Stockout 19&times; harder than a leftover.
+    </p>
+    <div class="chips">
+      <span class="chip">Eval window <b>2026-01-09 → 2026-07-09</b></span>
+      <span class="chip">Open days scored <b>178</b></span>
+      <span class="chip">Poolish lead <b>3&nbsp;days</b></span>
+      <span class="chip">Service Level <b>95%</b></span>
+      <span class="chip">Warmup <b>26&nbsp;wk prior</b></span>
+    </div>
+  </header>
+
+  <section>
+    <p class="kicker">Current leader</p>
+    <div class="winner">
+      <div class="score">11.65<small>pinball@95</small></div>
+      <div class="who">
+        <h3>Holt-Winters / ETS</h3>
+        <p>
+          The weekly-seasonal additive ETS wins by a slim 3.5% over EWMA and cuts
+          the incumbent seasonal-naive by 8.0%. It reads the ~8%/yr downtrend and
+          the weekly cycle at once — but it's the only candidate that needs the
+          <code>experiment</code> statsmodels extra to run.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Pinball@95 by candidate · lower is better</p>
+    <div class="chart">
+      <div class="bars">
+        <!-- widths are pinball / 22 (zero-based axis) -->
+        <div class="bar-row">
+          <div class="bar-label"><span class="name">Holt-Winters / ETS</span><span class="tag">ets · experiment</span></div>
+          <div class="bar-track"><div class="bar-fill best" style="width:53.0%">11.65</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="name">EWMA seasonal-naive</span><span class="tag">ewma</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:54.8%">12.06</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="name">Trailing-window (8&nbsp;wk)</span><span class="tag">trailing_window</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:55.3%">12.16</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="name">Seasonal + trend</span><span class="tag">seasonal_trend</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:57.4%">12.62</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="name">Seasonal-naive</span><span class="tag">seasonal_naive · incumbent</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:57.6%">12.67</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="name">Moving average</span><span class="tag">moving_average · pilot</span></div>
+          <div class="bar-track"><div class="bar-fill worst" style="width:96.3%">21.19</div></div>
+        </div>
+      </div>
+      <div class="chart-axis"><span>0</span><span>11</span><span>22</span></div>
+      <p class="chart-note">
+        The top five cluster within ~1 point; the choice between them is close. The
+        pilot's moving-average baseline is the clear outlier — it over-smooths across
+        weekdays, so its P95 has to carry a large buffer.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Full ranking</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="model-col">Model</th>
+            <th>Pinball@95</th>
+            <th>Δ vs best</th>
+            <th>MAPE</th>
+            <th>Days</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="is-best">
+            <td class="model-col"><span class="rank">1</span><span class="name">Holt-Winters / ETS</span> <span class="pill best">winner</span><span class="desc">Weekly-seasonal additive ETS · needs statsmodels</span></td>
+            <td class="primary">11.65</td>
+            <td>—</td>
+            <td>19.1%</td>
+            <td>178</td>
+          </tr>
+          <tr>
+            <td class="model-col"><span class="rank">2</span><span class="name">EWMA seasonal-naive</span><span class="desc">Same-weekday mean, 3-wk half-life decay</span></td>
+            <td class="primary">12.06</td>
+            <td class="delta-pos">+0.41 · +3.5%</td>
+            <td>20.4%</td>
+            <td>178</td>
+          </tr>
+          <tr>
+            <td class="model-col"><span class="rank">3</span><span class="name">Trailing-window</span><span class="desc">Same-weekday mean over last 8 weeks</span></td>
+            <td class="primary">12.16</td>
+            <td class="delta-pos">+0.51 · +4.4%</td>
+            <td>21.6%</td>
+            <td>178</td>
+          </tr>
+          <tr>
+            <td class="model-col"><span class="rank">4</span><span class="name">Seasonal + trend</span><span class="desc">Same-weekday level plus fitted linear drift</span></td>
+            <td class="primary">12.62</td>
+            <td class="delta-pos">+0.97 · +8.3%</td>
+            <td>20.1%</td>
+            <td>178</td>
+          </tr>
+          <tr>
+            <td class="model-col"><span class="rank">5</span><span class="name">Seasonal-naive</span><span class="desc">Equal-weight same-weekday mean · incumbent</span></td>
+            <td class="primary">12.67</td>
+            <td class="delta-pos">+1.01 · +8.7%</td>
+            <td>22.7%</td>
+            <td>178</td>
+          </tr>
+          <tr>
+            <td class="model-col"><span class="rank">6</span><span class="name">Moving average</span><span class="desc">Trailing daily mean · pilot baseline</span></td>
+            <td class="primary">21.19</td>
+            <td class="delta-pos">+9.53 · +81.8%</td>
+            <td>48.3%</td>
+            <td>178</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">How these scores are kept honest</p>
+    <div class="method">
+      <div class="card">
+        <span class="k">Leak-free</span>
+        <h4>Forecast from the past only</h4>
+        <p>Every scored day is forecast from a 3-day-back origin via <code>history_before</code>, so no model ever sees the day it's judged on.</p>
+      </div>
+      <div class="card">
+        <span class="k">Same buffer</span>
+        <h4>Every point forecast → P95 identically</h4>
+        <p>Each candidate emits a point forecast; the evaluator applies the one uniform relative-residual buffer, so pinball measures forecast quality, not interval machinery.</p>
+      </div>
+      <div class="card">
+        <span class="k">Separate window</span>
+        <h4>The buffer never sees its test days</h4>
+        <p>Buffer residuals come from the 26 weeks strictly before the evaluation window — no scored day feeds its own P95.</p>
+      </div>
+      <div class="card">
+        <span class="k">Asymmetric</span>
+        <h4>Pinball@95, not MAPE</h4>
+        <p>An under-forecast costs 19&times; an equal over-forecast — the Stockout-averse asymmetry a symmetric metric can't see. MAPE is a sanity column only.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Generated 2026-07-10 · <code>model_comparison.py</code></span>
+    <span>Sales history 2024-03-01 → 2026-07-09 · products: everything, plain, sesame</span>
+  </footer>
+
+</div>
+
+<script>
+  // Honor the viewer's stored theme toggle if the host stamps data-theme; no-op otherwise.
+  (function () {
+    try {
+      var t = document.documentElement.getAttribute('data-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</body>
+</html>
