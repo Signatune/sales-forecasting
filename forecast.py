@@ -87,18 +87,24 @@ def _validate_sales(sales: pd.DataFrame) -> None:
         )
 
 
-def _history_before(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
+def history_before(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
     """Sales strictly before as_of. Sales on as_of itself are excluded: the day
     is not over, so its total would understate the weekday.
 
     Product scope is not applied here — callers select the Products they emit,
     so filtering here too would be a second, silent gate on the same decision.
+
+    Public because backtest.py's baseline model must cut its history at exactly
+    the same place this one does, or the two are not comparable.
     """
     _validate_sales(sales)
     return sales[sales["date"] < pd.Timestamp(as_of)]
 
 
-def _target_dates(as_of: dt.date) -> List[pd.Timestamp]:
+def target_dates(as_of: dt.date) -> List[pd.Timestamp]:
+    """The dates a forecast made on as_of covers. Public for the same reason as
+    history_before: the backtest's baseline and its replay both key off the
+    horizon, and a second definition of it would be free to drift."""
     first, last = HORIZON_DAYS
     return [pd.Timestamp(as_of) + pd.Timedelta(days=n) for n in range(first, last + 1)]
 
@@ -121,10 +127,10 @@ def forecast_demand(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
     no evidence to average, and a fabricated zero would flow into the family
     Sales Forecast as if it were one. sparse_weekday_counts() surfaces the gaps.
     """
-    weekday_means = _by_product_weekday(_history_before(sales, as_of)).mean()
+    weekday_means = _by_product_weekday(history_before(sales, as_of)).mean()
 
     records = []
-    for target in _target_dates(as_of):
+    for target in target_dates(as_of):
         for product in FORECAST_PRODUCTS:
             mean = weekday_means.get((product, target.dayofweek))
             if mean is None:
@@ -160,10 +166,10 @@ def sparse_weekday_counts(
     """(Product, weekday, count) for every forecast Product whose same-weekday
     history is thinner than min_observations — including the zero-observation
     case, where forecast_demand() emits no row at all."""
-    observed = _by_product_weekday(_history_before(sales, as_of)).size()
+    observed = _by_product_weekday(history_before(sales, as_of)).size()
 
     sparse = []
-    for target in _target_dates(as_of):
+    for target in target_dates(as_of):
         for product in FORECAST_PRODUCTS:
             count = int(observed.get((product, target.dayofweek), 0))
             if count < min_observations:

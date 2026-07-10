@@ -56,10 +56,17 @@ Toast Analytics API
   → backtest.py compares vs. held-out actuals
 ```
 
-The family-level Sales Forecast is persisted rather than left in memory: ticket
-03's backtest consumes it, and `CONTEXT.md` treats it as a concept distinct from
-the per-Product Demand Forecast. It covers only the Products in
-`forecast.FORECAST_PRODUCTS` — see ticket 02's Comments.
+The family-level Sales Forecast is persisted rather than left in memory because
+`CONTEXT.md` treats it as a concept distinct from the per-Product Demand
+Forecast, and it is the number a human actually orders against. It covers only
+the Products in `forecast.FORECAST_PRODUCTS` — see ticket 02's Comments.
+
+It is *not* what `backtest.py` reads, though an earlier draft of this PRD said
+so. `data/sales_forecast.parquet` holds the forecast for the next 2..7 days —
+future dates, with no actuals to score against. The backtest instead replays
+`forecast.forecast_demand` from a series of past origins and rolls the results
+up itself, which is the only way to get a leak-free forecast of a day whose
+actuals we already hold.
 
 ## Testing
 
