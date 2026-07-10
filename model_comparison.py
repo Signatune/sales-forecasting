@@ -127,6 +127,164 @@ def p95_buffer(
     return point_forecast * (1 + q)
 
 
+# --- Holt-Winters / ETS candidate (opt-in; needs the statsmodels extra) ----
+
+# A weekly-seasonal ETS needs at least two full 7-day cycles to estimate a
+# seasonal component; a variety with less history than this falls back to a
+# same-weekday mean rather than failing to fit.
+_ETS_MIN_OBSERVATIONS = 2 * 7
+
+
+def _same_weekday_means(recorded: pd.Series) -> pd.Series:
+    """Mean quantity by weekday (0=Mon .. 6=Sun) of a date-indexed Sales
+    series — the same-weekday mean the incumbent forecasts on, reused here both
+    to fill regularization gaps and as the ETS fallback."""
+    return recorded.groupby(recorded.index.dayofweek).mean()
+
+
+def _regular_daily_series(history: pd.DataFrame, product: str):
+    """One variety's Sales as a gap-free daily series, or None if it never sold.
+
+    normalize.py emits no row for a day a variety didn't sell, so a variety's
+    recorded history is irregular — but ExponentialSmoothing with
+    seasonal_periods=7 needs a regular daily index. We reindex to the continuous
+    daily range the recorded days span (all strictly before as_of, because
+    `history` is already history_before, so this never crosses the cutoff) and
+    fill each inserted gap with that variety's mean Sales on the *same weekday*.
+    That preserves the weekly cycle the seasonal component is about to estimate
+    rather than puncturing it with a holiday zero; a weekday never observed at
+    all backs off to the series mean.
+    """
+    recorded = (
+        history.loc[history["product"] == product]
+        .groupby("date")["quantity"]
+        .sum()
+        .sort_index()
+    )
+    if recorded.empty:
+        return None
+
+    full = pd.date_range(recorded.index.min(), recorded.index.max(), freq="D")
+    series = recorded.reindex(full)
+
+    weekday_means = _same_weekday_means(recorded)
+    gap_index = series.index[series.isna()]
+    if len(gap_index):
+        series.loc[gap_index] = gap_index.dayofweek.map(weekday_means)
+    return series.fillna(recorded.mean())
+
+
+def _ets_points(series: pd.Series, targets: List[pd.Timestamp], smoother) -> Dict:
+    """Fit a weekly-seasonal additive ETS on the regular series and read off each
+    target date's point forecast.
+
+    Additive trend and additive seasonal (not multiplicative) so both a
+    zero-Sales holiday and the ~8%/yr downtrend are safe — multiplicative terms
+    choke on non-positive values. Forecasts far enough to reach the furthest
+    target, then maps forecast dates (series_end + 1, +2, ...) onto the targets.
+    """
+    series_end = series.index.max()
+    steps = max((max(targets) - series_end).days, 1)
+
+    fitted = smoother(
+        series.to_numpy(dtype=float),
+        trend="add",
+        seasonal="add",
+        seasonal_periods=7,
+        initialization_method="estimated",
+    ).fit()
+    forecasts = fitted.forecast(steps)
+    by_date = {
+        series_end + pd.Timedelta(days=i + 1): value
+        for i, value in enumerate(forecasts)
+    }
+    return {target: by_date.get(target) for target in targets}
+
+
+def ets_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
+    """A per-variety Holt-Winters / ETS Demand Forecast — one point per target
+    date — the classic seasonal reference model.
+
+    Conforms to the same (sales, as_of) -> [product, date, forecast_quantity]
+    seam as forecast.forecast_demand, so compare_models scores it with no
+    special casing. statsmodels is imported *lazily* here so importing this
+    module never requires it: ETS is opt-in via candidates_with_ets() and lives
+    in the `experiment` extra, not the test-required deps.
+
+    Emits a POINT forecast only — never its native prediction interval. Every
+    candidate is buffered to its P95 the same way, through p95_buffer, so pinball
+    measures forecast quality and not interval machinery (ADR 0002).
+
+    Robustness: a variety with fewer than two weekly cycles of history, or one
+    whose fit fails to converge, falls back to a same-weekday mean rather than
+    raising; a variety with no history at all yields no row (as the incumbent
+    does) and simply drops out of that day's wheat total. Negative point
+    forecasts (a steep additive downtrend extrapolated out) are floored at zero.
+    """
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+    history = forecast.history_before(sales, as_of)
+    targets = forecast.target_dates(as_of)
+
+    records = []
+    for product in forecast.FORECAST_PRODUCTS:
+        series = _regular_daily_series(history, product)
+        if series is None:
+            continue
+
+        points = None
+        if len(series) >= _ETS_MIN_OBSERVATIONS:
+            try:
+                points = _ets_points(series, targets, ExponentialSmoothing)
+            except Exception:
+                points = None
+        if points is None:
+            weekday_means = _same_weekday_means(series)
+            points = {t: weekday_means.get(t.dayofweek) for t in targets}
+
+        for target in targets:
+            value = points.get(target)
+            if value is None or pd.isna(value):
+                continue
+            records.append(
+                {
+                    "product": product,
+                    "date": target,
+                    "forecast_quantity": max(float(value), 0.0),
+                }
+            )
+
+    result = pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
+    result["date"] = pd.to_datetime(result["date"])
+    result["forecast_quantity"] = result["forecast_quantity"].astype(float)
+    return result.sort_values(["date", "product"], ignore_index=True)
+
+
+def statsmodels_available() -> bool:
+    """True when statsmodels (the `experiment` extra) can be imported. The ETS
+    candidate is registered only when this holds, so a dev-only install can
+    still import this module and run compare_models on the default candidates."""
+    import importlib.util
+
+    return importlib.util.find_spec("statsmodels") is not None
+
+
+def candidates_with_ets() -> Dict[str, Model]:
+    """The opt-in registry the notebook evaluates: POOLISH_CANDIDATES plus the
+    ETS candidate — but only when statsmodels is installed.
+
+    ETS is kept OUT of the default POOLISH_CANDIDATES on purpose. compare_models
+    defaults to POOLISH_CANDIDATES, so importing this module and running the
+    default comparison never touches statsmodels; the test suite passes on a
+    dev-only install. A machine with the `experiment` extra gets ETS ranked
+    alongside the others by evaluating this registry instead. On a dev-only
+    install this returns the defaults unchanged, so nothing calls statsmodels.
+    """
+    if statsmodels_available():
+        return {**POOLISH_CANDIDATES, "ets": ets_forecast}
+    return dict(POOLISH_CANDIDATES)
+
+
 # --- Rolling-origin evaluator on the Poolish total -------------------------
 
 
