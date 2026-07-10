@@ -19,10 +19,11 @@ A later origin does see the earlier holdout days, which is not a leak: by then
 they have happened. What must never happen is a forecast seeing its own target
 date, and forecast.history_before is what guarantees that.
 
-**A zero actual has no MAPE.** The metric divides by the actual, and
-`gluten-free plain` records no Sales on 41 of 854 open days. Those rows are
-carried in the comparison frame (the notebook charts them) but excluded from
-the mean, and counted in `unscored_days` so the exclusion is visible.
+**A zero actual has no MAPE.** The metric divides by the actual, and even a
+Product that sells nearly every open day records the occasional zero-Sales day.
+Those rows are carried in the comparison frame (the notebook charts them) but
+excluded from the mean, and counted in `unscored_days` so the exclusion is
+visible.
 
 **Both models are scored on identical rows.** forecast_demand emits no row for
 a Product on a weekday it never sold; the baseline, blind to weekday, always

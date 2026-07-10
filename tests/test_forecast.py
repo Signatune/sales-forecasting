@@ -151,6 +151,28 @@ class TestProductScope:
         assert products == {"plain"}
         assert {"cinnamon raisin", "pumpernickel"} <= set(SKIPPED_PRODUCTS)
 
+    def test_forecast_scope_is_the_three_baked_varieties(self):
+        assert set(FORECAST_PRODUCTS) == {"everything", "plain", "sesame"}
+
+    def test_gluten_free_varieties_are_skipped_not_forecast(self):
+        """Bought in frozen, never baked — a recorded decision, not a warning on
+        every run. Their Sales stay in the history (see normalize.py)."""
+        for variety in ("gluten-free everything", "gluten-free plain"):
+            assert variety in SKIPPED_PRODUCTS
+            assert variety not in FORECAST_PRODUCTS
+
+    def test_gluten_free_sales_are_not_forecast_but_are_a_known_decision(self):
+        history = sales([
+            ("plain", "2026-07-05", 10.0),
+            ("gluten-free plain", "2026-07-05", 5.0),
+            ("gluten-free everything", "2026-07-05", 3.0),
+        ])
+
+        products = set(forecast_demand(history, AS_OF)["product"])
+
+        assert products == {"plain"}  # gluten-free left the forecast scope
+        assert unexpected_products(history) == []  # but not as an unexpected variety
+
     def test_skipped_and_forecast_products_do_not_overlap(self):
         assert not set(FORECAST_PRODUCTS) & set(SKIPPED_PRODUCTS)
 

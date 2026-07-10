@@ -21,9 +21,10 @@ day. normalize.py emits no row for a Product that sold nothing, so an absent day
 is real information — but counting it as a zero and skipping it give different
 answers, and this module skips. That is only sound for the Products in
 FORECAST_PRODUCTS, each of which sells nearly every open day; it would badly
-overstate a day-restricted variety, which is why the two we have are skipped
-(see SKIPPED_PRODUCTS). It also means the days both locations were closed
-(July 4ths, Thanksgivings) drop out for free: no Product has a row on them.
+overstate a day-restricted variety, which is why cinnamon raisin and
+pumpernickel are skipped (see SKIPPED_PRODUCTS). It also means the days both
+locations were closed (July 4ths, Thanksgivings) drop out for free: no Product
+has a row on them.
 
 And a Demand Forecast may only see Sales strictly before its as_of date. Ticket
 03 backtests by replaying a past as_of over the same history, so a leak of the
@@ -40,12 +41,11 @@ SALES_HISTORY_PATH = Path(__file__).parent / "data" / "sales_history.parquet"
 DEMAND_FORECAST_PATH = Path(__file__).parent / "data" / "demand_forecast.parquet"
 SALES_FORECAST_PATH = Path(__file__).parent / "data" / "sales_forecast.parquet"
 
-# The bagel Products the pilot forecasts. Each sells on essentially every open
-# day, which is what licenses the recorded-days-only averaging above.
+# The three baked bagel varieties the forecast covers — everything, plain and
+# sesame, which share one Wheat Dough. Each sells on essentially every open day,
+# which is what licenses the recorded-days-only averaging above.
 FORECAST_PRODUCTS: Tuple[str, ...] = (
     "everything",
-    "gluten-free everything",
-    "gluten-free plain",
     "plain",
     "sesame",
 )
@@ -54,6 +54,8 @@ FORECAST_PRODUCTS: Tuple[str, ...] = (
 # decision rather than a warning on every run. Their Sales stay in
 # sales_history.parquet; re-including one is a move between these two constants.
 SKIPPED_PRODUCTS: Dict[str, str] = {
+    "gluten-free everything": "bought in frozen, not baked — kept in Sales history for later",
+    "gluten-free plain": "bought in frozen, not baked — kept in Sales history for later",
     "cinnamon raisin": "sold Wednesdays only; no Sales on most weekdays",
     "pumpernickel": "sold Thursdays only; no Sales on most weekdays",
 }
