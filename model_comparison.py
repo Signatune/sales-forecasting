@@ -29,7 +29,7 @@ asymmetry a Stockout-averse bake decision turns on, and one MAPE cannot see.
 """
 import datetime as dt
 import sys
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -113,6 +113,34 @@ def _demand_forecast_frame(records: List[dict]) -> pd.DataFrame:
     return frame.sort_values(["date", "product"], ignore_index=True)
 
 
+def _same_weekday_reduce(
+    history: pd.DataFrame, as_of: dt.date, reducer: Callable[[pd.Series], float]
+) -> pd.DataFrame:
+    """Reduce each variety's same-weekday Sales, in date order, to one Demand
+    Forecast per target date — the shared body of the same-weekday candidates.
+
+    `reducer` is the only thing that varies between them (a trailing-window mean,
+    an EWMA, ...); it receives that variety's same-weekday quantities oldest-first
+    and returns the point forecast. A variety that never sold on a target's
+    weekday yields no row, exactly as the incumbent — no evidence to reduce.
+    """
+    records = []
+    for target in forecast.target_dates(as_of):
+        weekday = target.dayofweek
+        for product in forecast.FORECAST_PRODUCTS:
+            same_weekday = history[
+                (history["product"] == product)
+                & (history["date"].dt.dayofweek == weekday)
+            ].sort_values("date")["quantity"]
+            if same_weekday.empty:
+                continue
+            records.append(
+                {"product": product, "date": target,
+                 "forecast_quantity": float(reducer(same_weekday))}
+            )
+    return _demand_forecast_frame(records)
+
+
 def trailing_window_forecast(
     sales: pd.DataFrame, as_of: dt.date, weeks: int = TRAILING_WINDOW_WEEKS
 ) -> pd.DataFrame:
@@ -126,21 +154,7 @@ def trailing_window_forecast(
     weekday yields no row, exactly as the incumbent — no evidence to average.
     """
     history = _in_scope_history(sales, as_of)
-    records = []
-    for target in forecast.target_dates(as_of):
-        weekday = target.dayofweek
-        for product in forecast.FORECAST_PRODUCTS:
-            same_weekday = history[
-                (history["product"] == product)
-                & (history["date"].dt.dayofweek == weekday)
-            ].sort_values("date")
-            if same_weekday.empty:
-                continue
-            recent = same_weekday["quantity"].tail(weeks)
-            records.append(
-                {"product": product, "date": target, "forecast_quantity": float(recent.mean())}
-            )
-    return _demand_forecast_frame(records)
+    return _same_weekday_reduce(history, as_of, lambda s: s.tail(weeks).mean())
 
 
 def ewma_forecast(
@@ -157,21 +171,9 @@ def ewma_forecast(
     yields no row, mirroring the incumbent.
     """
     history = _in_scope_history(sales, as_of)
-    records = []
-    for target in forecast.target_dates(as_of):
-        weekday = target.dayofweek
-        for product in forecast.FORECAST_PRODUCTS:
-            same_weekday = history[
-                (history["product"] == product)
-                & (history["date"].dt.dayofweek == weekday)
-            ].sort_values("date")
-            if same_weekday.empty:
-                continue
-            weighted = same_weekday["quantity"].ewm(halflife=halflife, adjust=True).mean()
-            records.append(
-                {"product": product, "date": target, "forecast_quantity": float(weighted.iloc[-1])}
-            )
-    return _demand_forecast_frame(records)
+    return _same_weekday_reduce(
+        history, as_of, lambda s: s.ewm(halflife=halflife, adjust=True).mean().iloc[-1]
+    )
 
 
 def seasonal_trend_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
@@ -324,7 +326,9 @@ def _regular_daily_series(history: pd.DataFrame, product: str):
     return series.fillna(recorded.mean())
 
 
-def _ets_points(series: pd.Series, targets: List[pd.Timestamp], smoother) -> Dict:
+def _ets_points(
+    series: pd.Series, targets: List[pd.Timestamp], smoother
+) -> Dict[pd.Timestamp, Optional[float]]:
     """Fit a weekly-seasonal additive ETS on the regular series and read off each
     target date's point forecast.
 
@@ -373,7 +377,7 @@ def ets_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
     """
     from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
-    history = forecast.history_before(sales, as_of)
+    history = _in_scope_history(sales, as_of)
     targets = forecast.target_dates(as_of)
 
     records = []
@@ -404,10 +408,7 @@ def ets_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
                 }
             )
 
-    result = pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
-    result["date"] = pd.to_datetime(result["date"])
-    result["forecast_quantity"] = result["forecast_quantity"].astype(float)
-    return result.sort_values(["date", "product"], ignore_index=True)
+    return _demand_forecast_frame(records)
 
 
 def statsmodels_available() -> bool:
@@ -461,7 +462,7 @@ def wheat_total(per_variety_forecast: pd.DataFrame) -> pd.DataFrame:
 
 def evaluation_window(
     sales: pd.DataFrame, weeks: int = EVAL_WEEKS
-) -> tuple:
+) -> Tuple[pd.Timestamp, pd.Timestamp]:
     """The first and last date (inclusive) of the evaluation period: the most
     recent `weeks` weeks of the Sales history. Refuses a window that leaves no
     earlier Sales to forecast from, mirroring backtest.holdout_window."""
@@ -573,7 +574,7 @@ def _score_candidate(
 
 def compare_models(
     sales: pd.DataFrame,
-    candidates: Dict[str, Model] = None,
+    candidates: Optional[Dict[str, Model]] = None,
     eval_weeks: int = EVAL_WEEKS,
     warmup_weeks: int = WARMUP_WEEKS,
     lead: int = POOLISH_LEAD,

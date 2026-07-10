@@ -269,6 +269,31 @@ class TestCompareModels:
         # finite pinball per candidate rather than a NaN.
         assert comparison["pinball"].notna().all()
 
+    def test_scores_every_open_day_in_the_window_once(self):
+        # The rolling-origin bookkeeping TestReplayOrigins pins for backtest:
+        # each open day in the window is forecast exactly once, at the lead.
+        history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
+
+        comparison = compare_models(history, eval_weeks=2, warmup_weeks=2)
+
+        # 2 weeks of gap-free Sales = 14 open days, each scored once per model.
+        assert (comparison["days"] == 14).all()
+
+    def test_a_closed_day_is_not_an_origin_target(self):
+        # No variety sells on 2026-07-06 (both locations closed), so it is never
+        # a target date and drops out of the window — 13 open days, not 14.
+        history = sales(
+            [
+                row
+                for row in varieties("2026-05-29", 42, (5.0, 3.0, 2.0))
+                if row[1] != pd.Timestamp("2026-07-06")
+            ]
+        )
+
+        comparison = compare_models(history, eval_weeks=2, warmup_weeks=2)
+
+        assert (comparison["days"] == 13).all()
+
 
 def mondays(product, quantities, start="2026-06-01"):
     """One Sale per week on the same weekday (2026-06-01 is a Monday), oldest
