@@ -1,6 +1,6 @@
 # Rolling-origin evaluator on the Poolish total
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 

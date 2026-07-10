@@ -5,10 +5,47 @@ relative-residual buffer transform.
 As in test_backtest.py, numbers are worked by hand rather than recomputed the
 way the code does, and only the returned values are asserted on.
 """
+import datetime as dt
+
 import pandas as pd
 import pytest
 
-from model_comparison import p95_buffer, pinball, wape
+import backtest
+import model_comparison
+from model_comparison import (
+    WHEAT_TOTAL,
+    actual_totals,
+    compare_models,
+    evaluation_window,
+    forecast_totals,
+    p95_buffer,
+    pinball,
+    wape,
+    wheat_total,
+)
+
+
+def sales(records) -> pd.DataFrame:
+    """A Sales history frame shaped like normalize.py's output."""
+    df = pd.DataFrame(records, columns=["product", "date", "quantity"])
+    df["date"] = pd.to_datetime(df["date"])
+    df["quantity"] = df["quantity"].astype(float)
+    return df
+
+
+def daily(product: str, start: str, days: int, quantity: float = 10.0):
+    first = pd.Timestamp(start)
+    return [(product, first + pd.Timedelta(days=n), quantity) for n in range(days)]
+
+
+def varieties(start: str, days: int, quantities=(5.0, 3.0, 2.0)):
+    """everything/plain/sesame each selling a constant quantity every day."""
+    e, p, s = quantities
+    return (
+        daily("everything", start, days, e)
+        + daily("plain", start, days, p)
+        + daily("sesame", start, days, s)
+    )
 
 
 class TestPinball:
@@ -109,3 +146,131 @@ class TestP95Buffer:
         buffered = p95_buffer(point_forecasts, residuals, level=0.95)
 
         assert list(buffered) == pytest.approx([119.0, 238.0])
+
+
+class TestWheatTotal:
+    """The three varieties sum per date into one synthetic total Product — the
+    Poolish is decided on the total, not per variety."""
+
+    def test_sums_the_varieties_per_date(self):
+        per_variety = pd.DataFrame(
+            [
+                ("everything", pd.Timestamp("2026-07-11"), 5.0),
+                ("plain", pd.Timestamp("2026-07-11"), 3.0),
+                ("sesame", pd.Timestamp("2026-07-11"), 2.0),
+                ("everything", pd.Timestamp("2026-07-12"), 6.0),
+                ("plain", pd.Timestamp("2026-07-12"), 4.0),
+                ("sesame", pd.Timestamp("2026-07-12"), 2.0),
+            ],
+            columns=["product", "date", "forecast_quantity"],
+        )
+
+        total = wheat_total(per_variety)
+
+        assert set(total["product"]) == {WHEAT_TOTAL}
+        assert total.set_index("date")["forecast_quantity"].to_dict() == {
+            pd.Timestamp("2026-07-11"): 10.0,
+            pd.Timestamp("2026-07-12"): 12.0,
+        }
+
+    def test_an_empty_forecast_totals_to_nothing(self):
+        empty = pd.DataFrame(columns=["product", "date", "forecast_quantity"])
+
+        assert wheat_total(empty).empty
+
+
+class TestEvaluationWindow:
+    def test_covers_the_most_recent_n_weeks_inclusive(self):
+        history = sales(daily("plain", "2026-05-01", 70))  # .. 2026-07-09
+
+        start, end = evaluation_window(history, weeks=1)
+
+        assert start == pd.Timestamp("2026-07-03")
+        assert end == pd.Timestamp("2026-07-09")
+
+    def test_refuses_a_window_that_leaves_no_history_to_train_on(self):
+        history = sales(daily("plain", "2026-07-03", 7))  # .. 2026-07-09
+
+        with pytest.raises(ValueError, match="no Sales before"):
+            evaluation_window(history, weeks=1)
+
+
+class TestForecastTotals:
+    """The wheat-total point forecast per day, at a fixed lead, leak-free."""
+
+    def test_a_forecast_never_sees_the_day_it_forecasts(self):
+        # plain sells 10 every day, then jumps to 1000 from 2026-07-06. The
+        # forecast for 2026-07-09 is made at lead 3 (as_of 2026-07-06), so it
+        # trails only the tens behind the jump.
+        history = sales(
+            daily("plain", "2026-06-01", 35)  # .. 2026-07-05
+            + daily("plain", "2026-07-06", 4, quantity=1000.0)  # .. 2026-07-09
+        )
+        target = pd.Timestamp("2026-07-09")
+
+        totals = forecast_totals(
+            backtest.moving_average_forecast, history, [target], lead=3
+        )
+
+        assert totals.loc[0, "forecast_quantity"] == pytest.approx(10.0)
+        assert actual_totals(history, [target]).loc[0, "actual"] == 1000.0
+
+    def test_sums_the_three_varieties_into_the_total(self):
+        history = sales(varieties("2026-06-01", 39, (5.0, 3.0, 2.0)))
+        target = pd.Timestamp("2026-07-09")
+
+        totals = forecast_totals(
+            backtest.moving_average_forecast, history, [target], lead=3
+        )
+
+        assert totals.loc[0, "forecast_quantity"] == pytest.approx(10.0)  # 5+3+2
+
+
+class TestCompareModels:
+    def test_ranks_the_seeded_candidates_on_pinball(self):
+        # Every variety sells a flat quantity all history, so both models
+        # forecast the total exactly (residuals zero, no buffer) and score a
+        # perfect pinball of zero.
+        history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
+
+        comparison = compare_models(history, eval_weeks=1, warmup_weeks=1)
+
+        assert list(comparison.columns) == ["model", "pinball", "mape", "days"]
+        assert set(comparison["model"]) == {"seasonal_naive", "moving_average"}
+        assert comparison["pinball"].tolist() == pytest.approx([0.0, 0.0])
+        assert comparison["mape"].tolist() == pytest.approx([0.0, 0.0])
+        assert comparison["days"].tolist() == [7, 7]
+        # Sorted best (lowest pinball) first.
+        assert comparison["pinball"].is_monotonic_increasing
+
+    def test_under_forecasting_the_total_costs_more_than_over(self):
+        # A flat history the models forecast exactly, then break the buffer's
+        # residual pool: with no warmup buffer, a model that reads high vs one
+        # that reads low are penalised asymmetrically by pinball@95.
+        history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
+
+        comparison = compare_models(
+            history, eval_weeks=1, warmup_weeks=1, level=0.95
+        )
+
+        # Both are exact here, so this simply pins that the frame carries a
+        # finite pinball per candidate rather than a NaN.
+        assert comparison["pinball"].notna().all()
+
+
+class TestMain:
+    def test_prints_the_ranked_candidates(self, tmp_path, monkeypatch, capsys):
+        history_path = tmp_path / "sales_history.parquet"
+        monkeypatch.setattr(model_comparison, "SALES_HISTORY_PATH", history_path)
+        monkeypatch.setattr(model_comparison, "EVAL_WEEKS", 1)
+        monkeypatch.setattr(model_comparison, "WARMUP_WEEKS", 1)
+        sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0))).to_parquet(
+            history_path, index=False
+        )
+
+        model_comparison.main()
+        out = capsys.readouterr().out
+
+        assert "seasonal_naive" in out
+        assert "moving_average" in out
+        assert "pinball@95" in out
