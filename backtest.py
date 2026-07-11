@@ -115,7 +115,9 @@ def moving_average_forecast(
     ]
 
     baseline = pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
-    baseline["date"] = pd.to_datetime(baseline["date"])
+    # Nanoseconds, matching forecast.forecast_demand — the baseline and the
+    # model it is compared against must not differ by their date dtype.
+    baseline["date"] = pd.to_datetime(baseline["date"]).astype("datetime64[ns]")
     baseline["forecast_quantity"] = baseline["forecast_quantity"].astype(float)
     return baseline.sort_values(["date", "product"], ignore_index=True)
 

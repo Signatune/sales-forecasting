@@ -142,7 +142,12 @@ def forecast_demand(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
             )
 
     forecast = pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
-    forecast["date"] = pd.to_datetime(forecast["date"])
+    # Pinned to nanoseconds, not left to pd.to_datetime's inference: from pandas
+    # 3.0 it infers microseconds from a column of Timestamps, and a Demand
+    # Forecast whose date dtype drifts by pandas version is one that merges
+    # against a Sales history — and round-trips through parquet — differently
+    # than it used to.
+    forecast["date"] = pd.to_datetime(forecast["date"]).astype("datetime64[ns]")
     forecast["forecast_quantity"] = forecast["forecast_quantity"].astype(float)
     return forecast.sort_values(["date", "product"], ignore_index=True)
 

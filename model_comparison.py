@@ -108,7 +108,8 @@ def _demand_forecast_frame(records: List[dict]) -> pd.DataFrame:
     the columns, dtypes and ordering forecast.forecast_demand returns, so a
     candidate's output is indistinguishable from the incumbent's downstream."""
     frame = pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
-    frame["date"] = pd.to_datetime(frame["date"])
+    # Nanoseconds, matching forecast.forecast_demand — see the note there.
+    frame["date"] = pd.to_datetime(frame["date"]).astype("datetime64[ns]")
     frame["forecast_quantity"] = frame["forecast_quantity"].astype(float)
     return frame.sort_values(["date", "product"], ignore_index=True)
 
