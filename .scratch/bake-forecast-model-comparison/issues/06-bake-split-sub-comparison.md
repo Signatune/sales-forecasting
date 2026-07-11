@@ -1,6 +1,6 @@
 # Bake-split sub-comparison
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 

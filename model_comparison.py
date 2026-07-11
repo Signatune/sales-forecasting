@@ -26,6 +26,14 @@ collected from a warmup window strictly before the evaluation window, so the
 buffer never sees the days it is scored on either. And the total is scored on
 pinball@95, which penalises under-forecasting 19x as hard as over — the
 asymmetry a Stockout-averse bake decision turns on, and one MAPE cannot see.
+
+The second, smaller target is the **bake split**: two days out, with the Poolish
+already made and fixed, how to divide it into a Bake-to Quantity per variety
+(compare_split_models). A split candidate emits a share rather than a quantity,
+carries no buffer of its own — the Service Level buffer lives once, in the
+Poolish total, because quantiles do not add (ADR 0001) — and is scored on WAPE
+per variety, so a miss on sesame is not weighted as though it mattered more than
+a larger absolute miss on everything.
 """
 import datetime as dt
 import sys
@@ -42,6 +50,10 @@ Quantity = Union[float, pd.Series]
 
 # A candidate model: prior Sales and an as_of, out a per-Product Demand Forecast.
 Model = Callable[[pd.DataFrame, dt.date], pd.DataFrame]
+
+# A split candidate: prior Sales and an as_of, out a per-variety expected
+# share of the horizon's total — (product, date, share), not a quantity.
+SplitModel = Callable[[pd.DataFrame, dt.date], pd.DataFrame]
 
 SALES_HISTORY_PATH = forecast.SALES_HISTORY_PATH
 
@@ -62,6 +74,10 @@ WARMUP_WEEKS = 26
 # The Poolish is decided ~3 days ahead, so every origin forecasts its target
 # from exactly three days back — the lead an ordering run actually faces.
 POOLISH_LEAD = 3
+
+# A Bake-to Quantity is decided ~2 days ahead — a day later than the Poolish
+# itself, because shaping and baking happen after the Poolish is already made.
+SPLIT_LEAD = 2
 
 # The Service Level the Poolish total is buffered and scored at.
 SERVICE_LEVEL = 0.95
@@ -488,27 +504,68 @@ def _open_days(
     return sorted(window["date"].unique())
 
 
+def _replay_at_lead(model, sales: pd.DataFrame, days: List[pd.Timestamp], lead: int):
+    """Yield (day, the rows the model emitted for that day) for each day, every
+    call made from the origin `lead` days back.
+
+    The single home of the rolling-origin walk both bake targets replay on. For
+    a target day D the origin is D - lead, so history_before(D - lead) inside
+    the model guarantees it never sees D or anything after it — the leak-freeness
+    the whole comparison rests on, in one place rather than one copy per target.
+    `model` is anything shaped (sales, as_of) -> frame with a `date` column: a
+    Model, a SplitModel, or a Model composed with wheat_total.
+    """
+    for day in days:
+        day = pd.Timestamp(day)
+        as_of = (day - pd.Timedelta(days=lead)).date()
+        emitted = model(sales, as_of)
+        yield day, emitted[emitted["date"] == day]
+
+
 def forecast_totals(
     model: Model, sales: pd.DataFrame, days: List[pd.Timestamp], lead: int
 ) -> pd.DataFrame:
     """Each day's wheat-total point forecast at a fixed lead, every one made
-    from only the Sales strictly before its origin.
+    from only the Sales strictly before its origin (_replay_at_lead).
 
-    For a target day D the origin is D - lead, so history_before(D - lead)
-    inside the model guarantees the forecast never sees D (or anything after
-    it). Returns (date, forecast_quantity); a day the model forecast no variety
-    for yields NaN, so it drops out of scoring rather than counting as zero.
+    Returns (date, forecast_quantity); a day the model forecast no variety for
+    yields NaN, so it drops out of scoring rather than counting as zero.
     """
+    rows = []
+    for day, total in _replay_at_lead(
+        lambda s, as_of: wheat_total(model(s, as_of)), sales, days, lead
+    ):
+        quantity = total["forecast_quantity"]
+        rows.append(
+            {
+                "date": day,
+                "forecast_quantity": float(quantity.iloc[0])
+                if len(quantity)
+                else float("nan"),
+            }
+        )
+    return pd.DataFrame(rows, columns=["date", "forecast_quantity"])
+
+
+def variety_actuals(sales: pd.DataFrame, days: List[pd.Timestamp]) -> pd.DataFrame:
+    """Each baked variety's actual Sales on each day — a variety with no Sales
+    that day counting as zero, because on an open day the shop did bake it and
+    a Bake-to Quantity was still owed for it.
+
+    The grain actual_totals sums up from, so the two cannot disagree about what
+    a day's Wheat Dough Demand was.
+    """
+    in_scope = sales[sales["product"].isin(forecast.FORECAST_PRODUCTS)]
     rows = []
     for day in days:
         day = pd.Timestamp(day)
-        as_of = (day - pd.Timedelta(days=lead)).date()
-        total = wheat_total(model(sales, as_of))
-        match = total.loc[total["date"] == day, "forecast_quantity"]
-        rows.append(
-            {"date": day, "forecast_quantity": float(match.iloc[0]) if len(match) else float("nan")}
-        )
-    return pd.DataFrame(rows, columns=["date", "forecast_quantity"])
+        for product in forecast.FORECAST_PRODUCTS:
+            actual = in_scope.loc[
+                (in_scope["date"] == day) & (in_scope["product"] == product),
+                "quantity",
+            ].sum()
+            rows.append({"product": product, "date": day, "actual": float(actual)})
+    return pd.DataFrame(rows, columns=["product", "date", "actual"])
 
 
 def actual_totals(
@@ -516,13 +573,12 @@ def actual_totals(
 ) -> pd.DataFrame:
     """The actual wheat-total Sales on each day: the three baked varieties
     summed, an absent variety counting as zero for that day."""
-    in_scope = sales[sales["product"].isin(forecast.FORECAST_PRODUCTS)]
-    rows = []
-    for day in days:
-        day = pd.Timestamp(day)
-        actual = in_scope.loc[in_scope["date"] == day, "quantity"].sum()
-        rows.append({"date": day, "actual": float(actual)})
-    return pd.DataFrame(rows, columns=["date", "actual"])
+    return (
+        variety_actuals(sales, days)
+        .groupby("date", as_index=False)["actual"]
+        .sum()
+        .sort_values("date", ignore_index=True)
+    )
 
 
 def _relative_residuals(
@@ -608,6 +664,254 @@ def compare_models(
     )
 
 
+# --- Bake split: the second bake target ------------------------------------
+#
+# The lead-2 Bake-to Quantity per variety: the fixed Poolish divided across
+# everything/plain/sesame by expected share (ADR 0001). A split candidate is a
+# SplitModel — (sales, as_of) -> DataFrame[product, date, share] — emitting a
+# share, not a quantity, because the quantity is not the candidate's to choose:
+# the Poolish is already made and fixed by the time this decision is taken.
+# bake_to_quantities turns those shares into Bake-to Quantities by allocating
+# that fixed Poolish, and the result is scored on WAPE per variety.
+#
+# Two consequences of ADR 0001 hold everywhere below. No second quantile buffer
+# is applied — the Service Level buffer lives once, in the Poolish total, and
+# quantiles do not add. And the shares always sum to 1, so the split spends the
+# Poolish exactly; it can misallocate between varieties but can never conjure
+# dough that was not made.
+#
+# Not routed through compare_models: a SplitModel emits a share where a Model
+# emits a forecast_quantity, and the two bake targets are scored on different
+# metrics at different leads (ADR 0002). compare_split_models below reuses the
+# evaluator's machinery instead — evaluation_window, _open_days, _replay_at_lead
+# and wape — so the two comparisons cannot drift apart on the window, the open
+# days, the leak-free cutoff, or the metric.
+
+
+def _split_frame(records: List[dict]) -> pd.DataFrame:
+    """Shape share records into the split contract: (product, date, share),
+    matching _demand_forecast_frame's dtype and ordering convention."""
+    frame = pd.DataFrame(records, columns=["product", "date", "share"])
+    frame["date"] = pd.to_datetime(frame["date"]).astype("datetime64[ns]")
+    frame["share"] = frame["share"].astype(float)
+    return frame.sort_values(["date", "product"], ignore_index=True)
+
+
+def constant_recent_share(
+    sales: pd.DataFrame, as_of: dt.date, weeks: int = TRAILING_WINDOW_WEEKS
+) -> pd.DataFrame:
+    """Each variety's share of the recent total, held flat across every
+    target date regardless of weekday. The mix is fairly stable (~45/29/27),
+    so this is the near-non-race baseline a smarter split method must beat.
+
+    Recent means the calendar `weeks` before as_of, leak-free via
+    _in_scope_history — a cutoff on the date, not on the count of same-weekday
+    observations trailing_window_forecast tails, since a share is taken over
+    every recent day at once rather than per weekday. A variety with no Sales
+    in that window gets no row rather than a fabricated zero share.
+    """
+    history = _in_scope_history(sales, as_of)
+    cutoff = pd.Timestamp(as_of) - pd.Timedelta(weeks=weeks)
+    recent = history[history["date"] >= cutoff]
+    totals = recent.groupby("product")["quantity"].sum()
+    total = totals.sum()
+    if total <= 0:
+        return _split_frame([])
+
+    records = [
+        {"product": product, "date": target, "share": float(quantity / total)}
+        for target in forecast.target_dates(as_of)
+        for product, quantity in totals.items()
+    ]
+    return _split_frame(records)
+
+
+def same_weekday_share(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
+    """Each variety's share of the total, conditioned on the target's
+    weekday — a Saturday's mix need not match a Tuesday's. Leak-free over all
+    history before as_of, mirroring the incumbent's same-weekday averaging; a
+    weekday never observed at all yields no row for that target.
+    """
+    history = _in_scope_history(sales, as_of)
+    if history.empty:
+        return _split_frame([])
+
+    weekday = history["date"].dt.dayofweek
+    by_product = history.groupby([weekday, history["product"]])["quantity"].sum()
+    by_weekday = history.groupby(weekday)["quantity"].sum()
+
+    records = []
+    for target in forecast.target_dates(as_of):
+        weekday = target.dayofweek
+        total = by_weekday.get(weekday, 0.0)
+        if total <= 0:
+            continue
+        for product in forecast.FORECAST_PRODUCTS:
+            quantity = by_product.get((weekday, product))
+            if quantity is None:
+                continue
+            records.append(
+                {"product": product, "date": target, "share": float(quantity / total)}
+            )
+    return _split_frame(records)
+
+
+def per_variety_recency_share(
+    sales: pd.DataFrame, as_of: dt.date, halflife: float = EWMA_HALFLIFE_WEEKS
+) -> pd.DataFrame:
+    """Each variety's recency-weighted point forecast (ewma_forecast),
+    normalized per date to sum to 1 — the only split candidate that reacts to
+    a variety's own recent trend rather than a fixed or weekday-only ratio.
+
+    Normalizing is what makes this a split rather than three forecasts: the
+    point forecasts are only ever read against each other, so whatever level
+    error they share divides out, and what survives is their ratio. A date where
+    every variety's point forecast is non-positive yields no row — nothing to
+    normalize by.
+    """
+    points = ewma_forecast(sales, as_of, halflife=halflife)
+    if points.empty:
+        return _split_frame([])
+
+    totals = points.groupby("date")["forecast_quantity"].transform("sum")
+    positive = points[totals > 0].copy()
+    positive["share"] = positive["forecast_quantity"] / totals[totals > 0]
+    return _split_frame(positive[["product", "date", "share"]].to_dict("records"))
+
+
+# The pilot's three split methods. The evaluator treats every entry
+# identically, so a later candidate drops into SPLIT_CANDIDATES without
+# special-casing, exactly as POOLISH_CANDIDATES.
+SPLIT_CANDIDATES: Dict[str, SplitModel] = {
+    "constant_recent_share": constant_recent_share,
+    "same_weekday_share": same_weekday_share,
+    "per_variety_recency_share": per_variety_recency_share,
+}
+
+
+def bake_to_quantities(
+    model: SplitModel, sales: pd.DataFrame, days: List[pd.Timestamp], lead: int
+) -> pd.DataFrame:
+    """Each day's Bake-to Quantity per variety at a fixed lead: the candidate's
+    expected share of that day, allocating the fixed Poolish.
+
+    The Poolish it allocates is the day's *realised* wheat total. That is a
+    deliberate scoring choice, not a leak. The shares are leak-free — they come
+    from _replay_at_lead, so no candidate's history reaches its own target day —
+    and the realised total enters only here, at scoring time, identically for
+    every candidate, never fed back into a model. Holding the base fixed is what
+    makes this a comparison of *split* quality: allocate a forecast total
+    instead and each candidate's WAPE would carry whatever error the Poolish
+    model made, which is the other target's score, already measured by
+    compare_models.
+
+    Read the resulting WAPE as split error, then — as the error a bake would
+    actually see: on the day, the base is the P95-buffered Poolish, so real
+    Bake-to Quantities sit above these; and because the shares sum to 1 against
+    a base equal to the total, each candidate's signed errors across the three
+    varieties cancel to zero by construction. A variety the model gave no share
+    for yields no row.
+    """
+    poolish = actual_totals(sales, days).set_index("date")["actual"]
+    rows = [
+        {
+            "product": row.product,
+            "date": day,
+            "forecast_quantity": float(row.share) * poolish.get(day, 0.0),
+        }
+        for day, shares in _replay_at_lead(model, sales, days, lead)
+        for row in shares.itertuples(index=False)
+    ]
+    return pd.DataFrame(rows, columns=["product", "date", "forecast_quantity"])
+
+
+def _score_split_candidate(
+    model: SplitModel, sales: pd.DataFrame, eval_days: List[pd.Timestamp], lead: int
+) -> pd.DataFrame:
+    """One row per variety: WAPE over eval_days for this split candidate. A
+    day the candidate gave no share for drops that variety's row from the
+    comparison, exactly as an undeclared forecast does for the Poolish total.
+    """
+    merged = variety_actuals(sales, eval_days).merge(
+        bake_to_quantities(model, sales, eval_days, lead),
+        on=["product", "date"],
+        how="left",
+    )
+    rows = []
+    for product in forecast.FORECAST_PRODUCTS:
+        scored = merged[merged["product"] == product].dropna(
+            subset=["forecast_quantity"]
+        )
+        rows.append(
+            {
+                "product": product,
+                "wape": wape(scored["actual"], scored["forecast_quantity"]),
+                "days": len(scored),
+            }
+        )
+    return pd.DataFrame(rows, columns=["product", "wape", "days"])
+
+
+def compare_split_models(
+    sales: pd.DataFrame,
+    candidates: Optional[Dict[str, SplitModel]] = None,
+    eval_weeks: int = EVAL_WEEKS,
+    lead: int = SPLIT_LEAD,
+) -> pd.DataFrame:
+    """Replay every split candidate over the recent evaluation window and score
+    each on WAPE per variety — compare_models' opposite number for the second
+    bake target, sharing its window, its open days, and its leak-free walk.
+
+    One row per (candidate, variety): its WAPE and the day count, sorted by
+    model then product. The window is the last `eval_weeks` weeks; each day is
+    forecast once, at `lead` days back, from only prior Sales.
+
+    No warmup window, unlike compare_models: with no buffer on the split there
+    are no residuals to pool, so there is nothing a scored day could feed.
+    """
+    candidates = candidates if candidates is not None else SPLIT_CANDIDATES
+
+    eval_start, eval_end = evaluation_window(sales, eval_weeks)
+    eval_days = _open_days(sales, eval_start, eval_end)
+
+    rows = [
+        {"model": name, **row}
+        for name, model in candidates.items()
+        for row in _score_split_candidate(model, sales, eval_days, lead).to_dict(
+            "records"
+        )
+    ]
+    return pd.DataFrame(rows, columns=["model", "product", "wape", "days"]).sort_values(
+        ["model", "product"], ignore_index=True
+    )
+
+
+def _format_split_report(comparison: pd.DataFrame) -> str:
+    pivot = comparison.pivot(index="model", columns="product", values="wape")
+    products = [p for p in forecast.FORECAST_PRODUCTS if p in pivot.columns]
+    lines = [
+        f"Bake split — {pivot.index.nunique()} candidates, "
+        "WAPE per variety (lower is better)",
+        "",
+        f"{'model':26}" + "".join(f"{p:>14}" for p in products),
+    ]
+    for model in pivot.index:
+        cells = "".join(f"{pivot.loc[model, p] * 100:13.1f}%" for p in products)
+        lines.append(f"{model:26}{cells}")
+    lines += [
+        "",
+        "WAPE is each variety's total absolute error over its total actual Sales. Each "
+        "method splits the",
+        "day's realised wheat total, so these rank split quality with the Poolish "
+        "model's own error held out;",
+        "a real bake splits the P95-buffered Poolish, so its Bake-to Quantities sit "
+        "above these. No second",
+        "quantile buffer is applied — the buffer lives once, in the Poolish total "
+        "(ADR 0001).",
+    ]
+    return "\n".join(lines)
+
+
 def _format_report(comparison: pd.DataFrame, level: float) -> str:
     pct = int(round(level * 100))
     lines = [
@@ -636,6 +940,9 @@ def main() -> None:
         sales, eval_weeks=EVAL_WEEKS, warmup_weeks=WARMUP_WEEKS
     )
     print(_format_report(comparison, SERVICE_LEVEL))
+    print()
+    split_comparison = compare_split_models(sales, eval_weeks=EVAL_WEEKS)
+    print(_format_split_report(split_comparison))
 
 
 if __name__ == "__main__":

@@ -16,12 +16,17 @@ import model_comparison
 from model_comparison import (
     WHEAT_TOTAL,
     actual_totals,
+    bake_to_quantities,
     compare_models,
+    compare_split_models,
+    constant_recent_share,
     evaluation_window,
     ewma_forecast,
     forecast_totals,
     p95_buffer,
+    per_variety_recency_share,
     pinball,
+    same_weekday_share,
     seasonal_trend_forecast,
     trailing_window_forecast,
     wape,
@@ -485,6 +490,364 @@ class TestSeasonalTrend:
         assert result["forecast_quantity"].dtype == float
 
 
+def _share_on(frame, product, date):
+    """The single share a split candidate emitted for (product, date)."""
+    row = frame.loc[
+        (frame["product"] == product) & (frame["date"] == pd.Timestamp(date)), "share"
+    ]
+    assert len(row) == 1
+    return float(row.iloc[0])
+
+
+class TestConstantRecentShare:
+    """Each variety's share of the recent total, held flat across weekdays."""
+
+    def test_is_each_varietys_share_of_the_recent_total(self):
+        # 30 days of 5/3/2 a day: everything 150, plain 90, sesame 60 of a 300
+        # total -> 0.50 / 0.30 / 0.20, the same on every target date.
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+        as_of = dt.date(2026, 7, 1)
+
+        result = constant_recent_share(history, as_of)
+
+        assert _share_on(result, "everything", "2026-07-04") == pytest.approx(0.5)
+        assert _share_on(result, "plain", "2026-07-04") == pytest.approx(0.3)
+        assert _share_on(result, "sesame", "2026-07-04") == pytest.approx(0.2)
+
+    def test_the_shares_sum_to_one_on_every_target_date(self):
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+
+        result = constant_recent_share(history, dt.date(2026, 7, 1))
+
+        totals = result.groupby("date")["share"].sum()
+        assert totals.tolist() == pytest.approx([1.0] * len(totals))
+        assert len(totals) == 6  # as_of+2 .. as_of+7
+
+    def test_ignores_a_mix_older_than_the_recent_window(self):
+        # An old sesame-heavy month (1/1/8) then a recent week of 5/3/2. With a
+        # 1-week window only the recent week counts: 35 / 21 / 14 of 70
+        # -> 0.50 / 0.30 / 0.20, not the old 0.10-everything mix.
+        history = sales(
+            varieties("2026-06-01", 28, (1.0, 1.0, 8.0))  # .. 2026-06-28
+            + varieties("2026-07-01", 7, (5.0, 3.0, 2.0))  # .. 2026-07-07
+        )
+        as_of = dt.date(2026, 7, 8)
+
+        result = constant_recent_share(history, as_of, weeks=1)
+
+        assert _share_on(result, "everything", "2026-07-10") == pytest.approx(0.5)
+        assert _share_on(result, "sesame", "2026-07-10") == pytest.approx(0.2)
+
+    def test_ignores_sales_on_or_after_as_of(self):
+        # A sesame-only blowout on as_of and on a target date must not reach the
+        # shares: the mix stays the 5/3/2 the history before as_of recorded.
+        history = sales(
+            varieties("2026-06-01", 32, (5.0, 3.0, 2.0))  # .. 2026-07-02
+            + [("sesame", pd.Timestamp("2026-07-03"), 900.0)]  # as_of
+            + [("sesame", pd.Timestamp("2026-07-05"), 900.0)]  # a target date
+        )
+
+        result = constant_recent_share(history, dt.date(2026, 7, 3))
+
+        assert _share_on(result, "sesame", "2026-07-05") == pytest.approx(0.2)
+
+    def test_matches_the_split_shape(self):
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+
+        result = constant_recent_share(history, dt.date(2026, 7, 1))
+
+        assert list(result.columns) == ["product", "date", "share"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["share"].dtype == float
+
+
+class TestSameWeekdayShare:
+    """The mix conditioned on weekday — a Monday's split need not be a
+    Tuesday's."""
+
+    def test_conditions_the_mix_on_the_targets_weekday(self):
+        # Mondays sell 6/3/1 (shares .6/.3/.1); Tuesdays sell 2/2/6
+        # (shares .2/.2/.6). 2026-06-01 is a Monday.
+        history = sales(
+            varieties("2026-06-01", 1, (6.0, 3.0, 1.0))  # Mon 06-01
+            + varieties("2026-06-02", 1, (2.0, 2.0, 6.0))  # Tue 06-02
+            + varieties("2026-06-08", 1, (6.0, 3.0, 1.0))  # Mon 06-08
+            + varieties("2026-06-09", 1, (2.0, 2.0, 6.0))  # Tue 06-09
+        )
+        as_of = dt.date(2026, 6, 13)  # targets 06-15 (Mon) .. 06-20
+
+        result = same_weekday_share(history, as_of)
+
+        assert _share_on(result, "everything", "2026-06-15") == pytest.approx(0.6)
+        assert _share_on(result, "sesame", "2026-06-15") == pytest.approx(0.1)
+        assert _share_on(result, "everything", "2026-06-16") == pytest.approx(0.2)
+        assert _share_on(result, "sesame", "2026-06-16") == pytest.approx(0.6)
+
+    def test_the_shares_sum_to_one_on_every_target_date(self):
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+
+        result = same_weekday_share(history, dt.date(2026, 7, 1))
+
+        totals = result.groupby("date")["share"].sum()
+        assert totals.tolist() == pytest.approx([1.0] * len(totals))
+
+    def test_ignores_sales_on_or_after_as_of(self):
+        history = sales(
+            varieties("2026-06-01", 32, (5.0, 3.0, 2.0))  # .. 2026-07-02
+            + [("sesame", pd.Timestamp("2026-07-03"), 900.0)]
+            + [("sesame", pd.Timestamp("2026-07-05"), 900.0)]
+        )
+
+        result = same_weekday_share(history, dt.date(2026, 7, 3))
+
+        assert _share_on(result, "sesame", "2026-07-05") == pytest.approx(0.2)
+
+    def test_matches_the_split_shape(self):
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+
+        result = same_weekday_share(history, dt.date(2026, 7, 1))
+
+        assert list(result.columns) == ["product", "date", "share"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["share"].dtype == float
+
+
+class TestPerVarietyRecencyShare:
+    """Per-variety recency-weighted forecasts, normalized to the total."""
+
+    def test_normalizes_the_per_variety_forecasts_to_sum_to_one(self):
+        # A flat 5/3/2 history: every variety's recency-weighted forecast is its
+        # own flat quantity, so the normalized shares are exactly .5 / .3 / .2.
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+
+        result = per_variety_recency_share(history, dt.date(2026, 7, 1))
+
+        assert _share_on(result, "everything", "2026-07-04") == pytest.approx(0.5)
+        assert _share_on(result, "plain", "2026-07-04") == pytest.approx(0.3)
+        assert _share_on(result, "sesame", "2026-07-04") == pytest.approx(0.2)
+        totals = result.groupby("date")["share"].sum()
+        assert totals.tolist() == pytest.approx([1.0] * len(totals))
+
+    def test_normalizes_the_recency_weighted_forecasts_not_the_raw_totals(self):
+        # Four Mondays. everything declines 40 -> 30 -> 20 -> 10 while plain and
+        # sesame hold flat at 10. At half-life 1 the EWMA of everything's Mondays
+        # is 52/3 = 17.333.. (the weighting TestEwmaSeasonalNaive pins by hand),
+        # so the three point forecasts stand at 52/3 : 10 : 10. Normalized —
+        # scale by 3 to 52 : 30 : 30 of a 112 total — the shares are
+        #   everything = 52/112 = 13/28,  plain = sesame = 30/112 = 15/56.
+        # A share built from the raw totals instead would see 100 : 40 : 40 and
+        # hand everything 100/180 = 5/9, so this pins that the recency weighting
+        # reaches the split and drags the declining variety's share down.
+        history = sales(
+            mondays("everything", [40.0, 30.0, 20.0, 10.0])
+            + mondays("plain", [10.0, 10.0, 10.0, 10.0])
+            + mondays("sesame", [10.0, 10.0, 10.0, 10.0])
+        )
+        as_of = dt.date(2026, 6, 23)  # after the last Monday 2026-06-22
+        target = "2026-06-29"  # the next Monday
+
+        result = per_variety_recency_share(history, as_of, halflife=1)
+
+        assert _share_on(result, "everything", target) == pytest.approx(13 / 28)
+        assert _share_on(result, "plain", target) == pytest.approx(15 / 56)
+        assert _share_on(result, "sesame", target) == pytest.approx(15 / 56)
+        assert _share_on(result, "everything", target) < 5 / 9  # the raw-total share
+
+    def test_a_recent_surge_lifts_a_varietys_share_above_the_constant_mix(self):
+        # Four Mondays. everything and plain hold flat at 10; sesame surges
+        # 1 -> 2 -> 4 -> 40. The constant share sees only the volume totals
+        # (40 / 40 / 47 -> sesame 47/127); the recency split leans on sesame's
+        # newest Monday and puts its share above that.
+        history = sales(
+            mondays("everything", [10.0, 10.0, 10.0, 10.0])
+            + mondays("plain", [10.0, 10.0, 10.0, 10.0])
+            + mondays("sesame", [1.0, 2.0, 4.0, 40.0])
+        )
+        as_of = dt.date(2026, 6, 23)
+        target = "2026-06-29"
+
+        recency = per_variety_recency_share(history, as_of)
+        constant = constant_recent_share(history, as_of)
+
+        assert _share_on(constant, "sesame", target) == pytest.approx(47 / 127)
+        assert _share_on(recency, "sesame", target) > _share_on(
+            constant, "sesame", target
+        )
+
+    def test_ignores_sales_on_or_after_as_of(self):
+        history = sales(
+            varieties("2026-06-01", 32, (5.0, 3.0, 2.0))  # .. 2026-07-02
+            + [("sesame", pd.Timestamp("2026-07-03"), 900.0)]
+            + [("sesame", pd.Timestamp("2026-07-05"), 900.0)]
+        )
+
+        result = per_variety_recency_share(history, dt.date(2026, 7, 3))
+
+        assert _share_on(result, "sesame", "2026-07-05") == pytest.approx(0.2)
+
+    def test_matches_the_split_shape(self):
+        history = sales(varieties("2026-06-01", 30, (5.0, 3.0, 2.0)))
+
+        result = per_variety_recency_share(history, dt.date(2026, 7, 1))
+
+        assert list(result.columns) == ["product", "date", "share"]
+        assert result["date"].dtype == "datetime64[ns]"
+        assert result["share"].dtype == float
+
+
+class TestSplitForecastQuantities:
+    """The shares allocate the fixed Poolish — the actual wheat total for the
+    day — with no second quantile buffer on top."""
+
+    def test_allocates_the_actual_wheat_total_by_expected_share(self):
+        # A flat 5/3/2 history: the total on 2026-07-09 is 10, and the .5/.3/.2
+        # shares divide exactly that 10 back into 5 / 3 / 2.
+        history = sales(varieties("2026-06-01", 39, (5.0, 3.0, 2.0)))  # .. 2026-07-09
+        target = pd.Timestamp("2026-07-09")
+
+        result = bake_to_quantities(
+            constant_recent_share, history, [target], lead=2
+        )
+
+        quantities = result.set_index("product")["forecast_quantity"]
+        assert quantities["everything"] == pytest.approx(5.0)
+        assert quantities["plain"] == pytest.approx(3.0)
+        assert quantities["sesame"] == pytest.approx(2.0)
+
+    def test_the_allocation_sums_to_the_total_with_no_second_buffer(self):
+        # The split divides a fixed Poolish; it must never inflate it. The
+        # allocated quantities sum to exactly the day's actual total (10), not
+        # to a buffered 10 * (1 + q) — the buffer lives in the Poolish total.
+        history = sales(varieties("2026-06-01", 39, (5.0, 3.0, 2.0)))
+        target = pd.Timestamp("2026-07-09")
+
+        result = bake_to_quantities(
+            constant_recent_share, history, [target], lead=2
+        )
+
+        assert result["forecast_quantity"].sum() == pytest.approx(10.0)
+        assert actual_totals(history, [target]).loc[0, "actual"] == 10.0
+
+    def test_the_shares_never_see_the_day_they_split(self):
+        # A 5/3/2 mix until 2026-07-06, then sesame explodes to 1000 from
+        # 2026-07-07. Splitting 2026-07-09 at lead 2 (as_of 2026-07-07) reads
+        # only history strictly before the explosion, so the shares stay
+        # .5/.3/.2 — applied to that day's real (huge) total of 1008.
+        history = sales(
+            varieties("2026-06-01", 36, (5.0, 3.0, 2.0))  # .. 2026-07-06
+            + daily("everything", "2026-07-07", 3, 5.0)  # .. 2026-07-09
+            + daily("plain", "2026-07-07", 3, 3.0)
+            + daily("sesame", "2026-07-07", 3, 1000.0)
+        )
+        target = pd.Timestamp("2026-07-09")
+
+        result = bake_to_quantities(
+            constant_recent_share, history, [target], lead=2
+        )
+
+        quantities = result.set_index("product")["forecast_quantity"]
+        assert actual_totals(history, [target]).loc[0, "actual"] == 1008.0
+        assert quantities["everything"] == pytest.approx(0.5 * 1008.0)
+        assert quantities["plain"] == pytest.approx(0.3 * 1008.0)
+        assert quantities["sesame"] == pytest.approx(0.2 * 1008.0)
+
+
+class TestVarietyActuals:
+    """The per-variety grain actual_totals sums up from — the two must not
+    disagree about what a day's Wheat Dough Demand was."""
+
+    def test_an_absent_variety_counts_as_zero_that_day(self):
+        # sesame sold nothing on 2026-07-09, so normalize.py emits no row for
+        # it — but the shop was open and a Bake-to Quantity was still owed, so
+        # its actual is a real zero, not a missing row.
+        history = sales(
+            [
+                ("everything", pd.Timestamp("2026-07-09"), 5.0),
+                ("plain", pd.Timestamp("2026-07-09"), 3.0),
+            ]
+        )
+        day = pd.Timestamp("2026-07-09")
+
+        actuals = model_comparison.variety_actuals(history, [day]).set_index("product")
+
+        assert actuals.loc["sesame", "actual"] == 0.0
+        assert actuals.loc["everything", "actual"] == 5.0
+
+    def test_the_totals_are_the_varieties_summed(self):
+        history = sales(varieties("2026-07-09", 1, (5.0, 3.0, 2.0)))
+        day = pd.Timestamp("2026-07-09")
+
+        per_variety = model_comparison.variety_actuals(history, [day])
+
+        assert per_variety["actual"].sum() == pytest.approx(10.0)
+        assert actual_totals(history, [day]).loc[0, "actual"] == pytest.approx(10.0)
+
+
+class TestCompareSplitModels:
+    def test_scores_wape_per_variety_for_every_split_candidate(self):
+        # A flat 5/3/2 history every split method nails exactly, so every WAPE
+        # is zero — what this pins is the frame's shape: one row per
+        # (candidate, variety), every candidate present, every variety scored.
+        history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
+
+        comparison = compare_split_models(history, eval_weeks=1)
+
+        assert list(comparison.columns) == ["model", "product", "wape", "days"]
+        assert set(comparison["model"]) == {
+            "constant_recent_share",
+            "same_weekday_share",
+            "per_variety_recency_share",
+        }
+        assert set(comparison["product"]) == set(forecast.FORECAST_PRODUCTS)
+        assert len(comparison) == 9  # 3 candidates x 3 varieties
+        assert comparison["wape"].tolist() == pytest.approx([0.0] * 9)
+        assert (comparison["days"] == 7).all()
+
+    def test_a_wrong_split_scores_a_wape_the_right_size(self):
+        # Five weeks of a 5/3/2 mix, then the shop is closed until a single
+        # trading day on 2026-07-09 that actually splits 6/2/2. The 1-week
+        # window holds just that one open day, and its lead-2 origin (07-07)
+        # sees only the old mix — so the split is the stale 5/3/2 against a
+        # 6/2/2 actual, on a total of 10:
+        #   everything: |6 - 5| / 6 = 1/6
+        #   plain:      |2 - 3| / 2 = 1/2
+        #   sesame:     exact       = 0
+        history = sales(
+            varieties("2026-05-29", 35, (5.0, 3.0, 2.0))  # .. 2026-07-02
+            + varieties("2026-07-09", 1, (6.0, 2.0, 2.0))  # the one scored day
+        )
+
+        comparison = compare_split_models(
+            history, candidates={"constant": constant_recent_share}, eval_weeks=1
+        )
+
+        wapes = comparison.set_index("product")["wape"]
+        assert (comparison["days"] == 1).all()
+        assert wapes["everything"] == pytest.approx(1 / 6)
+        assert wapes["plain"] == pytest.approx(1 / 2)
+        assert wapes["sesame"] == pytest.approx(0.0, abs=1e-9)
+
+    def test_scores_every_open_day_in_the_window_once(self):
+        history = sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0)))
+
+        comparison = compare_split_models(history, eval_weeks=2)
+
+        assert (comparison["days"] == 14).all()
+
+    def test_a_closed_day_is_not_an_origin_target(self):
+        history = sales(
+            [
+                row
+                for row in varieties("2026-05-29", 42, (5.0, 3.0, 2.0))
+                if row[1] != pd.Timestamp("2026-07-06")
+            ]
+        )
+
+        comparison = compare_split_models(history, eval_weeks=2)
+
+        assert (comparison["days"] == 13).all()
+
+
 class TestMain:
     def test_prints_the_ranked_candidates(self, tmp_path, monkeypatch, capsys):
         history_path = tmp_path / "sales_history.parquet"
@@ -501,6 +864,25 @@ class TestMain:
         assert "seasonal_naive" in out
         assert "moving_average" in out
         assert "pinball@95" in out
+
+    def test_prints_the_split_comparison_too(self, tmp_path, monkeypatch, capsys):
+        history_path = tmp_path / "sales_history.parquet"
+        monkeypatch.setattr(model_comparison, "SALES_HISTORY_PATH", history_path)
+        monkeypatch.setattr(model_comparison, "EVAL_WEEKS", 1)
+        monkeypatch.setattr(model_comparison, "WARMUP_WEEKS", 1)
+        sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0))).to_parquet(
+            history_path, index=False
+        )
+
+        model_comparison.main()
+        out = capsys.readouterr().out
+
+        assert "Bake split" in out
+        assert "WAPE" in out
+        for name in model_comparison.SPLIT_CANDIDATES:
+            assert name in out
+        for product in forecast.FORECAST_PRODUCTS:
+            assert product in out
 
 
 class TestEtsDependencyGate:
