@@ -243,21 +243,31 @@ POOLISH_CANDIDATES: Dict[str, Model] = {
 }
 
 
-def pinball(actual: pd.Series, forecast: pd.Series, level: float) -> float:
-    """Mean pinball (quantile) loss at a Service Level.
+def pinball_losses(actual: pd.Series, forecast: pd.Series, level: float) -> pd.Series:
+    """The pinball (quantile) loss of each single day, un-averaged.
 
-    Per point: level * (actual - forecast) when actual >= forecast (an
-    under-forecast), else (1 - level) * (forecast - actual) (an
-    over-forecast). At level=0.95 an under-forecast is penalised
-    level / (1 - level) = 19x as hard as an equal-magnitude over-forecast —
-    the asymmetry that makes this the right metric for a Stockout-averse bake
-    decision, where MAPE/MAE would not distinguish the two directions.
+    Per day: level * (actual - forecast) when actual >= forecast (an
+    under-forecast), else (1 - level) * (forecast - actual) (an over-forecast).
+    At level=0.95 an under-forecast is penalised level / (1 - level) = 19x as
+    hard as an equal-magnitude over-forecast — the asymmetry that makes this the
+    right metric for a Stockout-averse bake decision, where MAPE/MAE would not
+    distinguish the two directions.
+
+    Public in its un-averaged form because the day-to-day spread is what says
+    whether one model's lower mean is evidence or noise: two candidates' daily
+    losses are paired day-by-day and their difference tested (see
+    inspection_page.recommendation). A mean alone cannot answer that.
     """
     diff = actual - forecast
-    loss = diff.where(diff >= 0, other=0.0) * level + (-diff).where(
+    return diff.where(diff >= 0, other=0.0) * level + (-diff).where(
         diff < 0, other=0.0
     ) * (1 - level)
-    return float(loss.mean())
+
+
+def pinball(actual: pd.Series, forecast: pd.Series, level: float) -> float:
+    """Mean pinball loss at a Service Level — the headline score for the Poolish
+    total, the daily losses averaged over the days scored."""
+    return float(pinball_losses(actual, forecast, level).mean())
 
 
 def wape(actual: pd.Series, forecast: pd.Series) -> float:
@@ -274,6 +284,22 @@ def wape(actual: pd.Series, forecast: pd.Series) -> float:
     if actual.empty or total_actual == 0:
         return float("nan")
     return float((actual - forecast).abs().sum() / total_actual)
+
+
+def coverage(actual: pd.Series, quantity: pd.Series) -> float:
+    """The share of days a quantity actually covered Demand — the *realised*
+    Service Level, read against the 95% the buffer targets.
+
+    A day the bake exactly met Demand counts as covered: nothing was left over,
+    but nobody was turned away either, and it is a Stockout the buffer exists to
+    prevent. Pinball says how costly the misses were; this says how often they
+    happened, which is the number the baker can check against the promise.
+
+    Undefined — NaN — for an empty comparison, as wape and backtest.mape are.
+    """
+    if actual.empty:
+        return float("nan")
+    return float((quantity >= actual).mean())
 
 
 def p95_buffer(
@@ -596,6 +622,45 @@ def _relative_residuals(
     ]
 
 
+def buffered_totals(
+    model: Model,
+    sales: pd.DataFrame,
+    eval_days: List[pd.Timestamp],
+    warmup_days: List[pd.Timestamp],
+    lead: int = POOLISH_LEAD,
+    level: float = SERVICE_LEVEL,
+) -> pd.DataFrame:
+    """One candidate's whole rolling-origin replay, day by day: what the shop
+    actually sold, what the model forecast from `lead` days back, and the P95
+    Poolish quantity that point forecast buffers to.
+
+    (date, actual, forecast_quantity, buffered_quantity) — one row per
+    evaluation day the model forecast at all; a day it declined drops out rather
+    than counting as zero. The buffer's relative residuals are collected from
+    `warmup_days` alone, so the P95 a day is scored on never saw that day; with
+    no warmup days there is nothing to buffer from and the point forecast stands
+    unbuffered.
+
+    Both the scores (_score_candidate) and the inspection charts read this one
+    frame, so what a chart draws is what the score was taken from — the two
+    cannot tell the baker different stories about the same day.
+    """
+    residuals = _relative_residuals(model, sales, warmup_days, lead)
+
+    replay = (
+        forecast_totals(model, sales, eval_days, lead)
+        .merge(actual_totals(sales, eval_days), on="date")
+        .dropna(subset=["forecast_quantity"])
+        .reset_index(drop=True)
+    )
+    replay["buffered_quantity"] = (
+        replay["forecast_quantity"]
+        if residuals.empty
+        else p95_buffer(replay["forecast_quantity"], residuals, level)
+    )
+    return replay[["date", "actual", "forecast_quantity", "buffered_quantity"]]
+
+
 def _score_candidate(
     model: Model,
     sales: pd.DataFrame,
@@ -604,29 +669,38 @@ def _score_candidate(
     lead: int,
     level: float,
 ) -> Dict[str, float]:
-    """One candidate's Poolish-total scores: pinball@level on its P95-buffered
-    total, and MAPE on the unbuffered point forecast as a familiar sanity
-    column. The buffer's residuals come from the warmup days only, so the P95 a
-    day is scored on never saw that day."""
-    residuals = _relative_residuals(model, sales, warmup_days, lead)
+    """One candidate's Poolish-total scores, reduced from its replay: pinball at
+    the Service Level on the P95-buffered total, the coverage that P95 realised
+    against it, and MAPE on the unbuffered point forecast as a familiar sanity
+    column."""
+    replay = buffered_totals(model, sales, eval_days, warmup_days, lead, level)
 
-    scored = (
-        forecast_totals(model, sales, eval_days, lead)
-        .merge(actual_totals(sales, eval_days), on="date")
-        .dropna(subset=["forecast_quantity"])
-        .reset_index(drop=True)
-    )
-    if residuals.empty:
-        buffered = scored["forecast_quantity"]
-    else:
-        buffered = p95_buffer(scored["forecast_quantity"], residuals, level)
-
-    positive = scored[scored["actual"] > 0]
+    positive = replay[replay["actual"] > 0]
     return {
-        "pinball": pinball(scored["actual"], buffered, level),
+        "pinball": pinball(replay["actual"], replay["buffered_quantity"], level),
+        "coverage": coverage(replay["actual"], replay["buffered_quantity"]),
         "mape": mape(positive["actual"], positive["forecast_quantity"]),
-        "days": len(scored),
+        "days": len(replay),
     }
+
+
+def window_days(
+    sales: pd.DataFrame,
+    eval_weeks: int = EVAL_WEEKS,
+    warmup_weeks: int = WARMUP_WEEKS,
+) -> Tuple[List[pd.Timestamp], List[pd.Timestamp]]:
+    """The open days a comparison scores on, and the open days its buffer takes
+    its residuals from: the last `eval_weeks` weeks, and the `warmup_weeks`
+    immediately before them. Public so the inspection page charts exactly the
+    days compare_models scored, rather than re-deriving a window that could
+    drift from it."""
+    eval_start, eval_end = evaluation_window(sales, eval_weeks)
+    warmup_end = eval_start - pd.Timedelta(days=1)
+    warmup_start = warmup_end - pd.Timedelta(days=warmup_weeks * 7 - 1)
+    return (
+        _open_days(sales, eval_start, eval_end),
+        _open_days(sales, warmup_start, warmup_end),
+    )
 
 
 def compare_models(
@@ -640,28 +714,23 @@ def compare_models(
     """Replay every candidate over the recent evaluation window and rank them on
     pinball@level for the Poolish total.
 
-    One row per candidate — its pinball@level, MAPE, and the day count — sorted
-    best (lowest pinball) first. The window is the last `eval_weeks` weeks; the
-    buffer's residuals come from the `warmup_weeks` immediately before it, so no
-    scored day feeds its own buffer. Each day is forecast once, at `lead` days
-    back, from only prior Sales.
+    One row per candidate — its pinball@level, the coverage its P95 realised,
+    MAPE, and the day count — sorted best (lowest pinball) first. The window is
+    the last `eval_weeks` weeks; the buffer's residuals come from the
+    `warmup_weeks` immediately before it, so no scored day feeds its own buffer.
+    Each day is forecast once, at `lead` days back, from only prior Sales.
     """
     candidates = candidates if candidates is not None else POOLISH_CANDIDATES
 
-    eval_start, eval_end = evaluation_window(sales, eval_weeks)
-    warmup_end = eval_start - pd.Timedelta(days=1)
-    warmup_start = warmup_end - pd.Timedelta(days=warmup_weeks * 7 - 1)
-
-    eval_days = _open_days(sales, eval_start, eval_end)
-    warmup_days = _open_days(sales, warmup_start, warmup_end)
+    eval_days, warmup_days = window_days(sales, eval_weeks, warmup_weeks)
 
     rows = [
         {"model": name, **_score_candidate(model, sales, eval_days, warmup_days, lead, level)}
         for name, model in candidates.items()
     ]
-    return pd.DataFrame(rows, columns=["model", "pinball", "mape", "days"]).sort_values(
-        "pinball", ignore_index=True
-    )
+    return pd.DataFrame(
+        rows, columns=["model", "pinball", "coverage", "mape", "days"]
+    ).sort_values("pinball", ignore_index=True)
 
 
 # --- Bake split: the second bake target ------------------------------------
@@ -918,18 +987,22 @@ def _format_report(comparison: pd.DataFrame, level: float) -> str:
         f"Poolish total — {len(comparison)} candidates, "
         f"ranked by pinball@{pct} (lower is better)",
         "",
-        f"{'model':20} {f'pinball@{pct}':>12} {'MAPE':>8} {'days':>6}",
+        f"{'model':20} {f'pinball@{pct}':>12} {'coverage':>10} {'MAPE':>8} {'days':>6}",
     ]
     for row in comparison.itertuples():
         lines.append(
-            f"{row.model:20} {row.pinball:12.2f} {row.mape:7.1f}% {row.days:6}"
+            f"{row.model:20} {row.pinball:12.2f} {row.coverage * 100:9.1f}% "
+            f"{row.mape:7.1f}% {row.days:6}"
         )
     lines += [
         "",
         f"pinball@{pct} scores each model's P95-buffered wheat-total forecast; it "
         f"penalises under-",
-        "forecasting 19x as hard as over. MAPE is on the unbuffered point forecast, "
-        "a sanity column only.",
+        "forecasting 19x as hard as over. Coverage is how often that P95 quantity "
+        f"actually covered",
+        f"Demand — the realised Service Level, against the {pct}% target. MAPE is on "
+        "the unbuffered point",
+        "forecast, a sanity column only.",
     ]
     return "\n".join(lines)
 

@@ -17,9 +17,11 @@ from model_comparison import (
     WHEAT_TOTAL,
     actual_totals,
     bake_to_quantities,
+    buffered_totals,
     compare_models,
     compare_split_models,
     constant_recent_share,
+    coverage,
     evaluation_window,
     ewma_forecast,
     forecast_totals,
@@ -157,6 +159,102 @@ class TestP95Buffer:
         assert list(buffered) == pytest.approx([119.0, 238.0])
 
 
+class TestCoverage:
+    """How often a buffered quantity actually covered Demand — the realised
+    Service Level the 95% target is read against."""
+
+    def test_is_the_share_of_days_the_quantity_covered_demand(self):
+        # Covered on 3 of the 4 days: 12 >= 10, 10 >= 10 (an exact bake covers —
+        # nothing short), 9 < 10 (a Stockout), 11 >= 10.
+        actual = pd.Series([10.0, 10.0, 10.0, 10.0])
+        quantity = pd.Series([12.0, 10.0, 9.0, 11.0])
+
+        assert coverage(actual, quantity) == pytest.approx(0.75)
+
+    def test_a_quantity_that_never_covers_scores_zero(self):
+        actual = pd.Series([10.0, 10.0])
+        quantity = pd.Series([9.0, 1.0])
+
+        assert coverage(actual, quantity) == pytest.approx(0.0)
+
+    def test_is_undefined_for_an_empty_comparison(self):
+        empty = pd.Series([], dtype=float)
+
+        assert pd.isna(coverage(empty, empty))
+
+
+def flat_model(quantity: float):
+    """A stub candidate that forecasts a fixed quantity for every target date —
+    a known point forecast to work the buffer's arithmetic against by hand."""
+
+    def model(sales_history, as_of):
+        records = [
+            {"product": "plain", "date": target, "forecast_quantity": quantity}
+            for target in forecast.target_dates(as_of)
+        ]
+        return pd.DataFrame(records, columns=["product", "date", "forecast_quantity"])
+
+    return model
+
+
+class TestBufferedTotals:
+    """The per-day replay both the pinball score and the inspection charts read,
+    so the number a chart draws is the number the score was taken from."""
+
+    def test_carries_the_actual_point_forecast_and_p95_per_day(self):
+        # The model forecasts a flat 10 while the shop sold 12 every day, so its
+        # relative residual is a constant (12 - 10) / 10 = 0.2 — a P95 of 0.2 and
+        # a buffered quantity of 10 * 1.2 = 12 on every evaluation day.
+        history = sales(daily("plain", "2026-06-01", 28, quantity=12.0))
+        warmup_days = [pd.Timestamp("2026-06-15"), pd.Timestamp("2026-06-16")]
+        eval_days = [pd.Timestamp("2026-06-27"), pd.Timestamp("2026-06-28")]
+
+        replay = buffered_totals(
+            flat_model(10.0), history, eval_days, warmup_days, lead=3, level=0.95
+        )
+
+        assert list(replay.columns) == [
+            "date",
+            "actual",
+            "forecast_quantity",
+            "buffered_quantity",
+        ]
+        assert replay["date"].tolist() == eval_days
+        assert replay["actual"].tolist() == pytest.approx([12.0, 12.0])
+        assert replay["forecast_quantity"].tolist() == pytest.approx([10.0, 10.0])
+        assert replay["buffered_quantity"].tolist() == pytest.approx([12.0, 12.0])
+
+    def test_the_buffer_comes_from_the_warmup_days_not_the_scored_ones(self):
+        # The shop sold 12 through the warmup and 100 across the evaluation days.
+        # A buffer that saw its own scored days would blow up to cover the 100s;
+        # taking its residuals from the warmup only, it stays at 10 * 1.2 = 12 —
+        # a badly under-covering P95, which is exactly what an honest score shows.
+        history = sales(
+            daily("plain", "2026-06-01", 21, quantity=12.0)  # .. 2026-06-21
+            + daily("plain", "2026-06-22", 7, quantity=100.0)  # .. 2026-06-28
+        )
+        warmup_days = [pd.Timestamp("2026-06-15"), pd.Timestamp("2026-06-16")]
+        eval_days = [pd.Timestamp("2026-06-27"), pd.Timestamp("2026-06-28")]
+
+        replay = buffered_totals(
+            flat_model(10.0), history, eval_days, warmup_days, lead=3, level=0.95
+        )
+
+        assert replay["actual"].tolist() == pytest.approx([100.0, 100.0])
+        assert replay["buffered_quantity"].tolist() == pytest.approx([12.0, 12.0])
+        assert coverage(replay["actual"], replay["buffered_quantity"]) == 0.0
+
+    def test_an_empty_residual_pool_leaves_the_point_forecast_unbuffered(self):
+        history = sales(daily("plain", "2026-06-01", 28, quantity=12.0))
+        eval_days = [pd.Timestamp("2026-06-27")]
+
+        replay = buffered_totals(
+            flat_model(10.0), history, eval_days, warmup_days=[], lead=3, level=0.95
+        )
+
+        assert replay["buffered_quantity"].tolist() == pytest.approx([10.0])
+
+
 class TestWheatTotal:
     """The three varieties sum per date into one synthetic total Product — the
     Poolish is decided on the total, not per variety."""
@@ -245,7 +343,13 @@ class TestCompareModels:
 
         comparison = compare_models(history, eval_weeks=1, warmup_weeks=1)
 
-        assert list(comparison.columns) == ["model", "pinball", "mape", "days"]
+        assert list(comparison.columns) == [
+            "model",
+            "pinball",
+            "coverage",
+            "mape",
+            "days",
+        ]
         assert {
             "seasonal_naive",
             "moving_average",
@@ -257,6 +361,8 @@ class TestCompareModels:
         assert comparison["pinball"].tolist() == pytest.approx([0.0] * n)
         assert comparison["mape"].tolist() == pytest.approx([0.0] * n)
         assert comparison["days"].tolist() == [7] * n
+        # An exact forecast covers Demand on every day — a realised 100%.
+        assert comparison["coverage"].tolist() == pytest.approx([1.0] * n)
         # Sorted best (lowest pinball) first.
         assert comparison["pinball"].is_monotonic_increasing
 
