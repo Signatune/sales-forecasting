@@ -15,6 +15,14 @@ dependencies = [
 dev = [
     "pytest",
 ]
+# The DB integration tests only. `pytest --ephemeral-postgres` boots a throwaway
+# local Postgres from this wheel (bundled binaries --- no Docker, no system
+# install) and points TEST_DATABASE_URL at it. Not needed for a database-less
+# dev install: bare `pytest` skips the integration tests, so the suite still
+# runs on a `dev`-only install.
+testdb = [
+    "pgserver",
+]
 # The inspection notebook only. Nothing under test imports these, so the test
 # suite still runs on a `dev`-only install.
 notebook = [
