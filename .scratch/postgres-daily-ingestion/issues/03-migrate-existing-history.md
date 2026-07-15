@@ -1,6 +1,6 @@
 # Migrate the existing history into Postgres
 
-Status: ready-for-agent
+Status: ready-for-human
 Branch: `postgres-daily-ingestion`
 
 ## Parent
@@ -95,15 +95,15 @@ COPY load relies on.
 
 ## Acceptance criteria
 
-- [ ] `sales_history.parquet` is regenerated from the full raw history before the comparison, so it reflects 2016 → present rather than the stale 2024-onward slice
-- [ ] Every canonical-source raw response (`menu_week`, `orders_agg`) is present in the raw table, sharded one row per `(restaurant, business_date)`, with capture time preserved
-- [ ] `products` and `product_sources` are seeded so the mapping reproduces `BAGEL_MODIFIER_NAMES`
-- [ ] The `sales` fact holds every configured modifier in the history at `(date, restaurant, source_type, source_name)` grain
-- [ ] For the seven bagel Products, the `product_sales` view matches the regenerated `sales_history.parquet` exactly: same row count, same Product set, same date range, same quantities
-- [ ] The fact is loaded via COPY-into-staging plus a single `ON CONFLICT` upsert, not a per-row loop; raw responses are inserted in batches, not one statement per shard
-- [ ] Re-running the migration leaves the database unchanged rather than duplicating rows
-- [ ] The comparison that proves the match is reproducible, not a one-off eyeballing
-- [ ] Nothing in this ticket re-contacts the Toast API
+- [x] `sales_history.parquet` is regenerated from the full raw history before the comparison, so it reflects 2016 → present rather than the stale 2024-onward slice
+- [x] Every canonical-source raw response (`menu_week`, `orders_agg`) is present in the raw table, sharded one row per `(restaurant, business_date)`, with capture time preserved
+- [x] `products` and `product_sources` are seeded so the mapping reproduces `BAGEL_MODIFIER_NAMES`
+- [x] The `sales` fact holds every configured modifier in the history at `(date, restaurant, source_type, source_name)` grain
+- [x] For the seven bagel Products, the `product_sales` view matches the regenerated `sales_history.parquet` exactly: same row count, same Product set, same date range, same quantities
+- [x] The fact is loaded via COPY-into-staging plus a single `ON CONFLICT` upsert, not a per-row loop; raw responses are inserted in batches, not one statement per shard
+- [x] Re-running the migration leaves the database unchanged rather than duplicating rows
+- [x] The comparison that proves the match is reproducible, not a one-off eyeballing
+- [x] Nothing in this ticket re-contacts the Toast API
 
 ## Blocked by
 
