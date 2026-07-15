@@ -7,6 +7,8 @@ dependencies = [
     "requests",
     "pandas",
     "pyarrow",
+    # Postgres access (ADR 0003). db.py reads/writes the Sales pipeline tables.
+    "psycopg[binary]",
 ]
 
 [project.optional-dependencies]

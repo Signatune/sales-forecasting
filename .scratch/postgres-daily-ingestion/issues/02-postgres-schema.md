@@ -1,6 +1,6 @@
 # Stand up the Postgres schema
 
-Status: ready-for-agent
+Status: done
 Branch: `postgres-daily-ingestion`
 
 ## Parent
