@@ -191,3 +191,32 @@ class TestAgainstPostgres:
         db.insert_raw_response(conn, "r1", "2026-07-06", [{"b": 2}])
 
         assert db.read_raw_responses(conn, business_date="2026-07-05") == [[{"a": 1}]]
+
+    def test_bulk_upsert_sales_replaces_on_repeat_key(self, conn):
+        # The bulk path (COPY into staging + one ON CONFLICT upsert) keeps the
+        # same replace-on-repeat semantics as the row-at-a-time upsert_sales.
+        db.upsert_product_sources(conn, {"plain": [("modifier", "plain bagel")]})
+        rows = [(datetime.date(2026, 7, 5), CAMBRIDGE, "modifier", "plain bagel", 10.0)]
+        db.bulk_upsert_sales(conn, rows)
+        conn.commit()
+        db.bulk_upsert_sales(
+            conn, [(datetime.date(2026, 7, 5), CAMBRIDGE, "modifier", "plain bagel", 17.0)]
+        )
+        conn.commit()
+
+        result = db.read_sales(conn)
+        assert len(result) == 1
+        assert result["quantity"].iloc[0] == 17.0
+
+    def test_bulk_insert_raw_responses_batches_and_dedupes(self, conn):
+        fetched = datetime.datetime(2026, 7, 10, tzinfo=datetime.timezone.utc)
+        shards = [
+            (CAMBRIDGE, datetime.date(2026, 7, 5), fetched, [{"a": 1}]),
+            (BROOKLINE, datetime.date(2026, 7, 5), fetched, [{"b": 2}]),
+        ]
+        assert db.bulk_insert_raw_responses(conn, shards, batch_size=1) == 2
+        conn.commit()
+        # Re-inserting the same captures is a no-op (ON CONFLICT DO NOTHING).
+        db.bulk_insert_raw_responses(conn, shards)
+        conn.commit()
+        assert conn.execute("SELECT count(*) FROM raw_toast_responses").fetchone()[0] == 2

@@ -107,16 +107,20 @@ def read_raw_responses(
     return [row[0] for row in rows]
 
 
-def upsert_product_sources(
+def seed_products(
     conn: psycopg.Connection,
     mapping: Dict[str, Iterable[tuple]],
 ) -> None:
-    """Seed the Product mapping: `mapping` is `{product_name: [(source_type,
-    source_name), ...]}`, many sources to one Product. Idempotent — a Product is
-    inserted once and its sources are re-pointed rather than duplicated, so this
-    is safe to re-run (and is how ticket 03 seeds BAGEL_MODIFIER_NAMES). Source
-    names are stored verbatim, so pass them already normalized (see module
-    docstring) — that is what lines the map up with the fact under the view's join."""
+    """Seed the Product mapping without committing: `mapping` is
+    `{product_name: [(source_type, source_name), ...]}`, many sources to one
+    Product. Idempotent — a Product is inserted once and its sources are
+    re-pointed rather than duplicated. Source names are stored verbatim, so pass
+    them already normalized (see module docstring) — that is what lines the map
+    up with the fact under the view's join.
+
+    This does not commit, so it can join a larger transaction (the ticket 03
+    migration writes the map, the raw shards and the fact in one transaction).
+    `upsert_product_sources` wraps it with a commit for standalone callers."""
     with conn.cursor() as cur:
         for product, sources in mapping.items():
             # ON CONFLICT ... DO UPDATE (not DO NOTHING) so RETURNING yields the
@@ -138,6 +142,15 @@ def upsert_product_sources(
                     "DO UPDATE SET product_id = EXCLUDED.product_id",
                     source_rows,
                 )
+
+
+def upsert_product_sources(
+    conn: psycopg.Connection,
+    mapping: Dict[str, Iterable[tuple]],
+) -> None:
+    """Seed the Product mapping and commit. See `seed_products` for the
+    semantics; this is the standalone (self-committing) entry point."""
+    seed_products(conn, mapping)
     conn.commit()
 
 
@@ -176,6 +189,83 @@ def upsert_sales(conn: psycopg.Connection, frame: pd.DataFrame) -> None:
             rows,
         )
     conn.commit()
+
+
+# The fact's columns, and the subset that is its primary key — the upsert's
+# COPY target, SELECT list and ON CONFLICT key are all spelled from these.
+SALES_KEY_COLUMNS = ("date", "restaurant_guid", "source_type", "source_name")
+SALES_COLUMNS = SALES_KEY_COLUMNS + ("quantity",)
+
+
+def bulk_upsert_sales(conn: psycopg.Connection, rows: Iterable[tuple]) -> int:
+    """Load many fact rows the way the ticket 03 migration needs and the daily
+    `upsert_sales` is the wrong tool for: COPY every row into a temp staging
+    table in one stream, then a single `INSERT ... SELECT ... ON CONFLICT` upsert
+    into `sales`. That keeps the atomic replace-on-repeat semantics the daily job
+    depends on — a repeat key still replaces its quantity — while paying one
+    round trip instead of one per row over the whole history.
+
+    `rows` are `(date, restaurant_guid, source_type, source_name, quantity)`
+    tuples (as `sales_rows` produces). Callers must not hand in two rows with the
+    same key — dedupe upstream — so the staged SELECT never affects a target row
+    twice. Returns the number of rows staged. Does not commit: the migration
+    wraps the raw shards, the map and the fact in one transaction and commits
+    once, so a failure rolls back to nothing. The temp table is dropped on that
+    commit (`ON COMMIT DROP`)."""
+    columns = ", ".join(SALES_COLUMNS)
+    key = ", ".join(SALES_KEY_COLUMNS)
+    staged = 0
+    with conn.cursor() as cur:
+        cur.execute(
+            "CREATE TEMP TABLE sales_staging "
+            "(LIKE sales INCLUDING DEFAULTS) ON COMMIT DROP"
+        )
+        with cur.copy(f"COPY sales_staging ({columns}) FROM STDIN") as copy:
+            for row in rows:
+                copy.write_row(row)
+                staged += 1
+        cur.execute(
+            f"INSERT INTO sales ({columns}) "
+            f"SELECT {columns} FROM sales_staging "
+            f"ON CONFLICT ({key}) DO UPDATE SET quantity = EXCLUDED.quantity"
+        )
+    return staged
+
+
+def bulk_insert_raw_responses(
+    conn: psycopg.Connection,
+    shards: Iterable[tuple],
+    batch_size: int = 1000,
+) -> int:
+    """Insert many raw-response shards in multi-row batches, not one statement
+    per shard. Each shard is `(restaurant_guid, business_date, fetched_at,
+    response)` — the ticket 03 migration shards each saved raw file into one row
+    per `(restaurant, business_date)`, capture time from the filename. The insert
+    is `ON CONFLICT (restaurant_guid, business_date, fetched_at) DO NOTHING`, so
+    re-running the migration adds no duplicate captures. Returns the number of
+    shards *actually* inserted — conflict-skipped rows are not counted, so a
+    re-run over an already-loaded history returns 0. Does not commit — it joins
+    the migration's single transaction."""
+    shards = list(shards)
+    if not shards:
+        return 0
+    inserted = 0
+    with conn.cursor() as cur:
+        for start in range(0, len(shards), batch_size):
+            batch = shards[start : start + batch_size]
+            values_sql = ",".join(["(%s, %s, %s, %s)"] * len(batch))
+            params: List = []
+            for restaurant_guid, business_date, fetched_at, response in batch:
+                params += [restaurant_guid, business_date, fetched_at, Jsonb(response)]
+            cur.execute(
+                "INSERT INTO raw_toast_responses "
+                "(restaurant_guid, business_date, fetched_at, response) "
+                f"VALUES {values_sql} "
+                "ON CONFLICT (restaurant_guid, business_date, fetched_at) DO NOTHING",
+                params,
+            )
+            inserted += cur.rowcount
+    return inserted
 
 
 def read_sales(conn: psycopg.Connection) -> pd.DataFrame:

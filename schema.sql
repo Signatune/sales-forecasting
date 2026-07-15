@@ -26,6 +26,16 @@ CREATE TABLE IF NOT EXISTS raw_toast_responses (
 CREATE INDEX IF NOT EXISTS raw_toast_responses_business_date_idx
     ON raw_toast_responses (business_date);
 
+-- A capture is identified by its restaurant, business date, and fetch time.
+-- The one-time history migration (ticket 03) shards each saved raw file into
+-- one row per (restaurant, business_date) and re-inserts them on a re-run;
+-- this key lets that insert ON CONFLICT DO NOTHING so re-running changes
+-- nothing. It does not constrain the daily job: a business date re-pulled on
+-- three consecutive days (ADR 0004) has three distinct fetch times, so it is
+-- still three rows, exactly as intended.
+CREATE UNIQUE INDEX IF NOT EXISTS raw_toast_responses_capture_key
+    ON raw_toast_responses (restaurant_guid, business_date, fetched_at);
+
 -- These tables live in `public`, which Supabase exposes through its Data API.
 -- Enable RLS with no policies: the pipeline connects as the `postgres` role
 -- (which bypasses RLS), so its reads and writes are unaffected, while the

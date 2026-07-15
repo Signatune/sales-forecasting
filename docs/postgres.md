@@ -62,6 +62,31 @@ This creates the tables and the `product_sales` view. It is idempotent — every
 statement is `IF NOT EXISTS` or `CREATE OR REPLACE`, so running it against an
 already-set-up database changes nothing and is safe to repeat.
 
+## Migrate the pulled history (one-time)
+
+The history already pulled from Toast lives under `data/raw/`. It is loaded into
+Postgres once, by hand, reusing the rate-limit cost already paid rather than
+re-pulling (ADR 0003) — the migration never re-contacts Toast. Regenerate the
+parquet first so the file-based readers and the fact tell the same story, then
+load:
+
+```
+python normalize.py     # regenerate sales_history.parquet from the full raw history
+python migrate.py        # load Postgres, then verify the view matches the parquet
+```
+
+`migrate.py` shards the saved `menu_week` / `orders_agg` responses into the raw
+table (one row per restaurant and business date, capture time from the
+filename), seeds `products` / `product_sources` from `normalize.py`'s
+`BAGEL_MODIFIER_NAMES`, and loads the canonical `sales` fact — every configured
+modifier in the history, via COPY into a staging table plus one `ON CONFLICT`
+upsert. The whole load is one transaction and idempotent: re-running it changes
+nothing. It wants the **Session pooler** `DATABASE_URL` (the staged COPY relies
+on a full session), same as applying the schema.
+
+`python migrate.py verify` re-runs just the comparison (below); `migrate` runs
+just the load. With no argument it does both.
+
 ## Verify (the ticket's demoable)
 
 ```python
@@ -104,14 +129,16 @@ rather than adding a duplicate — the uniqueness ADR 0004's daily job depends o
 
 ## Running the database integration tests
 
-The unit tests in `tests/test_db.py` need no database. The integration tests do,
-and they `TRUNCATE` the pipeline tables — so they run against a **throwaway**
-database, never your real `DATABASE_URL`. Point `TEST_DATABASE_URL` at a scratch
-database (a second Supabase project, or a local Postgres) to run them:
+The unit tests in `tests/test_db.py` and `tests/test_migrate.py` need no
+database. The integration tests do, and they `TRUNCATE` the pipeline tables — so
+they run against a **throwaway** database, never your real `DATABASE_URL`. Point
+`TEST_DATABASE_URL` at a scratch database (a second Supabase project, or a local
+Postgres) to run them:
 
 ```
-TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres' pytest tests/test_db.py
+TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres' pytest tests/test_db.py tests/test_migrate.py
 ```
 
 With `TEST_DATABASE_URL` unset, those tests skip and the rest of the suite runs
-unchanged.
+unchanged. `test_migrate.py`'s full-history comparison also expects
+`sales_history.parquet` to be current (`python normalize.py`).

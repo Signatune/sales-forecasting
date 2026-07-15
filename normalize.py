@@ -115,9 +115,11 @@ _OPTIONAL_ROW_FIELDS = {"modifierGuid": str}
 _UNKNOWN_GUID = "unknown"
 
 
-def _is_configured_modifier(row: dict) -> bool:
+def is_configured_modifier(row: dict) -> bool:
     """Whether the row is a menu entity rather than text someone typed. Only
-    configured modifiers can be Product Sales, or evidence of shape drift."""
+    configured modifiers can be Product Sales, or evidence of shape drift. Public
+    so the history migration (migrate.py) selects the fact's configured sources
+    by the same rule that builds the parquet, and the two can't drift."""
     return row.get("modifierGuid", _UNKNOWN_GUID) != _UNKNOWN_GUID
 
 
@@ -165,7 +167,7 @@ def normalize_sales(rows: List[dict]) -> pd.DataFrame:
     for row in rows:
         if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
             continue
-        if not _is_configured_modifier(row):
+        if not is_configured_modifier(row):
             continue
         product = _MODIFIER_TO_PRODUCT.get(row["modifierName"].strip().lower())
         if product is None:
@@ -191,7 +193,7 @@ def find_unmapped_bagelish(rows: List[dict]) -> Dict[str, float]:
     for row in rows:
         if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
             continue
-        if not _is_configured_modifier(row):
+        if not is_configured_modifier(row):
             continue
         name = row["modifierName"].strip().lower()
         if name in _MODIFIER_TO_PRODUCT or name in EXCLUDED_MODIFIER_NAMES:
