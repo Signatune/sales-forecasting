@@ -13,6 +13,7 @@ import pytest
 import backtest
 import forecast
 import model_comparison
+import sales_history
 from model_comparison import (
     WHEAT_TOTAL,
     actual_totals,
@@ -957,11 +958,13 @@ class TestCompareSplitModels:
 class TestMain:
     def test_prints_the_ranked_candidates(self, tmp_path, monkeypatch, capsys):
         history_path = tmp_path / "sales_history.parquet"
-        monkeypatch.setattr(model_comparison, "SALES_HISTORY_PATH", history_path)
         monkeypatch.setattr(model_comparison, "EVAL_WEEKS", 1)
         monkeypatch.setattr(model_comparison, "WARMUP_WEEKS", 1)
         sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0))).to_parquet(
             history_path, index=False
+        )
+        monkeypatch.setattr(
+            sales_history, "load_sales_history", lambda: pd.read_parquet(history_path)
         )
 
         model_comparison.main()
@@ -973,11 +976,13 @@ class TestMain:
 
     def test_prints_the_split_comparison_too(self, tmp_path, monkeypatch, capsys):
         history_path = tmp_path / "sales_history.parquet"
-        monkeypatch.setattr(model_comparison, "SALES_HISTORY_PATH", history_path)
         monkeypatch.setattr(model_comparison, "EVAL_WEEKS", 1)
         monkeypatch.setattr(model_comparison, "WARMUP_WEEKS", 1)
         sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0))).to_parquet(
             history_path, index=False
+        )
+        monkeypatch.setattr(
+            sales_history, "load_sales_history", lambda: pd.read_parquet(history_path)
         )
 
         model_comparison.main()

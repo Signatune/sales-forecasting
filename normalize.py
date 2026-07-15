@@ -26,8 +26,12 @@ from typing import Dict, List, Set
 
 import pandas as pd
 
+import sales_history
+
 RAW_DIR = Path(__file__).parent / "data" / "raw"
-OUTPUT_PATH = Path(__file__).parent / "data" / "sales_history.parquet"
+# normalize.py owns the write side; sales_history is the one place the path is
+# named, so reader and writer can never drift onto different files.
+OUTPUT_PATH = sales_history.SALES_HISTORY_PATH
 
 # Scope is the Cambridge and Brookline locations only (see ticket 01).
 INCLUDED_RESTAURANTS = {

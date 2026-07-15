@@ -1,6 +1,6 @@
 # Route every Sales reader through a single loader
 
-Status: ready-for-agent
+Status: done
 Branch: `postgres-daily-ingestion`
 
 ## Parent

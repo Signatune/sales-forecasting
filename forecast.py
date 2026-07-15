@@ -6,7 +6,7 @@ Reads the canonical Sales history written by normalize.py and writes, for each
 of the next 2..7 days, a Demand Forecast per Product and the summed family-level
 Sales Forecast:
 
-    data/sales_history.parquet
+    the Sales history (via sales_history.load_sales_history)
       -> data/demand_forecast.parquet   (product, date, forecast_quantity)
       -> data/sales_forecast.parquet    (date, forecast_quantity)
 
@@ -37,7 +37,8 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-SALES_HISTORY_PATH = Path(__file__).parent / "data" / "sales_history.parquet"
+import sales_history
+
 DEMAND_FORECAST_PATH = Path(__file__).parent / "data" / "demand_forecast.parquet"
 SALES_FORECAST_PATH = Path(__file__).parent / "data" / "sales_forecast.parquet"
 
@@ -51,8 +52,8 @@ FORECAST_PRODUCTS: Tuple[str, ...] = (
 )
 
 # In the Sales history, deliberately not forecast. Listed so they are a recorded
-# decision rather than a warning on every run. Their Sales stay in
-# sales_history.parquet; re-including one is a move between these two constants.
+# decision rather than a warning on every run. Their Sales stay in the Sales
+# history; re-including one is a move between these two constants.
 SKIPPED_PRODUCTS: Dict[str, str] = {
     "gluten-free everything": "bought in frozen, not baked — kept in Sales history for later",
     "gluten-free plain": "bought in frozen, not baked — kept in Sales history for later",
@@ -204,7 +205,7 @@ def _skipped_daily_mean(sales: pd.DataFrame) -> float:
 
 def main(as_of: Optional[dt.date] = None) -> None:
     as_of = as_of or dt.date.today()
-    sales = pd.read_parquet(SALES_HISTORY_PATH)
+    sales = sales_history.load_sales_history()
 
     for product in unexpected_products(sales):
         print(
