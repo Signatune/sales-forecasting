@@ -6,6 +6,7 @@ Branch: `postgres-daily-ingestion`
 ## Parent
 
 `docs/adr/0003-toast-ingestion-moves-to-scheduled-github-actions-and-postgres.md`
+`docs/adr/0005-canonical-sales-is-a-source-to-product-model.md`
 
 ## What to build
 
@@ -13,6 +14,10 @@ Flip the loader from ticket 01 so the Sales history comes from Postgres instead
 of the parquet file. Postgres becomes the single source of truth: the forecast,
 the backtest, the model comparison and the inspection page all now run off the
 database, and they need database connection setup they did not need before.
+
+The loader reads the `product_sales` view (ADR 0005), which rolls the Sales fact
+up through the Product mapping and returns the same `(product, date, quantity)`
+frame the readers consume today — so the readers are untouched below the loader.
 
 Because ticket 03 proved the migrated data matches the parquet file, this ticket
 has a sharp test — the numbers must not move. Any difference in the Demand
@@ -29,7 +34,7 @@ Demoable: with the parquet file moved out of the way, `forecast.py` and
 
 ## Acceptance criteria
 
-- [ ] The shared loader reads canonical Sales from Postgres
+- [ ] The shared loader reads canonical Sales from the `product_sales` view in Postgres
 - [ ] `forecast.py`, `backtest.py`, `model_comparison.py` and `inspection_page.py` all run with no parquet Sales history present
 - [ ] Outputs match a pre-switch run: same Demand Forecast, same Sales Forecast, same backtest metrics
 - [ ] The `date` dtype the loader returns matches what downstream code expects; no dtype regression

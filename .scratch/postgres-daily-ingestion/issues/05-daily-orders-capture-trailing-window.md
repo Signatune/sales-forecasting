@@ -6,14 +6,21 @@ Branch: `postgres-daily-ingestion`
 ## Parent
 
 `docs/adr/0004-daily-capture-uses-orders-api-only-with-a-trailing-window.md`
+`docs/adr/0005-canonical-sales-is-a-source-to-product-model.md`
 
 ## What to build
 
 One command that captures a day's Sales end to end: pull the Toast Orders API for
 both in-scope restaurants, store the raw responses as `jsonb`, normalize them to
-canonical Sales, and upsert. Capture and normalization happen in the same run —
-a GitHub Actions runner is ephemeral, so there is no half-finished state to hand
-to a second step later.
+the canonical Sales fact, and upsert. Capture and normalization happen in the
+same run — a GitHub Actions runner is ephemeral, so there is no half-finished
+state to hand to a second step later.
+
+Writes go to the ADR 0005 `sales` fact at `(date, restaurant, source_type,
+source_name, quantity)` grain — every configured modifier the day sold, not just
+the mapped bagels — via the batched `upsert_sales` helper (ticket 08). The
+`product_sales` view rolls those up to Products for the readers; this job does
+not touch the mapping.
 
 Two decisions from ADR 0004 shape it:
 
@@ -24,7 +31,7 @@ fit for a job that runs every day forever. `toast_client.py` is not on this path
 
 **A 3-day trailing window, not just yesterday.** Toast lets back-office
 corrections and voids land after a business date has closed. Re-pulling the last
-three business dates every run and upserting by `(Product, Date)` means those
+three business dates every run and upserting by `(date, restaurant, source)` means those
 corrections are picked up on their own, instead of depending on someone noticing
 and re-running a backfill by hand. This is the whole reason the window exists —
 if the job only ever wrote new days, a correction would sit uncaught forever.
@@ -41,7 +48,7 @@ again, and the day is corrected back from Toast.
 
 - [ ] One command pulls Orders for the trailing 3 business dates across both in-scope restaurants, normalizes, and writes to Postgres
 - [ ] Raw responses are stored as `jsonb`, aggregated so no guest PII is persisted
-- [ ] Sales are upserted by `(Product, Date)`: a second run is a no-op, and a changed quantity in Toast overwrites the stored one
+- [ ] Sales are upserted into the fact by `(date, restaurant, source_type, source_name)`: a second run is a no-op, and a changed quantity in Toast overwrites the stored one
 - [ ] The Analytics API is not called
 - [ ] The existing normalization rules still hold: only configured modifiers (those with a `modifierGuid`) count, unmapped bagel-looking modifiers are surfaced loudly, out-of-scope restaurants are excluded
 - [ ] A Toast or database failure exits non-zero with a clear message and leaves the stored history untouched
@@ -50,3 +57,4 @@ again, and the day is corrected back from Toast.
 ## Blocked by
 
 - `02-postgres-schema.md`
+- `08-batch-the-sales-upsert-helper.md` — the daily capture's write path; land the batched helper first so this is built on it, not on the row-at-a-time version
