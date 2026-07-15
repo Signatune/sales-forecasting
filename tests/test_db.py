@@ -1,9 +1,9 @@
-"""The Postgres access seam (ADR 0003, ticket 02).
+"""The Postgres access seam (ADR 0003, ADR 0005, ticket 02).
 
 Two layers:
 
 - Unit tests that need no database --- the connection-string contract and the
-  frame-to-rows mapping.
+  fact frame-to-rows mapping.
 - Integration tests that exercise a real Postgres, gated behind
   `TEST_DATABASE_URL`. They TRUNCATE the schema's tables, so they run against a
   throwaway test database, never `DATABASE_URL`; when the variable is unset they
@@ -20,6 +20,22 @@ import db
 from normalize import validate_modifier_rows
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
+
+CAMBRIDGE = "28e5b269-1c1c-45df-81a8-1d268c005dfa"
+BROOKLINE = "9ae70079-b9cd-4b92-8457-c86bc823188f"
+
+
+def fact(date, restaurant_guid, source_name, quantity, source_type="modifier"):
+    """One Sales fact row as the single-row frame upsert_sales takes."""
+    return pd.DataFrame(
+        {
+            "date": pd.to_datetime([date]),
+            "restaurant_guid": [restaurant_guid],
+            "source_type": [source_type],
+            "source_name": [source_name],
+            "quantity": [quantity],
+        }
+    )
 
 
 class TestConnectionString:
@@ -39,23 +55,21 @@ class TestConnectionString:
 
 
 class TestSalesRows:
-    """The frame-to-rows mapping upsert_sales feeds Postgres."""
+    """The fact frame-to-rows mapping upsert_sales feeds Postgres."""
 
     def test_maps_to_python_typed_tuples(self):
-        frame = pd.DataFrame(
-            {
-                "product": ["plain"],
-                "date": pd.to_datetime(["2026-07-05"]),
-                "quantity": [10.0],
-            }
-        )
-        (product, date, quantity), = db.sales_rows(frame)
-        assert product == "plain"
+        frame = fact("2026-07-05", CAMBRIDGE, "plain bagel", 10.0)
+        (date, restaurant_guid, source_type, source_name, quantity), = db.sales_rows(frame)
         assert date == datetime.date(2026, 7, 5)
+        assert restaurant_guid == CAMBRIDGE
+        assert source_type == "modifier"
+        assert source_name == "plain bagel"
         assert isinstance(quantity, float) and quantity == 10.0
 
     def test_empty_frame_maps_to_no_rows(self):
-        frame = pd.DataFrame(columns=["product", "date", "quantity"])
+        frame = pd.DataFrame(
+            columns=["date", "restaurant_guid", "source_type", "source_name", "quantity"]
+        )
         assert db.sales_rows(frame) == []
 
 
@@ -68,7 +82,9 @@ class TestAgainstPostgres:
     def conn(self):
         with psycopg.connect(TEST_DATABASE_URL) as c:
             db.apply_schema(c)
-            c.execute("TRUNCATE raw_toast_responses, sales")
+            c.execute(
+                "TRUNCATE raw_toast_responses, sales, product_sources, products"
+            )
             c.commit()
             yield c
 
@@ -77,31 +93,61 @@ class TestAgainstPostgres:
         db.apply_schema(conn)
         db.apply_schema(conn)
 
-    def test_repeat_write_of_a_day_replaces_the_row(self, conn):
-        # The ticket's demoable: write the same (product, date) twice with
-        # different quantities, read back one row carrying the second quantity.
-        first = pd.DataFrame(
-            {"product": ["plain"], "date": pd.to_datetime(["2026-07-05"]), "quantity": [10.0]}
-        )
-        second = pd.DataFrame(
-            {"product": ["plain"], "date": pd.to_datetime(["2026-07-05"]), "quantity": [17.0]}
-        )
-        db.upsert_sales(conn, first)
-        db.upsert_sales(conn, second)
+    def test_repeat_write_of_a_fact_row_replaces_it(self, conn):
+        # The ticket's demoable: write the same (date, restaurant, source) twice
+        # with different quantities, read back one fact row carrying the second.
+        db.upsert_product_sources(conn, {"plain": [("modifier", "plain bagel")]})
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "plain bagel", 10.0))
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "plain bagel", 17.0))
 
         result = db.read_sales(conn)
         assert len(result) == 1
         assert result["quantity"].iloc[0] == 17.0
 
-    def test_read_sales_matches_the_loader_shape(self, conn):
-        frame = pd.DataFrame(
-            {
-                "product": ["sesame", "plain"],
-                "date": pd.to_datetime(["2026-07-06", "2026-07-05"]),
-                "quantity": [5.0, 10.0],
-            }
+    def test_view_sums_across_a_products_sources(self, conn):
+        # The ticket's demoable: two different sources that map to the same
+        # Product on the same date read back through the view as one summed row.
+        db.upsert_product_sources(
+            conn,
+            {"plain": [("modifier", "plain bagel"), ("modifier", "plain, bulk")]},
         )
-        db.upsert_sales(conn, frame)
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "plain bagel", 10.0))
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "plain, bulk", 4.0))
+
+        result = db.read_sales(conn)
+        assert len(result) == 1
+        assert result["product"].iloc[0] == "plain"
+        assert result["quantity"].iloc[0] == 14.0
+
+    def test_view_sums_across_locations(self, conn):
+        # A Product's daily Sales is summed across both locations (CONTEXT.md).
+        db.upsert_product_sources(conn, {"sesame": [("modifier", "sesame bagel")]})
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "sesame bagel", 6.0))
+        db.upsert_sales(conn, fact("2026-07-05", BROOKLINE, "sesame bagel", 9.0))
+
+        result = db.read_sales(conn)
+        assert len(result) == 1
+        assert result["quantity"].iloc[0] == 15.0
+
+    def test_unmapped_source_sits_in_the_fact_but_not_the_view(self, conn):
+        # ADR 0005: the fact keeps every configured source; the view (inner join)
+        # shows only mapped ones.
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "rainbow bagel", 3.0))
+
+        assert db.read_sales(conn).empty
+        in_fact = conn.execute("SELECT count(*) FROM sales").fetchone()[0]
+        assert in_fact == 1
+
+    def test_read_sales_matches_the_loader_shape(self, conn):
+        db.upsert_product_sources(
+            conn,
+            {
+                "plain": [("modifier", "plain bagel")],
+                "sesame": [("modifier", "sesame bagel")],
+            },
+        )
+        db.upsert_sales(conn, fact("2026-07-06", CAMBRIDGE, "sesame bagel", 5.0))
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "plain bagel", 10.0))
 
         result = db.read_sales(conn)
         assert list(result.columns) == ["product", "date", "quantity"]
@@ -110,11 +156,30 @@ class TestAgainstPostgres:
         # sorted by (date, product)
         assert list(result["product"]) == ["plain", "sesame"]
 
+    def test_upsert_product_sources_is_idempotent_and_repoints(self, conn):
+        # Re-running the seed adds no duplicate sources, and a source can be
+        # moved from one Product to another by re-seeding (ADR 0005).
+        db.upsert_product_sources(conn, {"plain": [("modifier", "plain bagel")]})
+        db.upsert_product_sources(conn, {"plain": [("modifier", "plain bagel")]})
+        assert conn.execute("SELECT count(*) FROM products").fetchone()[0] == 1
+        assert conn.execute("SELECT count(*) FROM product_sources").fetchone()[0] == 1
+
+        db.upsert_product_sources(conn, {"everything": [("modifier", "plain bagel")]})
+        db.upsert_sales(conn, fact("2026-07-05", CAMBRIDGE, "plain bagel", 8.0))
+        result = db.read_sales(conn)
+        assert list(result["product"]) == ["everything"]
+
     def test_raw_response_round_trips_as_jsonb(self, conn):
         payload = [
-            {"businessDate": "20260705", "modifierName": "plain bagel", "quantitySold": 3}
+            {
+                "businessDate": "20260705",
+                "modifierName": "plain bagel",
+                "quantitySold": 3,
+                "restaurantGuid": CAMBRIDGE,
+                "modifierGuid": "g1",
+            }
         ]
-        db.insert_raw_response(conn, "28e5b269-1c1c-45df-81a8-1d268c005dfa", "2026-07-05", payload)
+        db.insert_raw_response(conn, CAMBRIDGE, "2026-07-05", payload)
 
         saved = db.read_raw_responses(conn)
         assert saved == [payload]

@@ -1,9 +1,21 @@
 # Postgres: local setup
 
 The Sales pipeline stores its data in a managed Postgres database (ADR 0003).
-There are two tables — raw Toast responses as `jsonb`, and the canonical
-`(product, date, quantity)` Sales history. Their definitions live in
-[`schema.sql`](../schema.sql); all access goes through [`db.py`](../db.py).
+There is the raw Toast responses table (`jsonb`), and canonical Sales as a
+source-to-product model (ADR 0005):
+
+- **`sales`** — the fact, one row per `(date, restaurant_guid, source_type,
+  source_name, quantity)`: every configured thing sold, at both Toast grains
+  (`source_type` is `item` or `modifier`), per location.
+- **`products`** / **`product_sources`** — the many-to-one map from a sold
+  source up to a canonical Product (`BAGEL_MODIFIER_NAMES` promoted from code
+  into data).
+- **`product_sales`** — a view that rolls the fact up through the map to the
+  `(product, date, quantity)` frame the readers consume, summed across locations
+  and across a Product's sources.
+
+Their definitions live in [`schema.sql`](../schema.sql); all access goes through
+[`db.py`](../db.py).
 
 ## Point at a database
 
@@ -46,9 +58,9 @@ export DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres'
 python db.py
 ```
 
-This creates both tables. It is idempotent — every statement is
-`IF NOT EXISTS`, so running it against an already-set-up database changes
-nothing and is safe to repeat.
+This creates the tables and the `product_sales` view. It is idempotent — every
+statement is `IF NOT EXISTS` or `CREATE OR REPLACE`, so running it against an
+already-set-up database changes nothing and is safe to repeat.
 
 ## Verify (the ticket's demoable)
 
@@ -56,16 +68,39 @@ nothing and is safe to repeat.
 import pandas as pd
 import db
 
+CAMBRIDGE = "28e5b269-1c1c-45df-81a8-1d268c005dfa"
+
+
+def fact(source_name, quantity):
+    return pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2026-07-05"]),
+            "restaurant_guid": [CAMBRIDGE],
+            "source_type": ["modifier"],
+            "source_name": [source_name],
+            "quantity": [quantity],
+        }
+    )
+
+
 with db.connect() as conn:
     db.apply_schema(conn)
-    day = pd.to_datetime(["2026-07-05"])
-    db.upsert_sales(conn, pd.DataFrame({"product": ["plain"], "date": day, "quantity": [10.0]}))
-    db.upsert_sales(conn, pd.DataFrame({"product": ["plain"], "date": day, "quantity": [17.0]}))
-    print(db.read_sales(conn))   # one row for (plain, 2026-07-05), quantity 17.0
+    # Seed one Product with two source mappings.
+    db.upsert_product_sources(
+        conn, {"plain": [("modifier", "plain bagel"), ("modifier", "plain, bulk")]}
+    )
+    # Write the same (date, restaurant, source) twice: the second quantity wins.
+    db.upsert_sales(conn, fact("plain bagel", 10.0))
+    db.upsert_sales(conn, fact("plain bagel", 17.0))
+    # Write a second source of the same Product on the same date.
+    db.upsert_sales(conn, fact("plain, bulk", 4.0))
+    print(db.read_sales(conn))   # one row: (plain, 2026-07-05), quantity 21.0
 ```
 
-The repeat write of the same `(product, date)` replaces the row rather than
-adding a duplicate — the uniqueness ADR 0004's daily job depends on.
+The repeat write of the same `(date, restaurant, source)` replaces that fact row
+rather than adding a duplicate — the uniqueness ADR 0004's daily job depends on
+— and the view sums a Product's sources (17.0 + 4.0) into one
+`(product, date, quantity)` row.
 
 ## Running the database integration tests
 

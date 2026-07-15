@@ -1,4 +1,4 @@
-"""Postgres access for the Sales pipeline (ADR 0003).
+"""Postgres access for the Sales pipeline (ADR 0003, ADR 0005).
 
 The connection string comes from a single environment variable, `DATABASE_URL`,
 so the same code runs from a laptop and from a GitHub Actions runner. Applying
@@ -9,19 +9,29 @@ the schema is one command:
 `schema.sql` is idempotent, so re-running it against an already-set-up database
 is harmless.
 
-Two tables (see `schema.sql`):
+The objects (see `schema.sql`):
 
 - `raw_toast_responses` --- raw Toast responses as `jsonb`, the replay/audit
   safety net. `insert_raw_response` saves one; `read_raw_responses` reads them
   back for re-normalization without contacting Toast.
-- `sales` --- canonical `(product, date, quantity)` Sales, one row per
-  `(product, date)`. `upsert_sales` writes them with replace-on-repeat
-  semantics; `read_sales` returns the same frame `sales_history` reads today.
+- Canonical Sales as a source-to-product model (ADR 0005). The fact `sales` is
+  keyed one row per `(date, restaurant_guid, source_type, source_name)`;
+  `upsert_sales` writes fact rows with replace-on-repeat semantics.
+  `product_sources` maps each source up to one Product; `upsert_product_sources`
+  seeds that map. `read_sales` reads the `product_sales` view, which rolls the
+  fact up through the map to the `(product, date, quantity)` frame the readers
+  consume — so the write side is at source grain and the read side at Product
+  grain, exactly as ADR 0005 lays out.
+
+`source_name` is stored in the normalized (stripped, lower-cased) form
+`normalize.py` matches on; callers pass names already normalized (as
+`normalize.py` produces them), and both the fact and the map store them that
+way so the view's join lines up.
 """
 import os
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import pandas as pd
 import psycopg
@@ -52,8 +62,8 @@ def connect(env=os.environ) -> psycopg.Connection:
 
 
 def apply_schema(conn: psycopg.Connection) -> None:
-    """Create both tables from `schema.sql`. Idempotent: safe to run against an
-    already-set-up database."""
+    """Create the tables and view from `schema.sql`. Idempotent: safe to run
+    against an already-set-up database."""
     conn.execute(SCHEMA_PATH.read_text())
     conn.commit()
 
@@ -97,39 +107,85 @@ def read_raw_responses(
     return [row[0] for row in rows]
 
 
+def upsert_product_sources(
+    conn: psycopg.Connection,
+    mapping: Dict[str, Iterable[tuple]],
+) -> None:
+    """Seed the Product mapping: `mapping` is `{product_name: [(source_type,
+    source_name), ...]}`, many sources to one Product. Idempotent — a Product is
+    inserted once and its sources are re-pointed rather than duplicated, so this
+    is safe to re-run (and is how ticket 03 seeds BAGEL_MODIFIER_NAMES). Source
+    names are stored verbatim, so pass them already normalized (see module
+    docstring) — that is what lines the map up with the fact under the view's join."""
+    with conn.cursor() as cur:
+        for product, sources in mapping.items():
+            # ON CONFLICT ... DO UPDATE (not DO NOTHING) so RETURNING yields the
+            # id whether the Product is new or already present.
+            product_id = cur.execute(
+                "INSERT INTO products (name) VALUES (%s) "
+                "ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id",
+                (product,),
+            ).fetchone()[0]
+            source_rows = [
+                (product_id, str(source_type), str(source_name))
+                for source_type, source_name in sources
+            ]
+            if source_rows:
+                cur.executemany(
+                    "INSERT INTO product_sources (product_id, source_type, source_name) "
+                    "VALUES (%s, %s, %s) "
+                    "ON CONFLICT (source_type, source_name) "
+                    "DO UPDATE SET product_id = EXCLUDED.product_id",
+                    source_rows,
+                )
+    conn.commit()
+
+
 def sales_rows(frame: pd.DataFrame) -> List[tuple]:
-    """The canonical Sales frame as `(product, date, quantity)` tuples ready for
-    Postgres: dates as python `date`, quantities as `float`. Pure, so the
-    frame-to-rows mapping is testable without a database."""
+    """The Sales fact frame as `(date, restaurant_guid, source_type,
+    source_name, quantity)` tuples ready for Postgres: dates as python `date`,
+    quantities as `float`. Pure, so the frame-to-rows mapping is testable
+    without a database."""
     return [
-        (str(row.product), pd.Timestamp(row.date).date(), float(row.quantity))
+        (
+            pd.Timestamp(row.date).date(),
+            str(row.restaurant_guid),
+            str(row.source_type),
+            str(row.source_name),
+            float(row.quantity),
+        )
         for row in frame.itertuples(index=False)
     ]
 
 
 def upsert_sales(conn: psycopg.Connection, frame: pd.DataFrame) -> None:
-    """Write canonical Sales with replace-on-repeat semantics: a second write of
-    the same `(product, date)` replaces that row's quantity rather than adding a
-    duplicate. This is what lets ADR 0004's daily job re-pull a business date
-    across three days without accumulating duplicates."""
+    """Write Sales fact rows with replace-on-repeat semantics: a second write of
+    the same `(date, restaurant_guid, source_type, source_name)` replaces that
+    row's quantity rather than adding a duplicate. This is what lets ADR 0004's
+    daily job re-pull a business date across three days without accumulating
+    duplicates."""
     rows = sales_rows(frame)
     if not rows:
         return
     with conn.cursor() as cur:
         cur.executemany(
-            "INSERT INTO sales (product, date, quantity) VALUES (%s, %s, %s) "
-            "ON CONFLICT (product, date) DO UPDATE SET quantity = EXCLUDED.quantity",
+            "INSERT INTO sales (date, restaurant_guid, source_type, source_name, quantity) "
+            "VALUES (%s, %s, %s, %s, %s) "
+            "ON CONFLICT (date, restaurant_guid, source_type, source_name) "
+            "DO UPDATE SET quantity = EXCLUDED.quantity",
             rows,
         )
     conn.commit()
 
 
 def read_sales(conn: psycopg.Connection) -> pd.DataFrame:
-    """The canonical Sales history as a `(product, date, quantity)` frame, in the
-    same shape `sales_history.load_sales_history()` returns today: `date` a
-    datetime64 column, `quantity` a float, sorted by `(date, product)`."""
+    """The canonical Sales history as a `(product, date, quantity)` frame, read
+    from the `product_sales` view — the fact rolled up through the Product
+    mapping, summed across locations and sources. Same shape
+    `sales_history.load_sales_history()` returns today: `date` a datetime64
+    column, `quantity` a float, sorted by `(date, product)`."""
     rows = conn.execute(
-        "SELECT product, date, quantity FROM sales ORDER BY date, product"
+        "SELECT product, date, quantity FROM product_sales ORDER BY date, product"
     ).fetchall()
     frame = pd.DataFrame(rows, columns=["product", "date", "quantity"])
     frame["date"] = pd.to_datetime(frame["date"])
