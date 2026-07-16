@@ -173,7 +173,11 @@ def compare_to_parquet(conn: psycopg.Connection) -> Dict[str, object]:
     agree on row count, Product set, date range and every quantity. Returns a
     report dict with `matches` set."""
     view = db.read_sales(conn).sort_values(["date", "product"], ignore_index=True)
-    parquet = sales_history.load_sales_history().sort_values(
+    # Read the parquet file directly, not through sales_history.load_sales_history:
+    # since ticket 04 the loader returns the view itself, so going through it here
+    # would compare the view against itself. This check is the whole point of
+    # comparing the file on disk against the database.
+    parquet = pd.read_parquet(sales_history.SALES_HISTORY_PATH).sort_values(
         ["date", "product"], ignore_index=True
     )
     merged = parquet.merge(

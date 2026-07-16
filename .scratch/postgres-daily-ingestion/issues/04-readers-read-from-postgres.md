@@ -1,6 +1,6 @@
 # Readers read Sales from Postgres
 
-Status: ready-for-agent
+Status: done
 Branch: `postgres-daily-ingestion`
 
 ## Parent
@@ -34,12 +34,12 @@ Demoable: with the parquet file moved out of the way, `forecast.py` and
 
 ## Acceptance criteria
 
-- [ ] The shared loader reads canonical Sales from the `product_sales` view in Postgres
-- [ ] `forecast.py`, `backtest.py`, `model_comparison.py` and `inspection_page.py` all run with no parquet Sales history present
-- [ ] Outputs match a pre-switch run: same Demand Forecast, same Sales Forecast, same backtest metrics
-- [ ] The `date` dtype the loader returns matches what downstream code expects; no dtype regression
-- [ ] A missing or unreachable database fails with a clear message, not a confusing pandas error
-- [ ] Tests cover the loader against a database rather than mocking it away entirely
+- [x] The shared loader reads canonical Sales from the `product_sales` view in Postgres
+- [x] `forecast.py`, `backtest.py`, `model_comparison.py` and `inspection_page.py` all run with no parquet Sales history present
+- [x] Outputs match a pre-switch run: same Demand Forecast, same Sales Forecast, same backtest metrics
+- [x] The `date` dtype the loader returns matches what downstream code expects; no dtype regression
+- [x] A missing or unreachable database fails with a clear message, not a confusing pandas error
+- [x] Tests cover the loader against a database rather than mocking it away entirely
 
 ## Blocked by
 

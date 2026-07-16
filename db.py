@@ -56,9 +56,12 @@ def connection_string(env=os.environ) -> str:
     return url
 
 
-def connect(env=os.environ) -> psycopg.Connection:
-    """Open a connection to the database named by `DATABASE_URL`."""
-    return psycopg.connect(connection_string(env))
+def connect(env=os.environ, **kwargs) -> psycopg.Connection:
+    """Open a connection to the database named by `DATABASE_URL`. Extra keyword
+    arguments pass straight through to `psycopg.connect` — the reader seam uses
+    `connect_timeout` so an unreachable host fails fast rather than hanging on a
+    TCP timeout."""
+    return psycopg.connect(connection_string(env), **kwargs)
 
 
 def apply_schema(conn: psycopg.Connection) -> None:
@@ -278,7 +281,12 @@ def read_sales(conn: psycopg.Connection) -> pd.DataFrame:
         "SELECT product, date, quantity FROM product_sales ORDER BY date, product"
     ).fetchall()
     frame = pd.DataFrame(rows, columns=["product", "date", "quantity"])
-    frame["date"] = pd.to_datetime(frame["date"])
+    # Pinned to nanoseconds, not left to pd.to_datetime's inference: from pandas
+    # 3.0 it infers second resolution from Postgres' date values, and the readers
+    # merge this frame against Demand Forecasts that forecast.py pins to
+    # datetime64[ns]. A coarser dtype here is the regression ticket 04 guards
+    # against, and it must match what the parquet loader returned before.
+    frame["date"] = pd.to_datetime(frame["date"]).astype("datetime64[ns]")
     frame["quantity"] = frame["quantity"].astype(float)
     return frame
 
