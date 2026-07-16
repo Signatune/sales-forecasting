@@ -1,6 +1,6 @@
 # Daily capture: Orders only, upsert
 
-Status: ready-for-agent
+Status: done
 Branch: `postgres-daily-ingestion`
 
 ## Parent
@@ -37,13 +37,13 @@ again, and the day is corrected back from Toast.
 
 ## Acceptance criteria
 
-- [ ] One command pulls Orders for today and the last complete business date across both in-scope restaurants, normalizes, and writes to Postgres
-- [ ] Raw responses are stored as `jsonb`, aggregated so no guest PII is persisted
-- [ ] Sales are upserted into the fact by `(date, restaurant, source_type, source_name)`: a second run is a no-op, and a changed quantity in Toast overwrites the stored one
-- [ ] The Analytics API is not called
-- [ ] The existing normalization rules still hold: only configured modifiers (those with a `modifierGuid`) count, unmapped bagel-looking modifiers are surfaced loudly, out-of-scope restaurants are excluded
-- [ ] A Toast or database failure exits non-zero with a clear message and leaves the stored history untouched
-- [ ] Tests cover the corrected records after re-checking the same day after a modification, the upsert-corrects-a-changed-day case, and the failure path
+- [x] One command pulls Orders for today and the last complete business date across both in-scope restaurants, normalizes, and writes to Postgres — `python daily_capture.py`, over ADR 0004's 3-day trailing window
+- [x] Raw responses are stored as `jsonb`, aggregated so no guest PII is persisted
+- [x] Sales are upserted into the fact by `(date, restaurant, source_type, source_name)`: a second run is a no-op, and a changed quantity in Toast overwrites the stored one
+- [x] The Analytics API is not called
+- [x] The existing normalization rules still hold: only configured modifiers (those with a `modifierGuid`) count, unmapped bagel-looking modifiers are surfaced loudly, out-of-scope restaurants are excluded
+- [x] A Toast or database failure exits non-zero with a clear message and leaves the stored history untouched
+- [x] Tests cover the corrected records after re-checking the same day after a modification, the upsert-corrects-a-changed-day case, and the failure path
 
 ## Blocked by
 

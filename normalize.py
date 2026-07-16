@@ -17,12 +17,13 @@ edited in place, so one Product spans several spellings over the history
 entities and free text a guest or server types on a check — only the former
 carry a modifierGuid, and only the former are Sales.
 """
+import collections
 import datetime as dt
 import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 
 import pandas as pd
 
@@ -114,6 +115,11 @@ _REQUIRED_ROW_FIELDS = {
 _OPTIONAL_ROW_FIELDS = {"modifierGuid": str}
 _UNKNOWN_GUID = "unknown"
 
+# The Toast grain every raw modifier report row carries. The history and the
+# daily capture are modifier-grained throughout (ADR 0005); items exist in the
+# fact's schema but there is no item report to normalize here.
+MODIFIER_SOURCE_TYPE = "modifier"
+
 
 def is_configured_modifier(row: dict) -> bool:
     """Whether the row is a menu entity rather than text someone typed. Only
@@ -183,6 +189,42 @@ def normalize_sales(rows: List[dict]) -> pd.DataFrame:
     )
     df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
     return df.sort_values(["date", "product"], ignore_index=True)
+
+
+def modifier_fact_rows(rows: List[dict]) -> List[Tuple]:
+    """The canonical Sales fact at source grain from raw modifier report rows:
+    one `(date, restaurant_guid, source_type, source_name, quantity)` tuple per
+    `(date, restaurant, normalized modifier name)`, quantity summed over the rows
+    sharing that key. `date` is a python `date`, `quantity` a float,
+    `source_type` always `modifier`.
+
+    This is `normalize_sales` at the fact's grain rather than the Product's: it
+    applies the same three rules — in-scope restaurants only, configured
+    modifiers only (a `modifierGuid`), names normalized (stripped, lower-cased) —
+    but keeps *every* configured modifier, not just the mapped bagels, and does
+    not roll up through `BAGEL_MODIFIER_NAMES` (that mapping now lives in the
+    database, ADR 0005). Both the history migration (`migrate.py`) and the daily
+    capture build the fact through this one function, so their normalization can
+    never drift from each other or from the parquet."""
+    validate_modifier_rows(rows)
+    totals: Dict[Tuple[dt.date, str, str], float] = collections.defaultdict(float)
+    for row in rows:
+        if row["restaurantGuid"] not in INCLUDED_RESTAURANTS:
+            continue
+        if not is_configured_modifier(row):
+            continue
+        name = row["modifierName"].strip().lower()
+        key = (business_date(row["businessDate"]), row["restaurantGuid"], name)
+        totals[key] += float(row["quantitySold"])
+    return [
+        (date, restaurant_guid, MODIFIER_SOURCE_TYPE, name, quantity)
+        for (date, restaurant_guid, name), quantity in totals.items()
+    ]
+
+
+def business_date(yyyymmdd: str) -> dt.date:
+    """A Toast `YYYYMMDD` business-date string as a python `date`."""
+    return dt.datetime.strptime(yyyymmdd, "%Y%m%d").date()
 
 
 def find_unmapped_bagelish(rows: List[dict]) -> Dict[str, float]:

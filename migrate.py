@@ -59,7 +59,7 @@ import sales_history
 CANONICAL_PREFIXES = ("menu_week", "orders_agg")
 
 # Raw source rows are all modifier-grained; the fact loads them at that grain.
-SOURCE_TYPE = "modifier"
+SOURCE_TYPE = normalize.MODIFIER_SOURCE_TYPE
 
 
 def capture_time(path: Path) -> dt.datetime:
@@ -68,10 +68,6 @@ def capture_time(path: Path) -> dt.datetime:
     `20260710T122903Z` form toast_client.py / toast_orders.py write."""
     stamp = path.name.split("__")[1].removesuffix(".json")
     return dt.datetime.strptime(stamp, "%Y%m%dT%H%M%SZ").replace(tzinfo=dt.timezone.utc)
-
-
-def _business_date(yyyymmdd: str) -> dt.date:
-    return dt.datetime.strptime(yyyymmdd, "%Y%m%d").date()
 
 
 def canonical_files(raw_dir: Path = normalize.RAW_DIR) -> List[Path]:
@@ -98,7 +94,7 @@ def raw_shards(raw_dir: Path = normalize.RAW_DIR) -> List[Tuple]:
             grouped[(row["restaurantGuid"], row["businessDate"])].append(row)
         for (restaurant_guid, business_date), rows in grouped.items():
             shards.append(
-                (restaurant_guid, _business_date(business_date), fetched_at, rows)
+                (restaurant_guid, normalize.business_date(business_date), fetched_at, rows)
             )
     return shards
 
@@ -122,21 +118,10 @@ def fact_rows(raw_dir: Path = normalize.RAW_DIR) -> List[Tuple]:
     restaurants is kept — not just the mapped bagels — so an unmapped source
     sits in the fact until someone maps it (ADR 0005). Uses the same
     coverage-deduped row set normalize.py reads (week reports first, orders
-    aggregates only for dates no week report covers)."""
-    rows = normalize.load_sales_rows(raw_dir)
-    totals: Dict[Tuple[dt.date, str, str], float] = collections.defaultdict(float)
-    for row in rows:
-        if row["restaurantGuid"] not in normalize.INCLUDED_RESTAURANTS:
-            continue
-        if not normalize.is_configured_modifier(row):
-            continue
-        name = row["modifierName"].strip().lower()
-        key = (_business_date(row["businessDate"]), row["restaurantGuid"], name)
-        totals[key] += float(row["quantitySold"])
-    return [
-        (date, restaurant_guid, SOURCE_TYPE, name, quantity)
-        for (date, restaurant_guid, name), quantity in totals.items()
-    ]
+    aggregates only for dates no week report covers), then the shared
+    `normalize.modifier_fact_rows` — so the migration and the daily capture
+    normalize by exactly the same rules."""
+    return normalize.modifier_fact_rows(normalize.load_sales_rows(raw_dir))
 
 
 def run_migration(
