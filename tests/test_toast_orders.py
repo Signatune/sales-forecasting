@@ -60,7 +60,7 @@ class TestLoadStandardCredentials:
             "STANDARD_CLIENT_ID = std-id\n"
             "STANDARD_CLIENT_SECRET = std-secret\n"
         )
-        creds = load_standard_credentials(env)
+        creds = load_standard_credentials(env, environ={})
         assert creds == {
             "clientId": "std-id",
             "clientSecret": "std-secret",
@@ -71,4 +71,35 @@ class TestLoadStandardCredentials:
         env = tmp_path / ".env"
         env.write_text("URL = https://ws-api.toasttab.com\n")
         with pytest.raises(ToastAuthError, match="STANDARD_CLIENT_ID"):
-            load_standard_credentials(env)
+            load_standard_credentials(env, environ={})
+
+    def test_environment_variables_win_over_the_file(self, tmp_path):
+        # On a GitHub Actions runner there is no .env; the credentials come from
+        # secrets exported as environment variables, the same way DATABASE_URL
+        # does. When all three are set, the file is never read.
+        creds = load_standard_credentials(
+            tmp_path / "does-not-exist.env",
+            environ={
+                "URL": "https://ws-api.toasttab.com/",
+                "STANDARD_CLIENT_ID": "env-id",
+                "STANDARD_CLIENT_SECRET": "env-secret",
+            },
+        )
+        assert creds == {
+            "clientId": "env-id",
+            "clientSecret": "env-secret",
+            "baseUrl": "https://ws-api.toasttab.com",
+        }
+
+    def test_partial_environment_falls_back_to_the_file(self, tmp_path):
+        # A stray URL in the ambient environment must not shadow the .env file:
+        # the env path is taken only when every credential is present there.
+        env = tmp_path / ".env"
+        env.write_text(
+            "URL = https://file.toasttab.com\n"
+            "STANDARD_CLIENT_ID = file-id\n"
+            "STANDARD_CLIENT_SECRET = file-secret\n"
+        )
+        creds = load_standard_credentials(env, environ={"URL": "https://stray.example"})
+        assert creds["clientId"] == "file-id"
+        assert creds["baseUrl"] == "https://file.toasttab.com"

@@ -27,12 +27,12 @@ see the last three business dates present and correct in Postgres.
 
 ## Acceptance criteria
 
-- [ ] A workflow runs the daily capture on a daily cron, timed after close in the restaurants' timezone
-- [ ] Toast credentials and the database connection string come from GitHub Actions secrets; no credential is in the repo
-- [ ] The workflow can also be triggered manually
-- [ ] A failing run fails the workflow visibly rather than passing silently
-- [ ] The run's log says what it captured — which business dates, how many Sales rows
-- [ ] A successful scheduled run is observed in production, not just a manual one
+- [x] A workflow runs the daily capture on a daily cron, timed after close in the restaurants' timezone — `.github/workflows/daily-capture.yml`, `0 9 * * *` (04:00 EST / 05:00 EDT in `America/New_York`)
+- [x] Toast credentials and the database connection string come from GitHub Actions secrets; no credential is in the repo — `load_standard_credentials` and `db.connection_string` read them from the environment, exported from secrets by the workflow
+- [x] The workflow can also be triggered manually — `workflow_dispatch`
+- [x] A failing run fails the workflow visibly rather than passing silently — a Toast/DB failure exits non-zero, failing the step and the run
+- [x] The run's log says what it captured — which business dates, how many Sales rows — `daily_capture.main` prints the captured business dates and upserted/stored counts
+- [ ] A successful scheduled run is observed in production, not just a manual one — requires setting the secrets and waiting for the cron; can only be checked once deployed
 
 ## Blocked by
 

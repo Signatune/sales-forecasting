@@ -1,0 +1,63 @@
+name: Daily Sales capture
+
+# Runs `python daily_capture.py` once a day, writing each day's Sales to the
+# managed Postgres (ADR 0003). No laptop has to be awake for it — this is the
+# scheduled trigger ticket 06 asks for.
+#
+# Secrets (Settings -> Secrets and variables -> Actions), so no credential lives
+# in the repo:
+#   TOAST_URL                      Toast API base URL (https://ws-api.toasttab.com)
+#   TOAST_STANDARD_CLIENT_ID       standard-key client id  (orders:read)
+#   TOAST_STANDARD_CLIENT_SECRET   standard-key client secret
+#   DATABASE_URL                   Supabase session-pooler connection string
+#                                  (see docs/postgres.md — the pooler is IPv4,
+#                                  which the runner needs)
+
+on:
+  schedule:
+    # 09:00 UTC = 04:00 EST / 05:00 EDT — early morning in America/New_York, well
+    # after the restaurants close and after the business date has rolled over, so
+    # the day that just closed is settled before we pull it. GitHub cron is always
+    # UTC and does not follow DST; this hour stays in the early-morning ET window
+    # on either side of the switch. daily_capture.py computes its trailing
+    # business-date window in the restaurants' timezone, not UTC, so that
+    # just-closed day falls inside the window and is captured complete.
+    - cron: "0 9 * * *"
+  # Also runnable by hand from the Actions tab: how the job is demoed, and how a
+  # missed day gets re-run without waiting for tomorrow's cron.
+  workflow_dispatch: {}
+
+# Never let a hand-triggered run and the cron overlap: they would pull and upsert
+# the same trailing window at once. Queue instead of cancel — a run in progress
+# is doing real writes and should finish.
+concurrency:
+  group: daily-capture
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Capture the day's Sales
+        env:
+          # daily_capture.py reads these from the environment (see
+          # toast_orders.load_standard_credentials and db.connection_string), the
+          # same names it would find in a local .env — so the same code runs on a
+          # laptop and here.
+          URL: ${{ secrets.TOAST_URL }}
+          STANDARD_CLIENT_ID: ${{ secrets.TOAST_STANDARD_CLIENT_ID }}
+          STANDARD_CLIENT_SECRET: ${{ secrets.TOAST_STANDARD_CLIENT_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # A Toast or database failure exits non-zero, which fails this step and
+        # the workflow — visibly in the Actions tab, not silently. The command
+        # logs which business dates it captured and how many Sales rows it wrote.
+        run: python daily_capture.py
