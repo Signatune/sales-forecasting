@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "sales-forecasting"
 version = "0.1.0"
@@ -36,6 +40,16 @@ notebook = [
 experiment = [
     "statsmodels",
 ]
+
+# Flat layout: the pipeline is a set of top-level scripts run in place
+# (`python daily_capture.py`) with the repo root on sys.path — see the tests'
+# `pythonpath = ["."]` below. Installing this project (as the GitHub Actions
+# capture does with `pip install -e .`) means installing its dependencies, not
+# shipping an importable package. `py-modules = []` opts out of setuptools'
+# flat-layout auto-discovery, which would otherwise try to package the sibling
+# `data/` and `notebooks/` directories and fail on the ambiguity.
+[tool.setuptools]
+py-modules = []
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
