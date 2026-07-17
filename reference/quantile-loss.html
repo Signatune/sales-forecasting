@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reference — Quantile (pinball) loss</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+  <p class="kicker">Reference card</p>
+  <h1>Quantile / pinball loss</h1>
+  <p class="muted lede">Compressed cheat-sheet. For the walkthrough see
+  <a href="../lessons/0001-pinball-95-concretely.html">Lesson 01</a>.</p>
+
+  <h2>Per-day loss (this repo&rsquo;s convention)</h2>
+  <div class="formula">
+    diff = actual − forecast<br>
+    <span class="under">actual ≥ forecast</span> → loss = <span class="under">level × diff</span>
+    &nbsp;<span class="muted">(under-forecast)</span><br>
+    <span class="over">actual &lt; forecast</span> → loss = <span class="over">(1 − level) × (−diff)</span>
+    &nbsp;<span class="muted">(over-forecast)</span>
+  </div>
+  <p><strong>Headline score</strong> = mean of daily losses. Lower is better.</p>
+
+  <h2>At level = 0.95</h2>
+  <ul>
+    <li>Under-forecast weight = <code>0.95</code>; over-forecast weight = <code>0.05</code>.</li>
+    <li>Asymmetry = <code>0.95 / 0.05 = 19×</code> (a Stockout costs 19× an equal leftover).</li>
+    <li>Units are the same as the data — <em>bagels of loss per day</em>, roughly.</li>
+  </ul>
+
+  <h2>Conventions &amp; gotchas</h2>
+  <ul>
+    <li><strong>Factor of 2:</strong> FPP3 uses <code>2p</code>/<code>2(1−p)</code>
+      = 2× these numbers. Ranking-invariant.</li>
+    <li><strong>What&rsquo;s scored:</strong> the P95 <em>buffered</em> quantity, not the raw
+      point forecast (<code>p95_buffer</code>, <code>model_comparison.py:304</code>).</li>
+    <li>At <code>level = 0.5</code> pinball reduces to ½·MAE (symmetric).</li>
+    <li><strong>Coverage</strong> is the companion: share of days
+      <code>quantity ≥ actual</code> — realised Service Level.</li>
+  </ul>
+
+  <h2>Glossary</h2>
+  <table>
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>level / p</td><td>target quantile, e.g. 0.95 Service Level</td></tr>
+      <tr><td>actual</td><td>realised Wheat Dough Demand for the day</td></tr>
+      <tr><td>forecast</td><td>the model&rsquo;s P95 Poolish quantity</td></tr>
+      <tr><td>under-forecast</td><td>forecast &lt; actual → Stockout risk (weight 0.95)</td></tr>
+      <tr><td>over-forecast</td><td>forecast &gt; actual → leftover (weight 0.05)</td></tr>
+      <tr><td>pinball@95</td><td>mean daily quantile loss at level 0.95</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer-links">
+    <a href="../lessons/0001-pinball-95-concretely.html">← Lesson 01</a>
+    <a href="https://otexts.com/fpp3/distaccuracy.html">FPP3 §5.9</a>
+    <span>Code: <code>model_comparison.py:245</code></span>
+  </div>
+</main>
+</body>
+</html>

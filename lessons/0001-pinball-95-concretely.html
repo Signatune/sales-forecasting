@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 01 — How pinball@95 is calculated, concretely</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main>
+
+  <p class="kicker">Lesson 01 · Reading the model score</p>
+  <h1>How <span class="mono">pinball@95</span> is calculated, concretely</h1>
+  <p class="lede muted">
+    The whole model bake-off comes down to one number per model. By the end of
+    this page you can compute it by hand for a week of bagels — and say why a
+    Stockout hurts it ~19× harder than a leftover.
+  </p>
+
+  <h2>1 · What is being scored</h2>
+  <p>
+    Each model turns its point forecast into a <strong>P95 Poolish quantity</strong>
+    — the buffered amount that&rsquo;s supposed to cover Demand 95% of the time
+    (<a href="../CONTEXT.md">Service Level</a>). Pinball scores that quantity, day
+    by day, against the <strong>actual Wheat&nbsp;Dough Demand</strong> that showed up.
+  </p>
+  <p class="muted">
+    So for one day you always have exactly two numbers: <code>actual</code> (what
+    Demand turned out to be) and <code>forecast</code> (the model&rsquo;s P95
+    quantity). Everything below is just what we do with those two.
+  </p>
+
+  <h2>2 · The formula (one day)</h2>
+  <p>Let <code>diff = actual − forecast</code>, and the level be <code>0.95</code>.</p>
+
+  <div class="formula">
+    loss =
+    <span class="under">0.95 × (actual − forecast)</span>
+    &nbsp;if actual ≥ forecast &nbsp;<span class="muted">(under-forecast → Stockout)</span><br>
+    loss =
+    <span class="over">0.05 × (forecast − actual)</span>
+    &nbsp;if actual &lt; forecast &nbsp;<span class="muted">(over-forecast → leftover)</span>
+  </div>
+
+  <p>
+    That&rsquo;s the entire idea. Whichever way you missed, the loss is
+    <em>the size of the miss</em> times a weight. The only trick is that the two
+    directions get <strong>different weights</strong>: <span class="under">0.95</span>
+    when you baked too little, <span class="over">0.05</span> when you baked too much.
+  </p>
+
+  <div class="aside">
+    <span class="tag">Why those weights = the 19× asymmetry</span>
+    <code>0.95 ÷ 0.05 = 19</code>. A day you&rsquo;re 10 bagels <em>short</em> costs
+    <code>0.95×10 = 9.5</code>. A day you&rsquo;re 10 bagels <em>over</em> costs
+    <code>0.05×10 = 0.5</code>. Same 10-bagel miss, but the Stockout is scored
+    <strong>19× heavier</strong> — because a lost sale is treated as far costlier
+    than a leftover. That asymmetry is the whole reason we use this metric instead
+    of plain error (MAE/MAPE), which would score both misses the same.
+  </div>
+
+  <div class="aside">
+    <span class="tag">Heads-up when you read the textbook</span>
+    The FPP3 text (<a href="https://otexts.com/fpp3/distaccuracy.html">§5.9</a>)
+    writes this with a factor of 2 — <code>2p</code> and <code>2(1−p)</code> — so
+    its numbers are exactly <strong>double</strong> ours. Same shape, same 19:1
+    ratio, identical model rankings. Our code just drops the 2.
+  </div>
+
+  <h2>3 · A week, worked by hand</h2>
+  <p>
+    One model&rsquo;s P95 quantity vs. actual Demand over five bake days. Follow
+    the last column — <span class="under">red = short (Stockout)</span>,
+    <span class="over">green = over (leftover)</span>.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Day</th><th>actual</th><th>forecast</th><th>diff</th><th>weight</th><th>loss</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mon</td><td>120</td><td>130</td><td class="over">−10</td><td>0.05</td><td class="over">0.50</td></tr>
+      <tr><td>Tue</td><td>145</td><td>130</td><td class="under">+15</td><td>0.95</td><td class="under">14.25</td></tr>
+      <tr><td>Wed</td><td>110</td><td>125</td><td class="over">−15</td><td>0.05</td><td class="over">0.75</td></tr>
+      <tr><td>Thu</td><td>118</td><td>122</td><td class="over">−4</td><td>0.05</td><td class="over">0.20</td></tr>
+      <tr><td>Fri</td><td>160</td><td>140</td><td class="under">+20</td><td>0.95</td><td class="under">19.00</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>mean</td><td></td><td></td><td></td><td></td><td>6.94</td></tr>
+    </tfoot>
+  </table>
+
+  <p>
+    Sum of daily losses = <code>0.50 + 14.25 + 0.75 + 0.20 + 19.00 = 34.70</code>.
+    <strong>Mean pinball@95 = 34.70 ÷ 5 = 6.94.</strong> That mean is the model&rsquo;s
+    headline score — lower is better.
+  </p>
+  <p class="muted">
+    Look what drove it: three of five days were over-baked, yet the score is
+    dominated by the <span class="under">two short days</span> (14.25 + 19.00 =
+    33.25 of the 34.70). One busy Friday moves this number more than a whole quiet
+    week. Hold that thought — it&rsquo;s why a 5%-lower score can be noise, not
+    evidence, which is a later lesson.
+  </p>
+
+  <div class="aside">
+    <span class="tag">Companion number: coverage</span>
+    This model covered Demand on Mon/Wed/Thu = <strong>3 of 5 days = 60%</strong>,
+    well under its 95% promise. Pinball says <em>how costly</em> the misses were;
+    coverage says <em>how often</em> they happened (<code>model_comparison.py:288</code>).
+  </div>
+
+  <h2>4 · Try it — live loss</h2>
+  <div class="widget">
+    <h3>One-day pinball@95 calculator</h3>
+    <div class="field"><label>actual Demand</label><input id="a" type="number" value="145"></div>
+    <div class="field"><label>P95 forecast quantity</label><input id="f" type="number" value="130"></div>
+    <div class="readout" id="out"></div>
+  </div>
+
+  <h2>5 · Check yourself</h2>
+  <div class="quiz" id="quiz">
+    <p class="q">Q1. At level 0.95, a short day is scored how many times heavier than an equal-size over day?</p>
+    <div data-a="1">
+      <button data-c="1">Nineteen</button>
+      <button>Ninetyfive</button>
+      <button>Ninety</button>
+      <button>Fifteen</button>
+      <p class="fb"></p>
+    </div>
+
+    <p class="q">Q2. To get a model&rsquo;s headline score, the daily losses are combined how?</p>
+    <div data-a="1">
+      <button data-c="1">Averaged over days</button>
+      <button>Summed over days</button>
+      <button>Median over days</button>
+      <button>Maximum over days</button>
+      <p class="fb"></p>
+    </div>
+  </div>
+
+  <div class="ask">
+    <strong>I&rsquo;m your teacher — ask me anything.</strong> Stuck on why the
+    weights are 0.95 / 0.05 and not something else? Want to run this against a real
+    week from the database? Just ask in the chat.
+  </div>
+
+  <h3>Read next (primary source)</h3>
+  <p>
+    Hyndman &amp; Athanasopoulos, <em>Forecasting: Principles &amp; Practice</em>,
+    <a href="https://otexts.com/fpp3/distaccuracy.html">§5.9 — Evaluating
+    distributional forecast accuracy</a>. The authoritative definition (remember
+    the factor-of-2 note above).
+  </p>
+
+  <div class="footer-links">
+    <a href="../reference/quantile-loss.html">Reference: quantile-loss card →</a>
+    <a href="../CONTEXT.md">Domain language</a>
+    <span>Code: <code>model_comparison.py:245</code></span>
+  </div>
+
+</main>
+
+<script>
+  // --- live calculator ---
+  const LEVEL = 0.95;
+  function pinball(a, f) {
+    const diff = a - f;
+    return diff >= 0 ? LEVEL * diff : (1 - LEVEL) * (-diff);
+  }
+  const A = document.getElementById('a'), F = document.getElementById('f'),
+        OUT = document.getElementById('out');
+  function render() {
+    const a = parseFloat(A.value), f = parseFloat(F.value);
+    if (isNaN(a) || isNaN(f)) { OUT.innerHTML = '<span class="muted">enter two numbers…</span>'; return; }
+    const diff = a - f, under = diff >= 0;
+    const loss = pinball(a, f);
+    const w = under ? '0.95' : '0.05';
+    const pill = under
+      ? '<span class="pill under">short → Stockout</span>'
+      : '<span class="pill over">over → leftover</span>';
+    OUT.innerHTML =
+      pill + '<br>' +
+      'diff = ' + a + ' − ' + f + ' = ' + diff + ' bagels<br>' +
+      'loss = ' + w + ' × ' + Math.abs(diff) + ' = ' +
+      '<span class="big">' + loss.toFixed(2) + '</span>';
+  }
+  A.addEventListener('input', render); F.addEventListener('input', render); render();
+
+  // --- quiz ---
+  document.querySelectorAll('#quiz [data-a]').forEach(block => {
+    const fb = block.querySelector('.fb');
+    block.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const right = btn.dataset.c === '1';
+        block.querySelectorAll('button').forEach(b => b.disabled = true);
+        btn.classList.add(right ? 'right' : 'wrong');
+        if (!right) block.querySelector('[data-c="1"]').classList.add('right');
+        fb.textContent = right
+          ? 'Correct — 0.95 ÷ 0.05 = 19.'
+          : 'Not quite — see the highlighted answer, then the §2 aside.';
+      });
+    });
+  });
+</script>
+</body>
+</html>
