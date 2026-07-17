@@ -34,10 +34,10 @@ import pandas as pd
 
 import forecast
 import model_comparison as mc
+import sales_history
 from model_comparison import (
     EVAL_WEEKS,
     POOLISH_LEAD,
-    SALES_HISTORY_PATH,
     SERVICE_LEVEL,
     SPLIT_LEAD,
     WARMUP_WEEKS,
@@ -970,7 +970,7 @@ def render(report: dict) -> str:
 
 
 def main() -> None:
-    sales = pd.read_parquet(SALES_HISTORY_PATH)
+    sales = sales_history.load_sales_history()
     report = build_report(sales, eval_weeks=EVAL_WEEKS, warmup_weeks=WARMUP_WEEKS)
     PAGE_PATH.write_text(render(report), encoding="utf-8")
 

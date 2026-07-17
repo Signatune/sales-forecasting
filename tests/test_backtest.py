@@ -14,6 +14,7 @@ import pandas as pd
 import pytest
 
 import backtest
+import sales_history
 from backtest import (
     compare,
     holdout_window,
@@ -351,8 +352,10 @@ class TestFamilyTotals:
 class TestMain:
     def test_prints_both_models_side_by_side(self, tmp_path, monkeypatch, capsys):
         history_path = tmp_path / "sales_history.parquet"
-        monkeypatch.setattr(backtest, "SALES_HISTORY_PATH", history_path)
         sales(daily("plain", "2026-05-01", 70)).to_parquet(history_path, index=False)
+        monkeypatch.setattr(
+            sales_history, "load_sales_history", lambda: pd.read_parquet(history_path)
+        )
 
         backtest.main()
         out = capsys.readouterr().out

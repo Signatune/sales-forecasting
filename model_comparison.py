@@ -44,6 +44,7 @@ import pandas as pd
 
 import backtest
 import forecast
+import sales_history
 from backtest import mape
 
 Quantity = Union[float, pd.Series]
@@ -54,8 +55,6 @@ Model = Callable[[pd.DataFrame, dt.date], pd.DataFrame]
 # A split candidate: prior Sales and an as_of, out a per-variety expected
 # share of the horizon's total — (product, date, share), not a quantity.
 SplitModel = Callable[[pd.DataFrame, dt.date], pd.DataFrame]
-
-SALES_HISTORY_PATH = forecast.SALES_HISTORY_PATH
 
 # The synthetic Product the three baked varieties sum into per date — the
 # Poolish is decided on this total, not per variety (ADR 0001).
@@ -1008,7 +1007,7 @@ def _format_report(comparison: pd.DataFrame, level: float) -> str:
 
 
 def main() -> None:
-    sales = pd.read_parquet(SALES_HISTORY_PATH)
+    sales = sales_history.load_sales_history()
     comparison = compare_models(
         sales, eval_weeks=EVAL_WEEKS, warmup_weeks=WARMUP_WEEKS
     )

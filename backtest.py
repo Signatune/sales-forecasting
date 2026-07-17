@@ -42,8 +42,7 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 import forecast
-
-SALES_HISTORY_PATH = forecast.SALES_HISTORY_PATH
+import sales_history
 
 # Four weeks: long enough to cover every weekday four times, short enough that
 # the model still trains on two years of history.
@@ -286,7 +285,7 @@ def _format_report(
 
 
 def main(holdout_days: int = HOLDOUT_DAYS, trailing_days: int = TRAILING_DAYS) -> None:
-    sales = pd.read_parquet(SALES_HISTORY_PATH)
+    sales = sales_history.load_sales_history()
     start, end = holdout_window(sales, holdout_days)
     print(_format_report(compare(sales, holdout_days, trailing_days), start, end))
 

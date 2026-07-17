@@ -11,6 +11,7 @@ import pytest
 
 import forecast
 import inspection_page
+import sales_history
 from inspection_page import build_report, recommendation, render, t_statistic
 from tests.test_model_comparison import sales, varieties
 
@@ -374,12 +375,14 @@ class TestMain:
     def test_writes_the_page_from_the_sales_history(self, tmp_path, monkeypatch):
         history_path = tmp_path / "sales_history.parquet"
         page_path = tmp_path / "model_comparison.html"
-        monkeypatch.setattr(inspection_page, "SALES_HISTORY_PATH", history_path)
         monkeypatch.setattr(inspection_page, "PAGE_PATH", page_path)
         monkeypatch.setattr(inspection_page, "EVAL_WEEKS", 2)
         monkeypatch.setattr(inspection_page, "WARMUP_WEEKS", 2)
         sales(varieties("2026-05-29", 42, (5.0, 3.0, 2.0))).to_parquet(
             history_path, index=False
+        )
+        monkeypatch.setattr(
+            sales_history, "load_sales_history", lambda: pd.read_parquet(history_path)
         )
 
         inspection_page.main()
