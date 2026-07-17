@@ -55,12 +55,12 @@ different sources that map to the same Product on the same date, and read the
 
 ## Acceptance criteria
 
-- [ ] A managed Postgres instance exists and its connection string is read from the environment (never committed)
-- [ ] Applying the schema creates the raw table, `products`, `product_sources`, the `sales` fact and the `product_sales` view, and is safe to re-run
-- [ ] The `sales` fact enforces one row per `(date, restaurant, source_type, source_name)`; a repeat write of the same key replaces its quantity
-- [ ] `product_sources` maps many sources to one Product; `product_sales` sums the fact through the mapping to `(product, date, quantity)` across locations and sources
-- [ ] Raw responses are stored as `jsonb` and can be read back and re-normalized without contacting Toast
-- [ ] Local setup — how a developer points at a database and applies the schema — is written down (`docs/postgres.md`)
+- [X] A managed Postgres instance exists and its connection string is read from the environment (never committed)
+- [X] Applying the schema creates the raw table, `products`, `product_sources`, the `sales` fact and the `product_sales` view, and is safe to re-run
+- [X] The `sales` fact enforces one row per `(date, restaurant, source_type, source_name)`; a repeat write of the same key replaces its quantity
+- [X] `product_sources` maps many sources to one Product; `product_sales` sums the fact through the mapping to `(product, date, quantity)` across locations and sources
+- [X] Raw responses are stored as `jsonb` and can be read back and re-normalized without contacting Toast
+- [X] Local setup — how a developer points at a database and applies the schema — is written down (`docs/postgres.md`)
 
 ## Blocked by
 
