@@ -62,16 +62,17 @@ This creates the tables and the `product_sales` view. It is idempotent — every
 statement is `IF NOT EXISTS` or `CREATE OR REPLACE`, so running it against an
 already-set-up database changes nothing and is safe to repeat.
 
-## Migrate the pulled history (one-time)
+## Migrate the pulled history (one-time, already done)
 
-The history already pulled from Toast lives under `data/raw/`. It is loaded into
-Postgres once, by hand, reusing the rate-limit cost already paid rather than
-re-pulling (ADR 0003) — the migration never re-contacts Toast. Regenerate the
-parquet first so the file-based readers and the fact tell the same story, then
-load:
+This was a one-time load, run by hand when Postgres became the source of truth
+(ADR 0003), and it has already happened — it is documented here as the record of
+how the history got in, not a step a fresh clone repeats. The pulled history
+lived under `data/raw/`, which is no longer tracked in the repo (ticket 07);
+`normalize.py` no longer rebuilds `sales_history.parquet`. So the command below
+only runs on a checkout that still holds those pre-migration files locally; a
+fresh clone has nothing to migrate.
 
 ```
-python normalize.py     # regenerate sales_history.parquet from the full raw history
 python migrate.py        # load Postgres, then verify the view matches the parquet
 ```
 
@@ -154,5 +155,6 @@ TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres' pytest tests/t
 
 With `TEST_DATABASE_URL` unset and no `--ephemeral-postgres`, those tests skip
 and the rest of the suite runs unchanged. `test_migrate.py`'s full-history
-comparison also expects `sales_history.parquet` to be current
-(`python normalize.py`).
+comparison additionally needs the pre-migration `data/raw/` history and
+`sales_history.parquet` checked out locally; on a fresh clone, where those are
+no longer tracked (ticket 07), it skips.

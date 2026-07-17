@@ -1,10 +1,19 @@
-"""Normalize raw Toast Analytics menu reports into canonical Sales records.
+"""Normalize raw Toast modifier reports into canonical Sales records.
 
-Reads the timestamped raw reports under data/raw/ — Analytics week reports
-saved by toast_client.py, plus orders-derived aggregates saved by
-toast_orders.py for dates no week report covers — keeps only bagel-family
-modifier rows for the in-scope restaurants, and writes one Sales record per
-(Product, Date, Quantity) to data/sales_history.parquet.
+The shared normalization library: the rules that turn raw Toast modifier
+report rows into canonical Sales — in-scope restaurants only, configured
+modifiers only, names normalized, and (for the seven mapped bagels) rolled up
+through BAGEL_MODIFIER_NAMES. `migrate.py` (the one-time history load),
+`daily_capture.py` (the scheduled Orders-only capture), and `toast_client.py`
+all normalize through these functions, so no two paths can drift.
+
+This module no longer writes a parquet. Since Postgres became the source of
+truth (ADR 0003) the canonical history lives in the `sales` fact and the
+`product_sales` view; the file-based rebuild — reading every raw file and
+overwriting `data/sales_history.parquet` on every run — was retired with the
+rest of the file-based path (ticket 07). `load_sales_rows` and
+`latest_report_files` remain because `migrate.py` still reads the saved raw
+history to build the fact.
 
 Bagel Sales in Toast are recorded as modifiers only — there is no menu item
 per flavor. The three main flavors each have two modifiers (one used on
@@ -21,18 +30,12 @@ import collections
 import datetime as dt
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
 import pandas as pd
 
-import sales_history
-
 RAW_DIR = Path(__file__).parent / "data" / "raw"
-# normalize.py owns the write side; sales_history is the one place the path is
-# named, so reader and writer can never drift onto different files.
-OUTPUT_PATH = sales_history.SALES_HISTORY_PATH
 
 # Scope is the Cambridge and Brookline locations only (see ticket 01).
 INCLUDED_RESTAURANTS = {
@@ -295,8 +298,9 @@ def load_sales_rows(raw_dir: Path = RAW_DIR) -> List[dict]:
     orders_files = latest_report_files(raw_dir, "orders_agg")
     if not week_files and not orders_files:
         raise FileNotFoundError(
-            f"no menu_week or orders_agg raw reports under {raw_dir} — "
-            "run ingest.py or toast_orders.py first"
+            f"no menu_week or orders_agg raw reports under {raw_dir} — this reads "
+            "the pre-migration raw history (migrate.py); a fresh clone no longer "
+            "carries it (ticket 07)"
         )
     rows: List[dict] = []
     covered: Set[str] = set()
@@ -310,40 +314,3 @@ def load_sales_rows(raw_dir: Path = RAW_DIR) -> List[dict]:
         validate_modifier_rows(content, source=path.name)
         rows.extend(r for r in content if r["businessDate"] not in covered)
     return rows
-
-
-def main() -> None:
-    rows = load_sales_rows()
-    df = normalize_sales(rows)
-    if df.empty:
-        raise UnexpectedShapeError(
-            "normalization produced zero Sales records — refusing to write "
-            "an empty sales history"
-        )
-
-    unmapped = find_unmapped_bagelish(rows)
-    if unmapped:
-        print("WARNING: bagel-looking modifiers not mapped to any Product:")
-        for name, qty in sorted(unmapped.items(), key=lambda kv: -kv[1]):
-            print(f"  {qty:>10.1f}  {name!r}")
-
-    restaurants_files = latest_report_files(RAW_DIR, "restaurants_information")
-    if restaurants_files:
-        info = json.loads(restaurants_files[-1].read_text())
-        for r in unlisted_active_restaurants(info):
-            print(
-                "note: excluding out-of-scope active restaurant "
-                f"{r['restaurantName']!r} ({r['restaurantGuid']}) — Sales "
-                "history covers Cambridge and Brookline only"
-            )
-
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(OUTPUT_PATH, index=False)
-    print(
-        f"wrote {len(df)} Sales records for {df['product'].nunique()} Products, "
-        f"{df['date'].min().date()}..{df['date'].max().date()} -> {OUTPUT_PATH}"
-    )
-
-
-if __name__ == "__main__":
-    sys.exit(main())

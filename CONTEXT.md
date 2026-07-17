@@ -2,6 +2,14 @@
 
 Forecasts demand for products sold in a deli and bakery, producing an aggregate sales forecast derived from the sum of each product's projected demand.
 
+## Where the data lives
+
+A managed Postgres database is the single source of truth for Sales history (ADR 0003). Raw Toast responses land as `jsonb` in one table, and the canonical Sales fact — one row per `(date, restaurant, source_type, source_name, quantity)` — in another; the `product_sales` view rolls that fact up through the Product mapping to the `(product, date, quantity)` frame the forecast reads (ADR 0005). Every reader goes through `sales_history.load_sales_history()`, which reads that view; nothing forecasts from a file.
+
+Each day's Sales are captured by a scheduled GitHub Actions job (`.github/workflows/daily-capture.yml`) that runs `daily_capture.py` — no laptop has to be awake. The daily capture pulls the **Orders API only**, over a 3-day trailing business-date window, and upserts by `(date, restaurant, source)`, so voids and back-office corrections Toast allows after a day closes are picked up on the next run (ADR 0004).
+
+The Analytics client (`toast_client.py`) is off this daily path. It is kept for a future backfill or a manual reconciliation against the Orders numbers, not run automatically. The one-time load of the pre-existing history into Postgres lived in `migrate.py`; there is no file-based ingestion path any more.
+
 ## Language
 
 **Product**:

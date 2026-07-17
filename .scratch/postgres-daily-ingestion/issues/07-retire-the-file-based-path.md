@@ -1,6 +1,6 @@
 # Retire the file-based ingestion path
 
-Status: ready-for-agent
+Status: done
 Branch: `postgres-daily-ingestion`
 
 ## Parent
@@ -37,12 +37,12 @@ repo at all.
 
 ## Acceptance criteria
 
-- [ ] `data/raw/` and `sales_history.parquet` are untracked and ignored, after the migration is confirmed against the live database
-- [ ] The manual `ingest.py` flow and the rebuild-from-all-raw-files behaviour are gone
-- [ ] `toast_client.py` remains, documented as off the daily path and kept for backfill or reconciliation
-- [ ] A fresh clone with credentials configured can run the forecast against Postgres with no data files present
-- [ ] The test suite passes without any tracked data files
-- [ ] `CONTEXT.md` reflects Postgres as the source of truth and the scheduled Orders-only capture
+- [x] `data/raw/` and `sales_history.parquet` are untracked and ignored, after the migration is confirmed against the live database
+- [x] The manual `ingest.py` flow and the rebuild-from-all-raw-files behaviour are gone
+- [x] `toast_client.py` remains, documented as off the daily path and kept for backfill or reconciliation
+- [x] A fresh clone with credentials configured can run the forecast against Postgres with no data files present
+- [x] The test suite passes without any tracked data files
+- [x] `CONTEXT.md` reflects Postgres as the source of truth and the scheduled Orders-only capture
 
 ## Blocked by
 

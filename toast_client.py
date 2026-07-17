@@ -1,6 +1,14 @@
 """Pull the full available daily Sales history for the bagel family from
 the Toast Analytics API.
 
+Not on the daily path. The scheduled capture (ADR 0004) pulls the Orders API
+only; this Analytics client is kept deliberately for a future backfill or a
+manual reconciliation, the cross-check that would catch Orders-API counting
+drifting from Analytics. It is no longer wired into any automatic run — nothing
+imports it on the capture or forecast path — but it stays in the repo, and
+in the shared `normalize.py` grammar, so that cross-check is one command away
+if it is ever needed.
+
 The Analytics API is asynchronous: POST /era/v1/menu[/week] creates a report
 and returns a GUID; GET /era/v1/menu/{guid} returns [] until the report is
 ready (and also for windows with no sales, e.g. closed days).

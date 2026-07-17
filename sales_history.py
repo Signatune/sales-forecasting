@@ -5,22 +5,17 @@ Every reader — `forecast.py`, `backtest.py`, `model_comparison.py`,
 frame by calling `load_sales_history()` rather than opening a file itself.
 Concentrating the read here is what let ADR 0003's move to Postgres land by
 changing this one function: since ticket 04 it reads the `product_sales` view
-(ADR 0005) — the fact rolled up through the Product mapping — rather than the
+(ADR 0005) — the fact rolled up through the Product mapping — rather than a
 parquet file.
 
-`SALES_HISTORY_PATH` still names the parquet file, but only the write side uses
-it now: `normalize.py` rebuilds it there, and `migrate.py` compares it against
-the view. Nothing reads it to forecast from any more. Ticket 07 retires the file
-entirely.
+The old `sales_history.parquet` is gone: nothing reads it to forecast from, and
+ticket 07 retired its file-based write path. The only lingering reference is
+`migrate.py`'s one-time verification, which owns the path itself now.
 """
-from pathlib import Path
-
 import pandas as pd
 import psycopg
 
 import db
-
-SALES_HISTORY_PATH = Path(__file__).parent / "data" / "sales_history.parquet"
 
 # Bound the initial connect so an unreachable host fails fast with the clear
 # message below, rather than hanging on a TCP timeout before the reader ever

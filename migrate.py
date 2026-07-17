@@ -25,15 +25,19 @@ failure rolls back to nothing and a re-run stays clean. The fact goes in via
 per-row loop.
 
 The bar (ticket 03): for the seven bagel Products the `product_sales` view must
-match `sales_history.parquet` exactly — regenerate the parquet with
-`python normalize.py` first, since the file-based readers still use it and it
-was written before the Orders backfill reached back to 2016.
+match `sales_history.parquet` exactly. That was checked once, live, when the
+migration ran — the reproducible comparison this tool exists to provide.
 
-    python normalize.py     # regenerate the (stale) parquet from full raw
     python migrate.py       # load Postgres, then verify against the parquet
 
 Sub-commands: `migrate` (load only), `verify` (compare only), or no argument
 (both). `verify` is the reproducible comparison the ticket asks for.
+
+This is a completed one-time migration (ticket 03). The file-based path it read
+was retired with ticket 07: `normalize.py` no longer rebuilds the parquet, and
+`data/raw/` and `sales_history.parquet` are no longer tracked in the repo, so
+`verify` only runs on a checkout that still holds the pre-migration files
+locally — a fresh clone has nothing to migrate or compare.
 
 Connection: COPY and the single long-lived load session want the Session pooler
 `DATABASE_URL` (IPv4), not the transaction-mode pooler — see docs/postgres.md.
@@ -50,7 +54,11 @@ import psycopg
 
 import db
 import normalize
-import sales_history
+
+# The parquet the pre-Postgres readers used, now only the target of the one-time
+# `verify` comparison below (ticket 03's bar). See the module docstring for why
+# it resolves only on a checkout that still holds the pre-migration file.
+SALES_HISTORY_PATH = Path(__file__).parent / "data" / "sales_history.parquet"
 
 # The canonical sources that back the Sales history: the menu_week Analytics
 # reports and the orders_agg aggregates load_sales_rows() reads. daily_totals
@@ -162,7 +170,7 @@ def compare_to_parquet(conn: psycopg.Connection) -> Dict[str, object]:
     # since ticket 04 the loader returns the view itself, so going through it here
     # would compare the view against itself. This check is the whole point of
     # comparing the file on disk against the database.
-    parquet = pd.read_parquet(sales_history.SALES_HISTORY_PATH).sort_values(
+    parquet = pd.read_parquet(SALES_HISTORY_PATH).sort_values(
         ["date", "product"], ignore_index=True
     )
     merged = parquet.merge(
