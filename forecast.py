@@ -104,11 +104,20 @@ def history_before(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
     return sales[sales["date"] < pd.Timestamp(as_of)]
 
 
-def target_dates(as_of: dt.date) -> List[pd.Timestamp]:
-    """The dates a forecast made on as_of covers. Public for the same reason as
-    history_before: the backtest's baseline and its replay both key off the
-    horizon, and a second definition of it would be free to drift."""
-    first, last = HORIZON_DAYS
+def target_dates(
+    as_of: dt.date, horizon: Tuple[int, int] = HORIZON_DAYS
+) -> List[pd.Timestamp]:
+    """The dates a forecast made on as_of covers: as_of + first .. as_of + last
+    inclusive, for the `(first, last)` lead range `horizon`.
+
+    Public for the same reason as history_before: the backtest's baseline and
+    its replay both key off the horizon, and a second definition of it would be
+    free to drift. `horizon` is a parameter, not just the module constant,
+    because the daily forecast engine's horizon is configuration — a day-count
+    `N` covering `as_of+1 .. as_of+N` (ADR 0006) — and it must reach the same
+    definition of a target date rather than reimplement it.
+    """
+    first, last = horizon
     return [pd.Timestamp(as_of) + pd.Timedelta(days=n) for n in range(first, last + 1)]
 
 

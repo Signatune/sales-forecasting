@@ -7,15 +7,19 @@ are reused, not re-implemented: the daily forecast engine points a model at one
 Forecast Target's summed series, and the analysis layer reduces the logged
 forecasts with the same scoring functions.
 
-Every model is a `(sales, as_of, scope) -> DataFrame[product, date,
-forecast_quantity]` callable. `scope` is required — there is no default set of
-Products a model forecasts. The caller always names what to forecast: the baked
-varieties, or a lone `[target_name]` against a frame whose only Product is that
-Target's summed series. A model reads only Sales strictly before `as_of`
-(forecast.history_before), so a replayed past origin never sees its own target.
+Every model is a `(sales, as_of, scope, ..., horizon) -> DataFrame[product,
+date, forecast_quantity]` callable, plus whatever hyperparameters that model
+takes (EWMA's `halflife`; ETS has none). `scope` is required — there is no
+default set of Products a model forecasts. The caller always names what to
+forecast: the baked varieties, or a lone `[target_name]` against a frame whose
+only Product is that Target's summed series. `horizon` is the `(first, last)`
+lead range to cover, defaulting to the incumbent forecast.HORIZON_DAYS; the
+daily engine passes its configured `(1, horizon_days)` instead. A model reads
+only Sales strictly before `as_of` (forecast.history_before), so a replayed past
+origin never sees its own target.
 """
 import datetime as dt
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 
@@ -71,6 +75,7 @@ def _same_weekday_reduce(
     as_of: dt.date,
     reducer: Callable[[pd.Series], float],
     scope: Sequence[str],
+    horizon: Tuple[int, int],
 ) -> pd.DataFrame:
     """Reduce each scoped Product's same-weekday Sales, in date order, to one
     Demand Forecast per target date.
@@ -81,10 +86,11 @@ def _same_weekday_reduce(
     yields no row — no evidence to reduce.
 
     `scope` is required; the engine passes a lone `[target_name]` so the same
-    reduction runs over one Forecast Target series.
+    reduction runs over one Forecast Target series. `horizon` is the `(first,
+    last)` lead range to cover.
     """
     records = []
-    for target in forecast.target_dates(as_of):
+    for target in forecast.target_dates(as_of, horizon):
         weekday = target.dayofweek
         for product in scope:
             same_weekday = history[
@@ -105,6 +111,7 @@ def ewma_forecast(
     as_of: dt.date,
     scope: Sequence[str],
     halflife: float = EWMA_HALFLIFE_WEEKS,
+    horizon: Tuple[int, int] = forecast.HORIZON_DAYS,
 ) -> pd.DataFrame:
     """Recency-weighted same-weekday mean: a Product's same-weekday Sales in date
     order reduced by an exponentially-weighted mean whose weight halves every
@@ -117,7 +124,10 @@ def ewma_forecast(
     yields no row.
 
     `scope` names the Products to forecast: the baked varieties, or a lone
-    `[target_name]` for one Forecast Target's summed series.
+    `[target_name]` for one Forecast Target's summed series. `horizon` is the
+    `(first, last)` lead range to forecast, defaulting to the incumbent
+    forecast.HORIZON_DAYS; the daily engine passes its configured
+    `(1, horizon_days)`.
     """
     history = _in_scope_history(sales, as_of, scope)
     return _same_weekday_reduce(
@@ -125,6 +135,7 @@ def ewma_forecast(
         as_of,
         lambda s: s.ewm(halflife=halflife, adjust=True).mean().iloc[-1],
         scope,
+        horizon,
     )
 
 
@@ -284,7 +295,10 @@ def _ets_points(
 
 
 def ets_forecast(
-    sales: pd.DataFrame, as_of: dt.date, scope: Sequence[str]
+    sales: pd.DataFrame,
+    as_of: dt.date,
+    scope: Sequence[str],
+    horizon: Tuple[int, int] = forecast.HORIZON_DAYS,
 ) -> pd.DataFrame:
     """A per-Product Holt-Winters / ETS Demand Forecast — one point per target
     date — the classic seasonal reference model.
@@ -305,12 +319,13 @@ def ets_forecast(
     forecasts (a steep additive downtrend extrapolated out) are floored at zero.
 
     `scope` names the Products to forecast: the baked varieties, or a lone
-    `[target_name]` for one Forecast Target's summed series.
+    `[target_name]` for one Forecast Target's summed series. `horizon` is the
+    `(first, last)` lead range to forecast, as in ewma_forecast.
     """
     from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
     history = _in_scope_history(sales, as_of, scope)
-    targets = forecast.target_dates(as_of)
+    targets = forecast.target_dates(as_of, horizon)
 
     records = []
     for product in scope:

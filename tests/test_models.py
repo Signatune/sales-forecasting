@@ -332,6 +332,46 @@ class TestProductScope:
             ets_forecast(history, dt.date(2026, 6, 1))
 
 
+class TestHorizon:
+    """The `(first, last)` lead range a model covers is a parameter, defaulting
+    to the incumbent forecast.HORIZON_DAYS. The daily engine's horizon is
+    configuration — `as_of+1 .. as_of+N` — so it must be able to ask for a range
+    the module constant does not describe."""
+
+    def test_defaults_to_the_incumbent_horizon(self):
+        history = sales(daily("plain", "2026-06-01", 30))
+        as_of = dt.date(2026, 7, 9)
+
+        result = ewma_forecast(history, as_of, scope=["plain"])
+
+        assert list(result["date"]) == forecast.target_dates(as_of)
+
+    def test_ewma_covers_the_requested_lead_range(self):
+        history = sales(daily("plain", "2026-06-01", 30))
+        as_of = dt.date(2026, 7, 9)
+
+        result = ewma_forecast(history, as_of, scope=["plain"], horizon=(1, 3))
+
+        assert list(result["date"]) == [
+            pd.Timestamp("2026-07-10"),
+            pd.Timestamp("2026-07-11"),
+            pd.Timestamp("2026-07-12"),
+        ]
+
+    def test_ets_covers_the_requested_lead_range(self):
+        pytest.importorskip("statsmodels")
+        history = sales(daily("plain", "2026-01-01", 150, 10.0))
+        as_of = dt.date(2026, 6, 1)
+
+        result = ets_forecast(history, as_of, scope=["plain"], horizon=(1, 3))
+
+        assert list(result["date"]) == [
+            pd.Timestamp("2026-06-02"),
+            pd.Timestamp("2026-06-03"),
+            pd.Timestamp("2026-06-04"),
+        ]
+
+
 class TestEtsForecast:
     """The Holt-Winters / ETS model. Exact ETS arithmetic by hand is
     impractical, so these pin the contract — shape, scope, leak-freeness — not
