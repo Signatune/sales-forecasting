@@ -37,7 +37,7 @@ a larger absolute miss on everything.
 """
 import datetime as dt
 import sys
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -109,13 +109,22 @@ EWMA_HALFLIFE_WEEKS = 3
 # emit POINT forecasts only; the evaluator buffers to P95 and scores pinball@95.
 
 
-def _in_scope_history(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
-    """Leak-free Sales strictly before as_of, narrowed to the three baked
-    varieties — the shared front of every candidate below. history_before
-    applies no Product scope (callers select what they emit), so each candidate
-    must, exactly as forecast_demand and moving_average_forecast do."""
+def _in_scope_history(
+    sales: pd.DataFrame,
+    as_of: dt.date,
+    scope: Sequence[str] = forecast.FORECAST_PRODUCTS,
+) -> pd.DataFrame:
+    """Leak-free Sales strictly before as_of, narrowed to a Product `scope` — the
+    shared front of every candidate below. history_before applies no Product
+    scope (callers select what they emit), so each candidate must, exactly as
+    forecast_demand and moving_average_forecast do.
+
+    `scope` defaults to the three baked varieties (forecast.FORECAST_PRODUCTS),
+    the incumbent's surface. The daily engine passes `[target_name]` instead, so
+    the same candidate fits a single Forecast Target's summed series (ticket 02);
+    the arithmetic below is unchanged, only which Products it runs over."""
     history = forecast.history_before(sales, as_of)
-    return history[history["product"].isin(forecast.FORECAST_PRODUCTS)]
+    return history[history["product"].isin(scope)]
 
 
 def _demand_forecast_frame(records: List[dict]) -> pd.DataFrame:
@@ -130,20 +139,27 @@ def _demand_forecast_frame(records: List[dict]) -> pd.DataFrame:
 
 
 def _same_weekday_reduce(
-    history: pd.DataFrame, as_of: dt.date, reducer: Callable[[pd.Series], float]
+    history: pd.DataFrame,
+    as_of: dt.date,
+    reducer: Callable[[pd.Series], float],
+    scope: Sequence[str] = forecast.FORECAST_PRODUCTS,
 ) -> pd.DataFrame:
-    """Reduce each variety's same-weekday Sales, in date order, to one Demand
-    Forecast per target date — the shared body of the same-weekday candidates.
+    """Reduce each scoped Product's same-weekday Sales, in date order, to one
+    Demand Forecast per target date — the shared body of the same-weekday
+    candidates.
 
     `reducer` is the only thing that varies between them (a trailing-window mean,
-    an EWMA, ...); it receives that variety's same-weekday quantities oldest-first
-    and returns the point forecast. A variety that never sold on a target's
+    an EWMA, ...); it receives that Product's same-weekday quantities oldest-first
+    and returns the point forecast. A Product that never sold on a target's
     weekday yields no row, exactly as the incumbent — no evidence to reduce.
+
+    `scope` defaults to forecast.FORECAST_PRODUCTS; the engine passes a lone
+    `[target_name]` so the same reduction runs over one Forecast Target series.
     """
     records = []
     for target in forecast.target_dates(as_of):
         weekday = target.dayofweek
-        for product in forecast.FORECAST_PRODUCTS:
+        for product in scope:
             same_weekday = history[
                 (history["product"] == product)
                 & (history["date"].dt.dayofweek == weekday)
@@ -174,21 +190,31 @@ def trailing_window_forecast(
 
 
 def ewma_forecast(
-    sales: pd.DataFrame, as_of: dt.date, halflife: float = EWMA_HALFLIFE_WEEKS
+    sales: pd.DataFrame,
+    as_of: dt.date,
+    halflife: float = EWMA_HALFLIFE_WEEKS,
+    scope: Sequence[str] = forecast.FORECAST_PRODUCTS,
 ) -> pd.DataFrame:
-    """Recency-weighted same-weekday mean: a variety's same-weekday Sales in date
+    """Recency-weighted same-weekday mean: a Product's same-weekday Sales in date
     order reduced by an exponentially-weighted mean whose weight halves every
     `halflife` observations (pandas ewm, adjust=True).
 
     The most recent same-weekday Sale counts most and older ones fade smoothly,
     so — unlike the incumbent's equal weighting — a declining series is forecast
     below its all-history same-weekday mean, tracking the downtrend rather than
-    the (higher) distant past. A variety that never sold on the target's weekday
+    the (higher) distant past. A Product that never sold on the target's weekday
     yields no row, mirroring the incumbent.
+
+    `scope` defaults to the baked varieties, so every existing caller and the
+    whole comparison are unchanged; the daily engine passes `[target_name]` to
+    forecast one Forecast Target's summed series with this same definition.
     """
-    history = _in_scope_history(sales, as_of)
+    history = _in_scope_history(sales, as_of, scope)
     return _same_weekday_reduce(
-        history, as_of, lambda s: s.ewm(halflife=halflife, adjust=True).mean().iloc[-1]
+        history,
+        as_of,
+        lambda s: s.ewm(halflife=halflife, adjust=True).mean().iloc[-1],
+        scope,
     )
 
 
@@ -397,8 +423,12 @@ def _ets_points(
     return {target: by_date.get(target) for target in targets}
 
 
-def ets_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
-    """A per-variety Holt-Winters / ETS Demand Forecast — one point per target
+def ets_forecast(
+    sales: pd.DataFrame,
+    as_of: dt.date,
+    scope: Sequence[str] = forecast.FORECAST_PRODUCTS,
+) -> pd.DataFrame:
+    """A per-Product Holt-Winters / ETS Demand Forecast — one point per target
     date — the classic seasonal reference model.
 
     Conforms to the same (sales, as_of) -> [product, date, forecast_quantity]
@@ -411,19 +441,23 @@ def ets_forecast(sales: pd.DataFrame, as_of: dt.date) -> pd.DataFrame:
     candidate is buffered to its P95 the same way, through p95_buffer, so pinball
     measures forecast quality and not interval machinery (ADR 0002).
 
-    Robustness: a variety with fewer than two weekly cycles of history, or one
+    Robustness: a Product with fewer than two weekly cycles of history, or one
     whose fit fails to converge, falls back to a same-weekday mean rather than
-    raising; a variety with no history at all yields no row (as the incumbent
+    raising; a Product with no history at all yields no row (as the incumbent
     does) and simply drops out of that day's wheat total. Negative point
     forecasts (a steep additive downtrend extrapolated out) are floored at zero.
+
+    `scope` defaults to the baked varieties, leaving the comparison unchanged;
+    the daily engine passes `[target_name]` to re-fit ETS on one Forecast
+    Target's summed series with this same definition.
     """
     from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
-    history = _in_scope_history(sales, as_of)
+    history = _in_scope_history(sales, as_of, scope)
     targets = forecast.target_dates(as_of)
 
     records = []
-    for product in forecast.FORECAST_PRODUCTS:
+    for product in scope:
         series = _regular_daily_series(history, product)
         if series is None:
             continue

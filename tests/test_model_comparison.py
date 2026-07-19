@@ -1081,3 +1081,69 @@ class TestEtsForecast:
         registry = model_comparison.candidates_with_ets()
 
         assert registry.get("ets") is model_comparison.ets_forecast
+
+
+class TestProductScope:
+    """The optional Product scope points a model at exactly the series named,
+    so the daily engine can run one model definition over a Forecast Target's
+    summed series ([target_name]) — a Product that is not one of the baked
+    varieties — with no parallel per-series forecaster (ticket 02)."""
+
+    def test_ewma_forecasts_a_scoped_target_series(self):
+        # A Target series relabeled with its own name — the shape ticket 03's
+        # engine hands each model: a single Product outside FORECAST_PRODUCTS.
+        # Four declining Mondays 40/30/20/10 at half-life 1 obs reduce to the
+        # same 17.3333 TestEwmaSeasonalNaive works by hand, reached here only
+        # because the scope names the series.
+        history = sales(mondays("wheat_bagels", [40.0, 30.0, 20.0, 10.0]))
+        as_of = dt.date(2026, 6, 23)  # after the last Monday 2026-06-22
+        target = "2026-06-29"  # the next Monday
+
+        result = ewma_forecast(history, as_of, halflife=1, scope=["wheat_bagels"])
+
+        assert set(result["product"]) == {"wheat_bagels"}
+        assert _quantity_on(result, target) == pytest.approx(17.333333, rel=1e-5)
+
+    def test_ewma_default_scope_ignores_a_target_series(self):
+        # With no scope, a Target-named series the default FORECAST_PRODUCTS
+        # does not name is invisible — existing behavior, unchanged.
+        history = sales(mondays("wheat_bagels", [40.0, 30.0, 20.0, 10.0]))
+
+        result = ewma_forecast(history, dt.date(2026, 6, 23), halflife=1)
+
+        assert result.empty
+
+    def test_ewma_scope_selects_only_the_named_series(self):
+        # A frame carrying both a baked variety and a Target series: the default
+        # scope forecasts only the variety, a [target] scope only the Target —
+        # neither leaks the other's rows.
+        history = sales(
+            mondays("plain", [10.0, 10.0, 10.0, 10.0])
+            + mondays("wheat_bagels", [40.0, 30.0, 20.0, 10.0])
+        )
+        as_of = dt.date(2026, 6, 23)
+
+        default = ewma_forecast(history, as_of, halflife=1)
+        scoped = ewma_forecast(history, as_of, halflife=1, scope=["wheat_bagels"])
+
+        assert set(default["product"]) == {"plain"}
+        assert set(scoped["product"]) == {"wheat_bagels"}
+
+    def test_ets_forecasts_a_scoped_target_series(self):
+        pytest.importorskip("statsmodels")
+        history = sales(daily("wheat_bagels", "2026-01-01", 150, 10.0))
+
+        result = model_comparison.ets_forecast(
+            history, dt.date(2026, 6, 1), scope=["wheat_bagels"]
+        )
+
+        assert set(result["product"]) == {"wheat_bagels"}
+        assert not result.empty
+
+    def test_ets_default_scope_ignores_a_target_series(self):
+        pytest.importorskip("statsmodels")
+        history = sales(daily("wheat_bagels", "2026-01-01", 150, 10.0))
+
+        result = model_comparison.ets_forecast(history, dt.date(2026, 6, 1))
+
+        assert result.empty
