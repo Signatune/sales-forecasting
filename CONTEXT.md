@@ -40,6 +40,10 @@ _Avoid_: Prediction, estimate
 The aggregate projected revenue or units across all Products' Demand Forecasts for a future period.
 _Avoid_: Forecast (alone), projection
 
+**Forecast Target**:
+A named group of one or more Products whose Sales are summed into a single series that a model is fit to and forecast. A lone Product is the degenerate one-member group, so there is no separate "single product" case. Distinct from a Category: a Category is a merchandising grouping, a Forecast Target is a forecasting unit chosen because its aggregated series forecasts more accurately. A Product may belong to several Targets or none, and forecasting the members of a Target separately and summing the results (bottom-up) is a read-time aggregation, not a Target of its own.
+_Avoid_: Series, group (alone), aggregate
+
 ## Baking
 
 **Wheat Dough**:
