@@ -121,10 +121,13 @@ supersedes ticket 08 of the bake-forecast-model-comparison effort.
   case; there is no separate code path. An unknown Product name in the config is a
   loud error (mirroring `forecast.unexpected_products`).
 - **Reuse the model callables via a Product-scope parameter.** `ewma_forecast` and
-  `ets_forecast` (and their shared helpers) gain an optional Product scope,
-  defaulting to `forecast.FORECAST_PRODUCTS` so existing behavior is unchanged. The
-  engine points them at `[target_name]` against the relabeled summed series. One
-  definition of each model remains; no parallel per-series forecaster is written.
+  `ets_forecast` (and their shared helpers) take a **required** Product scope: the
+  caller always names what to forecast, so there is no default set of Products a
+  model forecasts. The engine points them at `[target_name]` against the relabeled
+  summed series. One definition of each model remains; no parallel per-series
+  forecaster is written. (Ticket 02 update: the standalone model comparison was
+  retired, so these live in `models.py`, not the old `model_comparison.py`; with no
+  comparison callers left there is no longer a default scope to preserve.)
 - **Horizon is a day-count `N`; lead is derived.** The engine forecasts
   `as_of+1 .. as_of+N` for every Target. There is no stored lead and no min-lead
   cutoff; downstream analysis filters on `target_date - as_of`. Leak-freeness is
@@ -177,11 +180,10 @@ supersedes ticket 08 of the bake-forecast-model-comparison effort.
   Target per target date; no forecast sees Sales on or after `as_of` (the
   leak-free cutoff, mirroring `TestHistoryCutoff`); rows key on the Target, not its
   members; an unknown Product name raises. Prior art:
-  `tests/test_model_comparison.py` and `tests/test_backtest.py` (synthetic frames,
-  rolling-origin bookkeeping, model arithmetic).
-- **Model-callable generalization.** Extend `tests/test_model_comparison.py` to
-  assert the Product-scope parameter forecasts exactly the scoped series, and that
-  the default scope leaves existing behavior unchanged.
+  `tests/test_models.py` and `tests/test_backtest.py` (synthetic frames, leak-free
+  cutoffs, model arithmetic).
+- **Model-callable generalization.** `tests/test_models.py` asserts the required
+  Product-scope parameter forecasts exactly the scoped series (done in ticket 02).
 - **Database functions (existing integration seam).** Test the write-once writer
   and the active-config reader with the ephemeral-Postgres pattern already in
   `tests/test_db.py`: a repeat write of the same key does not overwrite, a write

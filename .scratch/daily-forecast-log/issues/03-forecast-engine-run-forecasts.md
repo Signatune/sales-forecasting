@@ -48,7 +48,7 @@ and returns a frame. Wiring to Postgres is ticket 04/05.
       including for Holt-Winters (statelessness)
 - [ ] Output columns/dtypes are ready for the write path (dates as dates, quantity
       as float), tested with a synthetic Sales frame and config as in
-      `tests/test_model_comparison.py`
+      `tests/test_models.py`
 
 ## Blocked by
 

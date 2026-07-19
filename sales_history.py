@@ -1,8 +1,8 @@
 """The single seam through which the project reads its Sales history.
 
-Every reader — `forecast.py`, `backtest.py`, `model_comparison.py`,
-`inspection_page.py` — obtains the canonical `(product, date, quantity)` Sales
-frame by calling `load_sales_history()` rather than opening a file itself.
+Every reader — `forecast.py`, `backtest.py`, the daily forecast engine — obtains
+the canonical `(product, date, quantity)` Sales frame by calling
+`load_sales_history()` rather than opening a file itself.
 Concentrating the read here is what let ADR 0003's move to Postgres land by
 changing this one function: since ticket 04 it reads the `product_sales` view
 (ADR 0005) — the fact rolled up through the Product mapping — rather than a

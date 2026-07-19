@@ -1,6 +1,26 @@
 # Generalize the model callables with a Product scope
 
-Status: ready-for-agent
+Status: done
+
+## Resolution note (supersedes the plan below)
+
+Built with a **required** Product scope rather than an optional one defaulting to
+`FORECAST_PRODUCTS`. Mid-ticket the owner decided the model comparison is retired,
+so there is no longer a set of callers relying on a default: every call must name
+what it forecasts. Accordingly:
+
+- `ewma_forecast` / `ets_forecast` and the shared helpers (`_in_scope_history`,
+  `_same_weekday_reduce`, the ETS per-Product path) take a required `scope`.
+- The two model definitions plus the pure scoring/buffer functions (`pinball`,
+  `wape`, `coverage`, `p95_buffer`) moved to a new `models.py`; the daily engine
+  (ticket 03) and the analysis layer read from there.
+- `model_comparison.py`, `inspection_page.py`, `model_comparison.html` and their
+  tests were deleted. New coverage lives in `tests/test_models.py`.
+- The `experiment` extra was renamed `forecast` (statsmodels), matching the PRD.
+
+The acceptance criteria below that reference a default scope and a still-green
+`tests/test_model_comparison.py` are therefore obsolete; the scope-selects-the-
+named-series behaviour they wanted is covered by `tests/test_models.py`.
 
 ## Parent
 
