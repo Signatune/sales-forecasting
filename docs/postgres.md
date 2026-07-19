@@ -134,27 +134,28 @@ The unit tests in `tests/test_db.py` and `tests/test_migrate.py` need no
 database. The integration tests do, and they `TRUNCATE` the pipeline tables — so
 they run against a **throwaway** database, never your real `DATABASE_URL`.
 
-The easy path needs no Postgres install. Install the `testdb` extra once and
-pass `--ephemeral-postgres`; pytest boots a throwaway local Postgres for the run
-(bundled by the `pgserver` wheel — no Docker, no system install), points
-`TEST_DATABASE_URL` at it, and tears it down at the end:
+By default there's nothing to set up: the dev install includes the `pgserver`
+wheel, so `pytest` boots a throwaway local Postgres for the run (bundled
+binaries — no Docker, no system install), points `TEST_DATABASE_URL` at it, and
+tears it down at the end. Just run the suite:
 
 ```
-pip install -e ".[testdb]"
-pytest --ephemeral-postgres
+pip install -e ".[dev]"
+pytest
 ```
 
-Or point `TEST_DATABASE_URL` at a scratch database you manage yourself (a second
-Supabase project, or a local Postgres). This also lets CI reuse a service
-container: when `TEST_DATABASE_URL` is already set, `--ephemeral-postgres` uses
-it as-is instead of booting one.
+For a fast, database-less run, pass `--no-ephemeral-postgres`; the integration
+tests then skip (unless `TEST_DATABASE_URL` is set) and the rest of the suite
+runs unchanged.
+
+To run against a scratch database you manage yourself — a second Supabase
+project, a local Postgres, or a CI service container — set `TEST_DATABASE_URL`.
+When it's already set it wins: no local server is booted and it's used as-is.
 
 ```
 TEST_DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres' pytest tests/test_db.py tests/test_migrate.py
 ```
 
-With `TEST_DATABASE_URL` unset and no `--ephemeral-postgres`, those tests skip
-and the rest of the suite runs unchanged. `test_migrate.py`'s full-history
-comparison additionally needs the pre-migration `data/raw/` history and
-`sales_history.parquet` checked out locally; on a fresh clone, where those are
-no longer tracked (ticket 07), it skips.
+`test_migrate.py`'s full-history comparison additionally needs the pre-migration
+`data/raw/` history and `sales_history.parquet` checked out locally; on a fresh
+clone, where those are no longer tracked (ticket 07), it skips.
