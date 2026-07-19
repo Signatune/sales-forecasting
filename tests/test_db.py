@@ -1,4 +1,6 @@
-"""The Postgres access seam (ADR 0003, ADR 0005, ticket 02).
+"""The Postgres access seam (ADR 0003, ADR 0005, ticket 02); ticket 01 of the
+daily-forecast-log effort adds the config-driven, write-once Demand Forecast log
+schema (ADR 0006).
 
 Two layers:
 
@@ -10,6 +12,7 @@ Two layers:
   skip, and the suite still passes on a dev-only, database-less install.
 """
 import datetime
+import json
 import os
 
 import pandas as pd
@@ -83,7 +86,8 @@ class TestAgainstPostgres:
         with psycopg.connect(TEST_DATABASE_URL) as c:
             db.apply_schema(c)
             c.execute(
-                "TRUNCATE raw_toast_responses, sales, product_sources, products"
+                "TRUNCATE raw_toast_responses, sales, product_sources, products, "
+                "forecasts, forecast_configs"
             )
             c.commit()
             yield c
@@ -220,3 +224,80 @@ class TestAgainstPostgres:
         db.bulk_insert_raw_responses(conn, shards)
         conn.commit()
         assert conn.execute("SELECT count(*) FROM raw_toast_responses").fetchone()[0] == 2
+
+    # --- The config-driven, write-once Demand Forecast log (ADR 0006) -------
+    # Ticket 01 delivers the schema only; the db.py writer/reader that own these
+    # tables land in ticket 04, so these exercise the DDL contract with raw SQL.
+
+    def _insert_config(self, conn, config, is_active=True):
+        """Insert one forecast_configs row and return its generated version."""
+        return conn.execute(
+            "INSERT INTO forecast_configs (is_active, config) VALUES (%s, %s) "
+            "RETURNING version",
+            (is_active, json.dumps(config)),
+        ).fetchone()[0]
+
+    def _insert_forecast(self, conn, key, quantity, on_conflict_do_nothing=False):
+        """Insert one forecasts row from a full-key tuple `(as_of, config_version,
+        model, target, target_date)`, optionally with the write-once ON CONFLICT
+        DO NOTHING clause the daily writer uses."""
+        conflict = (
+            " ON CONFLICT (as_of, config_version, model, target, target_date) "
+            "DO NOTHING"
+            if on_conflict_do_nothing
+            else ""
+        )
+        conn.execute(
+            "INSERT INTO forecasts "
+            "(as_of, config_version, model, target, target_date, forecast_quantity) "
+            "VALUES (%s, %s, %s, %s, %s, %s)" + conflict,
+            (*key, quantity),
+        )
+
+    def test_forecast_config_round_trips_as_jsonb(self, conn):
+        config = {
+            "horizon_days": 14,
+            "models": {"ewma": {"halflife_weeks": 3}, "holt_winters": {}},
+            "targets": {"wheat_bagels": ["everything", "plain", "sesame"]},
+        }
+        version = self._insert_config(conn, config)
+        stored = conn.execute(
+            "SELECT config FROM forecast_configs WHERE version = %s", (version,)
+        ).fetchone()[0]
+        assert stored == config
+
+    def test_forecasts_write_once_conflicts_on_the_key(self, conn):
+        # The write-once contract: a same-key re-insert (a same-morning retry)
+        # is dropped by ON CONFLICT DO NOTHING, keeping the first-logged value.
+        version = self._insert_config(conn, {"horizon_days": 1})
+        key = (datetime.date(2026, 7, 5), version, "ewma", "wheat_bagels",
+               datetime.date(2026, 7, 6))
+        self._insert_forecast(conn, key, 42.0, on_conflict_do_nothing=True)
+        self._insert_forecast(conn, key, 99.0, on_conflict_do_nothing=True)
+        conn.commit()
+
+        rows = conn.execute(
+            "SELECT forecast_quantity FROM forecasts"
+        ).fetchall()
+        assert rows == [(42.0,)]
+
+    def test_forecast_rows_reference_a_config_version(self, conn):
+        # config_version is a foreign key: a forecast can't point at a
+        # configuration that was never recorded.
+        missing_version = (datetime.date(2026, 7, 5), 9999, "ewma", "wheat_bagels",
+                           datetime.date(2026, 7, 6))
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            self._insert_forecast(conn, missing_version, 42.0)
+
+    def test_new_tables_have_rls_enabled_and_no_policies(self, conn):
+        # Private, as the rest of the schema is: RLS on, no policies, so the
+        # Data API's anon/authenticated roles get no access to forecast data.
+        for table in ("forecast_configs", "forecasts"):
+            rls_on = conn.execute(
+                "SELECT relrowsecurity FROM pg_class WHERE relname = %s", (table,)
+            ).fetchone()[0]
+            assert rls_on, f"{table} should have RLS enabled"
+            policies = conn.execute(
+                "SELECT count(*) FROM pg_policies WHERE tablename = %s", (table,)
+            ).fetchone()[0]
+            assert policies == 0, f"{table} should have no policies"

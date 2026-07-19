@@ -1,4 +1,5 @@
--- Postgres schema for the Sales pipeline (ADR 0003, ADR 0005).
+-- Postgres schema for the Sales pipeline (ADR 0003, ADR 0005) and the
+-- config-driven, write-once Demand Forecast log (ADR 0006).
 --
 -- The raw Toast responses that are the replay/audit safety net data/raw/ used
 -- to provide, plus canonical Sales as a source-to-product dimensional model
@@ -124,3 +125,53 @@ CREATE OR REPLACE VIEW product_sales AS
 -- owner's, so the base tables' RLS still closes the Data API off from it — a
 -- plain (definer) view would otherwise leak the underlying rows to `anon`.
 ALTER VIEW product_sales SET (security_invoker = true);
+
+-- ---------------------------------------------------------------------------
+-- The config-driven, write-once Demand Forecast log (ADR 0006)
+-- ---------------------------------------------------------------------------
+
+-- forecast_configs: the versioned forecast surface as data, not code. One row
+-- per version of the *whole* configuration — the `config` jsonb document
+-- `{ horizon_days, models, targets }` naming which Forecast Targets to forecast,
+-- how far ahead (a day-count `N`), and each model's hyperparameters. A change is
+-- a new row with a fresh `version`, never an edit, so every logged forecast can
+-- point back at the exact configuration that produced it. `is_active` marks the
+-- version the daily job reads; a future frontend flips it by inserting a new
+-- version and activating that. `version` is the identity `forecasts` references.
+CREATE TABLE IF NOT EXISTS forecast_configs (
+    version    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    is_active  boolean     NOT NULL DEFAULT false,
+    config     jsonb       NOT NULL
+);
+
+ALTER TABLE forecast_configs ENABLE ROW LEVEL SECURITY;
+
+-- forecasts: the write-once Demand Forecast log. One row per point Demand
+-- Forecast — what a `model` forecast for a Forecast Target's `target_date`, as
+-- run on the morning of `as_of` with only the Sales available then, under the
+-- configuration version `config_version` names. The log is *append-only and
+-- frozen*: the primary key `(as_of, config_version, model, target, target_date)`
+-- is the key the daily writer conflicts on with ON CONFLICT DO NOTHING, so a
+-- same-morning retry fills gaps without overwriting, and a later config change or a
+-- trailing-window Sales correction (ADR 0004) never rewrites a past row — it
+-- lands under a new `config_version` instead. That frozen record is what lets
+-- the analysis layer score each forecast against what actually happened rather
+-- than against hindsight.
+--
+-- There is deliberately no `lead` column: lead is `target_date - as_of`, derived
+-- at read time (ADR 0006). Keeping it out of the table is what keeps every bake
+-- assumption — "3 days out means Poolish", "staffing is 14 days out" — a filter
+-- the analysis layer applies over the log, never a parameter frozen into it.
+CREATE TABLE IF NOT EXISTS forecasts (
+    as_of             date             NOT NULL,
+    config_version    bigint           NOT NULL REFERENCES forecast_configs (version),
+    model             text             NOT NULL,
+    target            text             NOT NULL,
+    target_date       date             NOT NULL,
+    forecast_quantity double precision NOT NULL,
+    created_at        timestamptz      NOT NULL DEFAULT now(),
+    PRIMARY KEY (as_of, config_version, model, target, target_date)
+);
+
+ALTER TABLE forecasts ENABLE ROW LEVEL SECURITY;
