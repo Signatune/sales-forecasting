@@ -201,11 +201,16 @@ class TestAgainstPostgres:
                 },
             )
             db.upsert_sales(c, self._facts())
-            c.execute(
-                "INSERT INTO forecast_configs (version, is_active, config) "
-                "VALUES (%s, true, %s)",
-                (CONFIG["version"], json.dumps(CONFIG)),
-            )
+            # `version` is GENERATED ALWAYS AS IDENTITY, so the database assigns
+            # it and `read_active_config` stamps the row's value over whatever
+            # the stored document carries. The active version is therefore
+            # whatever the identity hands out here, not CONFIG's — taken from
+            # RETURNING, as test_db.py's _insert_config does.
+            self.version = c.execute(
+                "INSERT INTO forecast_configs (is_active, config) VALUES (true, %s) "
+                "RETURNING version",
+                (json.dumps(CONFIG),),
+            ).fetchone()[0]
             c.commit()
             yield c
 
@@ -232,10 +237,10 @@ class TestAgainstPostgres:
     def test_logs_the_active_configs_forecasts(self, conn):
         counts = daily_forecast.run_daily_forecast(conn, sales(), AS_OF)
 
-        assert counts == {"config_version": 3, "rows": 2, "inserted": 2}
+        assert counts == {"config_version": self.version, "rows": 2, "inserted": 2}
         assert self._logged(conn) == [
-            (AS_OF, 3, "ewma", "wheat_bagels", dt.date(2026, 7, 8)),
-            (AS_OF, 3, "ewma", "wheat_bagels", dt.date(2026, 7, 9)),
+            (AS_OF, self.version, "ewma", "wheat_bagels", dt.date(2026, 7, 8)),
+            (AS_OF, self.version, "ewma", "wheat_bagels", dt.date(2026, 7, 9)),
         ]
 
     def test_a_rerun_the_same_morning_writes_nothing_new(self, conn):
