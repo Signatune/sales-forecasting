@@ -2,9 +2,10 @@
 
 # No data files are tracked (ticket 07). Postgres is the source of truth for
 # Sales history (ADR 0003); everything under data/ is a generated artifact —
-# raw Toast captures, the retired sales_history.parquet, forecast outputs, and
-# run logs. forecast.py recreates data/ on demand, so a fresh clone needs none
-# of it. The pre-migration history that migrate.py verified against still lives
+# raw Toast captures, the retired sales_history.parquet, the retired
+# demand_forecast.parquet / sales_forecast.parquet (ADR 0006), and run logs.
+# Only the manual Toast pulls write here now, so a fresh clone needs none of
+# it. The pre-migration history that migrate.py verified against still lives
 # here on the machine that ran the migration; it is simply no longer committed.
 /data/
 

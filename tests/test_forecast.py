@@ -13,8 +13,6 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-import forecast
-import sales_history
 from forecast import (
     FORECAST_PRODUCTS,
     SKIPPED_PRODUCTS,
@@ -310,40 +308,3 @@ class TestOutputShape:
 
         with pytest.raises(ValueError, match="NaN"):
             forecast_demand(history, AS_OF)
-
-
-class TestMain:
-    def test_writes_both_forecasts_and_refuses_an_empty_history(self, tmp_path, monkeypatch, capsys):
-        history_path = tmp_path / "sales_history.parquet"
-        demand_path = tmp_path / "demand_forecast.parquet"
-        family_path = tmp_path / "sales_forecast.parquet"
-        monkeypatch.setattr(forecast, "DEMAND_FORECAST_PATH", demand_path)
-        monkeypatch.setattr(forecast, "SALES_FORECAST_PATH", family_path)
-
-        sales([("plain", "2026-07-05", 10.0)]).to_parquet(history_path, index=False)
-        monkeypatch.setattr(
-            sales_history, "load_sales_history", lambda: pd.read_parquet(history_path)
-        )
-        forecast.main(as_of=AS_OF)
-
-        demand = pd.read_parquet(demand_path)
-        family = pd.read_parquet(family_path)
-        assert demand["product"].tolist() == ["plain"]
-        assert family["forecast_quantity"].tolist() == [10.0]
-        assert "cinnamon raisin" in capsys.readouterr().out
-
-    def test_refuses_to_write_when_no_product_can_be_forecast(self, tmp_path, monkeypatch):
-        history_path = tmp_path / "sales_history.parquet"
-        monkeypatch.setattr(forecast, "DEMAND_FORECAST_PATH", tmp_path / "d.parquet")
-        monkeypatch.setattr(forecast, "SALES_FORECAST_PATH", tmp_path / "f.parquet")
-
-        # Only skipped Products: nothing in scope to forecast.
-        sales([("cinnamon raisin", "2026-07-05", 10.0)]).to_parquet(
-            history_path, index=False
-        )
-        monkeypatch.setattr(
-            sales_history, "load_sales_history", lambda: pd.read_parquet(history_path)
-        )
-
-        with pytest.raises(ValueError, match="zero Demand Forecast"):
-            forecast.main(as_of=AS_OF)

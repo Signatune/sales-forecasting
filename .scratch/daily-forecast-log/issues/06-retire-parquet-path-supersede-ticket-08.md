@@ -1,6 +1,6 @@
 # Retire `forecast.py`'s parquet path and supersede ticket 08
 
-Status: ready-for-agent
+Status: done
 
 ## Parent
 
@@ -28,14 +28,33 @@ forecast output and formally close the now-obsolete promotion plan (ADR 0006).
 
 ## Acceptance criteria
 
-- [ ] `forecast.py` no longer writes either parquet file; nothing in the repo reads
+- [x] `forecast.py` no longer writes either parquet file; nothing in the repo reads
       them
-- [ ] `forecast.forecast_demand` and the shared helpers remain importable and their
+- [x] `forecast.forecast_demand` and the shared helpers remain importable and their
       tests still pass
-- [ ] Ticket 08 is marked superseded with a pointer to ADR 0006 and this effort
-- [ ] Any docs/READMEs that referenced the parquet outputs are updated
-- [ ] No downstream reader (`backtest.py`, `model_comparison.py`,
+- [x] Ticket 08 is marked superseded with a pointer to ADR 0006 and this effort
+- [x] Any docs/READMEs that referenced the parquet outputs are updated
+- [x] No downstream reader (`backtest.py`, `model_comparison.py`,
       `inspection_page.py`, the new engine) breaks
+
+## Notes
+
+`main()`, both `*_PATH` constants and `_skipped_daily_mean` (which existed only
+for `main()`'s printed caveat) are gone; `forecast.py` is a library with no
+entry point, as `normalize.py` became under ticket 07. `roll_up_sales_forecast`,
+`sparse_weekday_counts`, `unexpected_products` and `SKIPPED_PRODUCTS` were
+*kept* though they now run only under test — they record scope decisions ADR
+0001 and `forecast_engine.run_forecasts` still point at, and the ticket scoped
+the removal to the parquet-writing output path. A module-docstring paragraph
+says so, so they don't read as oversights, and flags the one thing this costs:
+nothing warns any more about a Sales-history Product classified neither way.
+Worth re-running that check when the analysis layer lands.
+
+`model_comparison.py` and `inspection_page.py` no longer exist (retired in
+ticket 02 of this effort), so the surviving downstream readers are `backtest.py`
+and `models.py`. The only doc still describing the parquet outputs as live was
+`.gitignore`'s header comment; the ADRs that mention them are left as the
+historical record they are.
 
 ## Blocked by
 

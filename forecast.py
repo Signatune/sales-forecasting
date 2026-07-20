@@ -1,14 +1,31 @@
-"""Seasonal-naive Demand Forecast per bagel Product, and the family Sales Forecast.
+"""The seasonal-naive Demand Forecast model, and the helpers every model shares.
 
-    .venv/bin/python forecast.py
+    forecast_demand(sales, as_of)
+      -> DataFrame[product, date, forecast_quantity]
 
-Reads the canonical Sales history written by normalize.py and writes, for each
-of the next 2..7 days, a Demand Forecast per Product and the summed family-level
-Sales Forecast:
+This module no longer writes a parquet, and is no longer an entry point. Since
+the daily forecast log became the single source of truth for forecasts (ADR
+0006), each morning's Demand Forecasts are produced by `daily_forecast.py` and
+appended to the `forecasts` table; the file-based outputs it used to write —
+`data/demand_forecast.parquet` and `data/sales_forecast.parquet` — were retired
+with `main()`, the way ticket 07 retired the file-based ingestion path.
 
-    the Sales history (via sales_history.load_sales_history)
-      -> data/demand_forecast.parquet   (product, date, forecast_quantity)
-      -> data/sales_forecast.parquet    (date, forecast_quantity)
+What remains is a library. `forecast_demand` is still a *model callable* — the
+seasonal-naive baseline `backtest.py` scores the candidates against — and
+`history_before`, `target_dates` and `FORECAST_PRODUCTS` are the definitions
+every other model reaches for, so that the leak-free cutoff and what counts as
+a target date exist once (see models.py, forecast_engine.py).
+
+`main()` was the only production caller of `unexpected_products`,
+`sparse_weekday_counts` and `roll_up_sales_forecast`, which now run only under
+test. They are kept because they record decisions the code still depends on —
+which varieties are knowingly not forecast (SKIPPED_PRODUCTS), and the
+mean-only family rollup ADR 0001 names — and because run_forecasts' docstring
+sends callers to sparse_weekday_counts to find the gaps the log won't show.
+Note what that costs: nothing now warns about a Product in the Sales history
+classified neither way. forecast_engine._target_series catches the inverse (a
+Target naming a Product the history lacks), so a *new* variety no longer
+announces itself; whatever picks up the analysis layer should re-run that check.
 
 The model is seasonal-naive: a Product's forecast Demand for a target date is
 the mean of its Sales on that same weekday across the trailing history. No
@@ -31,16 +48,9 @@ And a Demand Forecast may only see Sales strictly before its as_of date. Ticket
 target week's actuals would silently flatter the error metric.
 """
 import datetime as dt
-import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import pandas as pd
-
-import sales_history
-
-DEMAND_FORECAST_PATH = Path(__file__).parent / "data" / "demand_forecast.parquet"
-SALES_FORECAST_PATH = Path(__file__).parent / "data" / "sales_forecast.parquet"
 
 # The three baked bagel varieties the forecast covers — everything, plain and
 # sesame, which share one Wheat Dough. Each sells on essentially every open day,
@@ -201,63 +211,3 @@ def unexpected_products(sales: pd.DataFrame) -> List[str]:
     _validate_sales(sales)
     classified = set(FORECAST_PRODUCTS) | set(SKIPPED_PRODUCTS)
     return sorted(set(sales["product"]) - classified)
-
-
-def _skipped_daily_mean(sales: pd.DataFrame) -> float:
-    """Mean units/day the skipped Products sell, so the family Sales Forecast's
-    caveat carries a magnitude rather than just a name."""
-    skipped = sales[sales["product"].isin(SKIPPED_PRODUCTS)]
-    if skipped.empty or sales.empty:
-        return 0.0
-    return skipped["quantity"].sum() / sales["date"].nunique()
-
-
-def main(as_of: Optional[dt.date] = None) -> None:
-    as_of = as_of or dt.date.today()
-    sales = sales_history.load_sales_history()
-
-    for product in unexpected_products(sales):
-        print(
-            f"WARNING: Sales history contains Product {product!r}, which is "
-            "neither in FORECAST_PRODUCTS nor SKIPPED_PRODUCTS — it is missing "
-            "from the family Sales Forecast"
-        )
-    for product, weekday, count in sparse_weekday_counts(sales, as_of):
-        detail = (
-            "omitted from that date" if count == 0 else f"averaged over {count} days"
-        )
-        print(
-            f"WARNING: {product!r} has {count} recorded {weekday} Sales before "
-            f"{as_of} — {detail}"
-        )
-
-    demand = forecast_demand(sales, as_of)
-    if demand.empty:
-        raise ValueError(
-            "produced zero Demand Forecast records — refusing to write an empty "
-            f"Demand Forecast. Sales history holds {sorted(set(sales['product']))}, "
-            f"none of which is in FORECAST_PRODUCTS {list(FORECAST_PRODUCTS)}"
-        )
-    family = roll_up_sales_forecast(demand)
-
-    DEMAND_FORECAST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    demand.to_parquet(DEMAND_FORECAST_PATH, index=False)
-    family.to_parquet(SALES_FORECAST_PATH, index=False)
-
-    print(
-        f"wrote {len(demand)} Demand Forecast records for "
-        f"{demand['product'].nunique()} Products, "
-        f"{demand['date'].min().date()}..{demand['date'].max().date()} "
-        f"-> {DEMAND_FORECAST_PATH}"
-    )
-    print(f"wrote {len(family)} family Sales Forecast records -> {SALES_FORECAST_PATH}")
-    print(
-        f"\nnote: family Sales Forecast excludes {', '.join(sorted(SKIPPED_PRODUCTS))} "
-        f"(~{_skipped_daily_mean(sales):.1f} units/day)\n"
-    )
-    for row in family.itertuples():
-        print(f"  {row.date:%a %Y-%m-%d}  {row.forecast_quantity:8.1f}")
-
-
-if __name__ == "__main__":
-    sys.exit(main())

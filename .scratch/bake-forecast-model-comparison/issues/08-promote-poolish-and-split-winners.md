@@ -1,10 +1,20 @@
 # Promote the Poolish and split winners into `forecast.py`
 
-Status: ready-for-human
+Status: wontfix — superseded
 
 ## Parent
 
 `.scratch/bake-forecast-model-comparison/PRD.md`
+
+## Superseded
+
+Do not implement the plan below. Superseded by
+`docs/adr/0006-daily-forecasts-are-a-config-driven-write-once-log.md` and the
+`.scratch/daily-forecast-log/` effort, which log both candidates daily instead
+of promoting one; the operational bake number becomes a read over that log.
+
+Kept for the evidence in "Why this needs a human decision first", which ADR
+0006 rests on.
 
 ## What to build
 
