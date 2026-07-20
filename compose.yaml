@@ -1,0 +1,82 @@
+# The development and test environment. Dev and test only --- the three
+# production cron workflows still run `pip install -e .` on a runner and are
+# deliberately untouched. The reasoning is recorded in
+# .scratch/docker-dev-environment/PRD.md; ticket 05 of that effort promotes it
+# to ADR 0008, which is not written yet.
+#
+# The split between `test` and `app` is the security boundary. The integration
+# tests TRUNCATE the pipeline tables and the migrated Sales history has no
+# backup, so the truncating process must have no production connection string
+# in its environment to misuse. Reaching the real Supabase instance means
+# naming `app` explicitly; it is never ambient.
+
+services:
+  # Throwaway Postgres for the test suite. Pinned to 17 to match what the
+  # managed Supabase instance provisions --- a query must not be able to pass
+  # here and fail in production. The hard floor is 15: schema.sql sets
+  # `security_invoker` on the product_sales view, which earlier versions reject
+  # outright. If this ever drifts, re-check it against the real instance.
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sales_forecasting_test
+      # A subdirectory of the tmpfs mount, not the mount point itself: the
+      # entrypoint creates it with the ownership initdb requires, which it
+      # cannot do to a mount point it does not own.
+      PGDATA: /var/lib/postgresql/data/pgdata
+    # No named volume --- the data directory lives in memory and does not
+    # survive the run. The tests truncate regardless, and nothing persisting
+    # between runs means nothing can create order-dependence.
+    tmpfs:
+      - /var/lib/postgresql/data
+    # The `test` service waits on this rather than sleeping or retrying, so the
+    # suite cannot race a database that is not yet accepting connections.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sales_forecasting_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+
+  # Runs the suite. `docker compose run --rm test`.
+  test:
+    build: .
+    # TEST_DATABASE_URL and deliberately no DATABASE_URL. conftest.py already
+    # specifies that a pre-set TEST_DATABASE_URL is used as-is, so this feeds
+    # the existing TestAgainstPostgres suites through a contract that already
+    # exists --- no new seam. Note there is no `env_file` here: the .env file,
+    # and the production connection string in it, never enters this service.
+    environment:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sales_forecasting_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Source is bind-mounted, not copied, so an edit changes what the next run
+    # executes with no rebuild --- see the Dockerfile for why installing this
+    # project ships no source.
+    #
+    # The second mount is load-bearing for the security boundary, not tidiness:
+    # the bind mount above carries the developer's real .env into the container,
+    # and env.load_env reads it by path regardless of what `environment:` says.
+    # Masking it with an empty file is what actually denies this container the
+    # production connection string. See docker/no-secrets.env.
+    volumes:
+      - .:/app
+      - ./docker/no-secrets.env:/app/.env:ro
+
+  # Anything that must reach the real Supabase instance --- applying the
+  # schema, a manual capture. `docker compose run --rm app python migrate.py`.
+  # This is the only service that receives .env, and so the only one holding
+  # DATABASE_URL.
+  app:
+    build: .
+    # `required: false` so a fresh clone with no .env can still run the `test`
+    # service --- compose validates every service in the file, not just the one
+    # named, and a hard reference here would fail the whole project.
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app

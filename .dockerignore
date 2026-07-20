@@ -1,0 +1,12 @@
+# The build context only ever needs pyproject.toml (see the Dockerfile --- the
+# source is bind-mounted at run time, never copied). Excluding the heavy,
+# machine-local directories keeps the context from shipping a host virtualenv
+# to the daemon on every build.
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.git/
+data/
+.env
