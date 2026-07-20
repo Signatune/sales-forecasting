@@ -1,0 +1,49 @@
+name: Apply DB schema
+
+# Runs `python db.py` (schema.sql's idempotent DDL) against the managed
+# Postgres whenever schema.sql changes on main (ADR 0007). Triggering on push
+# rather than a local git hook is what catches PR merges too — a hook only
+# fires on `git push` from a contributor's own machine and never runs when a
+# PR is merged through GitHub's UI.
+#
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL   Supabase session-pooler connection string (see
+#                  docs/postgres.md), the same secret daily-capture.yml and
+#                  daily-forecast.yml already use.
+
+on:
+  push:
+    branches: [main]
+    paths: ["schema.sql"]
+  # Also runnable by hand from the Actions tab, to retry an apply that failed
+  # on a transient DB issue without waiting for another schema.sql edit.
+  workflow_dispatch: {}
+
+# Never let a hand-triggered run and a push-triggered one overlap: they would
+# apply the same schema at once. Queue instead of cancel — a run in progress is
+# doing a real DDL apply and should finish.
+concurrency:
+  group: apply-schema
+  cancel-in-progress: false
+
+jobs:
+  apply-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Apply schema.sql
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # schema.sql is idempotent (IF NOT EXISTS / CREATE OR REPLACE), so this
+        # is safe to run even when nothing actually changed. A DB or DDL
+        # failure exits non-zero, which fails this step and the workflow —
+        # visibly in the Actions tab, not silently.
+        run: python db.py

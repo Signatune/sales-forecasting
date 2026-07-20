@@ -62,6 +62,12 @@ This creates the tables and the `product_sales` view. It is idempotent — every
 statement is `IF NOT EXISTS` or `CREATE OR REPLACE`, so running it against an
 already-set-up database changes nothing and is safe to repeat.
 
+A change to `schema.sql` on `main` applies itself: `.github/workflows/apply-schema.yml`
+runs this same command against `DATABASE_URL` on every push to `main` that
+touches the file, whether it lands via a direct push or a merged PR (ADR 0007).
+Run `python db.py` by hand for local development or any other branch — those
+aren't automated.
+
 ## Migrate the pulled history (one-time, already done)
 
 This was a one-time load, run by hand when Postgres became the source of truth
