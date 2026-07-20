@@ -22,6 +22,11 @@ The objects (see `schema.sql`):
   fact up through the map to the `(product, date, quantity)` frame the readers
   consume — so the write side is at source grain and the read side at Product
   grain, exactly as ADR 0005 lays out.
+- The config-driven, write-once Demand Forecast log (ADR 0006).
+  `read_active_config` returns the configuration the daily job runs under, with
+  its version stamped in; `insert_forecasts` appends the log rows
+  `forecast_engine.run_forecasts` produces, write-once, so a retry fills gaps
+  and never rewrites what a past morning predicted.
 
 `source_name` is stored in the normalized (stripped, lower-cased) form
 `normalize.py` matches on; callers pass names already normalized (as
@@ -289,6 +294,96 @@ def read_sales(conn: psycopg.Connection) -> pd.DataFrame:
     frame["date"] = pd.to_datetime(frame["date"]).astype("datetime64[ns]")
     frame["quantity"] = frame["quantity"].astype(float)
     return frame
+
+
+# --- The config-driven, write-once Demand Forecast log (ADR 0006) ----------
+
+
+def read_active_config(conn: psycopg.Connection) -> Dict:
+    """The active forecast configuration, as the document `run_forecasts` takes.
+
+    "Active" is `is_active = true`; nothing in the schema stops two rows holding
+    that at once, so the newest `version` wins rather than leaving which
+    configuration a morning ran under up to the planner. The row's `version` is
+    stamped into the returned document under `"version"` (winning over any
+    `"version"` the stored document carries, since the row's is the identity
+    `forecasts.config_version` references) — that is the provenance every logged
+    row is keyed by, and reading the config and knowing its version are never
+    separate questions, so they are not separate calls.
+
+    Raises when no configuration is active: a morning with nothing to run is a
+    misconfiguration to fix, not an empty forecast to log."""
+    row = conn.execute(
+        "SELECT version, config FROM forecast_configs "
+        "WHERE is_active ORDER BY version DESC LIMIT 1"
+    ).fetchone()
+    if row is None:
+        raise RuntimeError(
+            "No active forecast configuration: forecast_configs has no row with "
+            "is_active = true. Insert a configuration document and activate it "
+            "(see docs/adr/0006-daily-forecasts-are-a-config-driven-write-once-"
+            "log.md) before running the daily forecast."
+        )
+    version, config = row
+    return {**config, "version": version}
+
+
+# The log's columns, in the order `forecast_engine.LOG_COLUMNS` returns them and
+# the insert spells them; the leading five are its primary key, which the
+# write-once insert conflicts on. Spelled here rather than imported so db.py
+# stays free of the engine (and of pandas-heavy model imports); a test pins the
+# two lists together, so a rename on either side fails loudly.
+FORECAST_KEY_COLUMNS = ("as_of", "config_version", "model", "target", "target_date")
+FORECAST_COLUMNS = FORECAST_KEY_COLUMNS + ("forecast_quantity",)
+
+
+def forecast_rows(frame: pd.DataFrame) -> List[tuple]:
+    """The Demand Forecast log frame as `(as_of, config_version, model, target,
+    target_date, forecast_quantity)` tuples ready for Postgres: dates as python
+    `date`, the version as `int`, the quantity as `float`, so no numpy scalar
+    reaches the driver. Dates go through `pd.Timestamp` as `sales_rows` does, so
+    a datetime64 column narrows here too rather than at the call site. Pure, so
+    the frame-to-rows mapping is testable without a database."""
+    return [
+        (
+            pd.Timestamp(row.as_of).date(),
+            int(row.config_version),
+            str(row.model),
+            str(row.target),
+            pd.Timestamp(row.target_date).date(),
+            float(row.forecast_quantity),
+        )
+        for row in frame.itertuples(index=False)
+    ]
+
+
+def insert_forecasts(conn: psycopg.Connection, frame: pd.DataFrame) -> int:
+    """Append `run_forecasts`' rows to the write-once log, returning how many
+    were actually written.
+
+    `ON CONFLICT (as_of, config_version, model, target, target_date) DO NOTHING`
+    is the write-once contract: a same-morning retry fills the gaps a failed run
+    left and leaves every already-logged forecast exactly as it was recorded, so
+    a logged row stays frozen at what was predicted that morning (ADR 0006). A
+    re-run under a *new* config version conflicts with nothing and adds its rows
+    alongside the old, which is what makes a configuration change additive
+    rather than a rewrite of history. Conflict-skipped rows are not counted, so
+    a fully redundant retry returns 0."""
+    rows = forecast_rows(frame)
+    if not rows:
+        return 0
+    columns = ", ".join(FORECAST_COLUMNS)
+    placeholders = ", ".join(["%s"] * len(FORECAST_COLUMNS))
+    key = ", ".join(FORECAST_KEY_COLUMNS)
+    with conn.cursor() as cur:
+        cur.executemany(
+            f"INSERT INTO forecasts ({columns}) VALUES ({placeholders}) "
+            f"ON CONFLICT ({key}) DO NOTHING",
+            rows,
+        )
+        inserted = cur.rowcount
+    conn.commit()
+    return inserted
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:

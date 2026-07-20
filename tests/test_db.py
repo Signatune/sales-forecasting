@@ -1,11 +1,11 @@
 """The Postgres access seam (ADR 0003, ADR 0005, ticket 02); ticket 01 of the
 daily-forecast-log effort adds the config-driven, write-once Demand Forecast log
-schema (ADR 0006).
+schema (ADR 0006), and ticket 04 the reader and writer that own it.
 
 Two layers:
 
 - Unit tests that need no database --- the connection-string contract and the
-  fact frame-to-rows mapping.
+  fact and forecast-log frame-to-rows mappings.
 - Integration tests that exercise a real Postgres, gated behind
   `TEST_DATABASE_URL`. They TRUNCATE the schema's tables, so they run against a
   throwaway test database, never `DATABASE_URL`; when the variable is unset they
@@ -26,6 +26,21 @@ TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 
 CAMBRIDGE = "28e5b269-1c1c-45df-81a8-1d268c005dfa"
 BROOKLINE = "9ae70079-b9cd-4b92-8457-c86bc823188f"
+
+
+def log_row(as_of, config_version, model, target, target_date, quantity):
+    """One Demand Forecast log row as the single-row frame insert_forecasts
+    takes --- the shape forecast_engine.run_forecasts returns."""
+    return pd.DataFrame(
+        {
+            "as_of": [as_of],
+            "config_version": [config_version],
+            "model": [model],
+            "target": [target],
+            "target_date": [target_date],
+            "forecast_quantity": [quantity],
+        }
+    )
 
 
 def fact(date, restaurant_guid, source_name, quantity, source_type="modifier"):
@@ -74,6 +89,37 @@ class TestSalesRows:
             columns=["date", "restaurant_guid", "source_type", "source_name", "quantity"]
         )
         assert db.sales_rows(frame) == []
+
+
+class TestForecastRows:
+    """The log frame-to-rows mapping insert_forecasts feeds Postgres."""
+
+    def test_the_columns_match_what_the_engine_returns(self):
+        # db.py spells the log's columns itself rather than importing the
+        # engine; this is what keeps the two spellings from drifting apart and
+        # breaking the daily job silently. forecast_engine imports statsmodels
+        # lazily, so this needs no ETS install.
+        import forecast_engine
+
+        assert list(db.FORECAST_COLUMNS) == forecast_engine.LOG_COLUMNS
+
+    def test_maps_to_python_typed_tuples(self):
+        # run_forecasts returns python dates and a numpy float; Postgres wants
+        # neither pandas Timestamps nor numpy scalars.
+        frame = log_row(
+            datetime.date(2026, 7, 5), 3, "ewma", "wheat_bagels",
+            datetime.date(2026, 7, 8), 42.5,
+        )
+        (as_of, version, model, target, target_date, quantity), = db.forecast_rows(frame)
+        assert as_of == datetime.date(2026, 7, 5)
+        assert isinstance(version, int) and version == 3
+        assert model == "ewma"
+        assert target == "wheat_bagels"
+        assert target_date == datetime.date(2026, 7, 8)
+        assert isinstance(quantity, float) and quantity == 42.5
+
+    def test_empty_frame_maps_to_no_rows(self):
+        assert db.forecast_rows(pd.DataFrame(columns=db.FORECAST_COLUMNS)) == []
 
 
 @pytest.mark.skipif(
@@ -226,8 +272,8 @@ class TestAgainstPostgres:
         assert conn.execute("SELECT count(*) FROM raw_toast_responses").fetchone()[0] == 2
 
     # --- The config-driven, write-once Demand Forecast log (ADR 0006) -------
-    # Ticket 01 delivers the schema only; the db.py writer/reader that own these
-    # tables land in ticket 04, so these exercise the DDL contract with raw SQL.
+    # These exercise the DDL contract itself with raw SQL; the db.py reader and
+    # writer that own these tables are covered further down.
 
     def _insert_config(self, conn, config, is_active=True):
         """Insert one forecast_configs row and return its generated version."""
@@ -301,3 +347,129 @@ class TestAgainstPostgres:
                 "SELECT count(*) FROM pg_policies WHERE tablename = %s", (table,)
             ).fetchone()[0]
             assert policies == 0, f"{table} should have no policies"
+
+    # --- The db.py reader and writer that own those tables (ticket 04) ------
+
+    def test_read_active_config_round_trips_the_document(self, conn):
+        config = {
+            "horizon_days": 14,
+            "models": {"ewma": {"halflife_weeks": 3}, "holt_winters": {}},
+            "targets": {"wheat_bagels": ["everything", "plain", "sesame"]},
+        }
+        version = self._insert_config(conn, config)
+        conn.commit()
+
+        active = db.read_active_config(conn)
+        # The version is stamped into the document, so what comes back is
+        # exactly what run_forecasts takes — it reads config["version"].
+        assert active == {**config, "version": version}
+
+    def test_read_active_config_ignores_inactive_versions(self, conn):
+        self._insert_config(conn, {"horizon_days": 1}, is_active=False)
+        active_version = self._insert_config(conn, {"horizon_days": 7})
+        conn.commit()
+
+        assert db.read_active_config(conn)["version"] == active_version
+
+    def test_read_active_config_takes_the_newest_of_several_active(self, conn):
+        # Nothing in the schema stops two rows being active at once; the reader
+        # settles it rather than leaving the morning's run non-deterministic.
+        self._insert_config(conn, {"horizon_days": 1})
+        newest = self._insert_config(conn, {"horizon_days": 7})
+        conn.commit()
+
+        assert db.read_active_config(conn)["version"] == newest
+
+    def test_read_active_config_raises_when_none_is_active(self, conn):
+        self._insert_config(conn, {"horizon_days": 1}, is_active=False)
+        conn.commit()
+
+        with pytest.raises(RuntimeError, match="forecast_configs"):
+            db.read_active_config(conn)
+
+    def test_insert_forecasts_writes_the_rows_and_counts_them(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 1})
+        conn.commit()
+        frame = pd.concat([
+            log_row(datetime.date(2026, 7, 5), version, "ewma", "wheat_bagels",
+                    datetime.date(2026, 7, 6), 42.0),
+            log_row(datetime.date(2026, 7, 5), version, "holt_winters",
+                    "wheat_bagels", datetime.date(2026, 7, 6), 44.0),
+        ], ignore_index=True)
+
+        assert db.insert_forecasts(conn, frame) == 2
+        rows = conn.execute(
+            "SELECT model, forecast_quantity FROM forecasts ORDER BY model"
+        ).fetchall()
+        assert rows == [("ewma", 42.0), ("holt_winters", 44.0)]
+
+    def test_insert_forecasts_does_not_overwrite_a_logged_forecast(self, conn):
+        # The write-once contract, through the writer: a same-morning retry
+        # keeps the first-logged quantity and reports it wrote nothing new.
+        version = self._insert_config(conn, {"horizon_days": 1})
+        conn.commit()
+        key = (datetime.date(2026, 7, 5), version, "ewma", "wheat_bagels",
+               datetime.date(2026, 7, 6))
+
+        db.insert_forecasts(conn, log_row(*key, 42.0))
+        assert db.insert_forecasts(conn, log_row(*key, 99.0)) == 0
+
+        assert conn.execute(
+            "SELECT forecast_quantity FROM forecasts"
+        ).fetchall() == [(42.0,)]
+
+    def test_insert_forecasts_fills_the_gaps_a_failed_run_left(self, conn):
+        # Half the morning's rows landed before the run died; the retry writes
+        # only the missing one and leaves the already-logged one alone.
+        version = self._insert_config(conn, {"horizon_days": 2})
+        conn.commit()
+        first = log_row(datetime.date(2026, 7, 5), version, "ewma",
+                        "wheat_bagels", datetime.date(2026, 7, 6), 42.0)
+        second = log_row(datetime.date(2026, 7, 5), version, "ewma",
+                         "wheat_bagels", datetime.date(2026, 7, 7), 50.0)
+        db.insert_forecasts(conn, first)
+
+        retry = pd.concat([first, second], ignore_index=True)
+        assert db.insert_forecasts(conn, retry) == 1
+        assert conn.execute(
+            "SELECT forecast_quantity FROM forecasts ORDER BY target_date"
+        ).fetchall() == [(42.0,), (50.0,)]
+
+    def test_insert_forecasts_adds_a_row_under_a_new_config_version(self, conn):
+        # A config change adds rows rather than clobbering: the old version's
+        # logged forecast stays exactly as it was recorded.
+        old = self._insert_config(conn, {"horizon_days": 1}, is_active=False)
+        new = self._insert_config(conn, {"horizon_days": 2})
+        conn.commit()
+        as_of, target_date = datetime.date(2026, 7, 5), datetime.date(2026, 7, 6)
+
+        db.insert_forecasts(
+            conn, log_row(as_of, old, "ewma", "wheat_bagels", target_date, 42.0)
+        )
+        assert db.insert_forecasts(
+            conn, log_row(as_of, new, "ewma", "wheat_bagels", target_date, 99.0)
+        ) == 1
+
+        assert conn.execute(
+            "SELECT config_version, forecast_quantity FROM forecasts "
+            "ORDER BY config_version"
+        ).fetchall() == [(old, 42.0), (new, 99.0)]
+
+    def test_insert_forecasts_of_an_empty_frame_writes_nothing(self, conn):
+        assert db.insert_forecasts(conn, pd.DataFrame(columns=db.FORECAST_COLUMNS)) == 0
+        assert conn.execute("SELECT count(*) FROM forecasts").fetchone()[0] == 0
+
+    def test_insert_forecasts_commits(self, conn):
+        # The write survives the connection, like the other writers': the
+        # scheduled job's rows must not depend on a later commit.
+        version = self._insert_config(conn, {"horizon_days": 1})
+        conn.commit()
+        db.insert_forecasts(conn, log_row(
+            datetime.date(2026, 7, 5), version, "ewma", "wheat_bagels",
+            datetime.date(2026, 7, 6), 42.0,
+        ))
+
+        with psycopg.connect(TEST_DATABASE_URL) as other:
+            assert other.execute(
+                "SELECT count(*) FROM forecasts"
+            ).fetchone()[0] == 1
