@@ -8,6 +8,8 @@ A managed Postgres database is the single source of truth for Sales history (ADR
 
 Each day's Sales are captured by a scheduled GitHub Actions job (`.github/workflows/daily-capture.yml`) that runs `daily_capture.py` — no laptop has to be awake. The daily capture pulls the **Orders API only**, over a 3-day trailing business-date window, and upserts by `(date, restaurant, source)`, so voids and back-office corrections Toast allows after a day closes are picked up on the next run (ADR 0004).
 
+Behind that capture, a second scheduled job (`.github/workflows/daily-forecast.yml`, running `daily_forecast.py`) forecasts the day: it reads the active configuration from `forecast_configs` — which Forecast Targets to run, how far ahead, and each model's hyperparameters — runs every configured model over each Target's summed series, and appends the results to the write-once `forecasts` log (ADR 0006). It is gated on the capture's success so it always sees the just-closed day. A logged row is frozen at what was predicted that morning; nothing bake-specific (lead, buffering, the Poolish total) is stored there, since all of it is derivable at read time.
+
 The Analytics client (`toast_client.py`) is off this daily path. It is kept for a future backfill or a manual reconciliation against the Orders numbers, not run automatically. The one-time load of the pre-existing history into Postgres lived in `migrate.py`; there is no file-based ingestion path any more.
 
 ## Language

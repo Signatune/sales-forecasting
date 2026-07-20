@@ -1,6 +1,40 @@
 # Scheduled forecast workflow, gated on the daily capture
 
-Status: ready-for-agent
+Status: done — integration tests unrun (see the resolution note)
+
+## Resolution note
+
+Built as `daily_forecast.py` (mirroring `daily_capture.py`'s shape:
+`run_daily_forecast(conn, sales, as_of)` plus a `main` with `connect` /
+`load_sales` / `now` seams) and `.github/workflows/daily-forecast.yml`, with
+`docs/scheduled-forecast.md` alongside `docs/scheduled-capture.md`.
+
+Three judgement calls worth recording:
+
+- **A separate workflow on `workflow_run`, not a second job in
+  `daily-capture.yml`.** Both were allowed by the ticket. A separate workflow
+  gets its own concurrency group and its own `workflow_dispatch`, so a missed
+  morning can be re-forecast *without* re-pulling Toast — which a `needs:`-gated
+  second job could not offer. It is guarded on
+  `github.event.workflow_run.conclusion == 'success'` so a failed capture skips
+  the morning rather than forecasting off an incomplete history.
+- **`main` catches `ValueError` as well as `RuntimeError` / `psycopg.Error`.**
+  The engine raises `ValueError` for configuration mistakes (an unknown Product
+  in a Target, a hyperparameter a model does not take, an unrunnable model).
+  Those messages already say what to fix, so they are printed as the same clear
+  one-line failure rather than buried in a traceback.
+- **The `forecast` extra already existed** — `experiment` was repurposed in an
+  earlier ticket — so this only had to install `.[forecast]` in the workflow.
+
+**The two `TestAgainstPostgres` tests are unrun.** As with ticket 04, `pgserver`
+publishes no Windows wheel and there was no local Postgres or Docker on the
+machine this was built on, so they skipped. The unit layer (eight tests driving
+`main` through fake `connect` / `load_sales` seams) did run and passes, and the
+whole path was additionally driven end to end against a stub connection with
+both models configured — logging the config version, the row count, and a group
+Target correctly summing its two members. What is unconfirmed is narrowly the
+database round trip: that `run_daily_forecast` reads a real `forecast_configs`
+row and that a same-morning re-run inserts nothing.
 
 ## Parent
 
@@ -32,14 +66,14 @@ sees the just-closed day.
 
 ## Acceptance criteria
 
-- [ ] The forecast job runs only after the capture has written the day's Sales
-- [ ] The entry point reads the active config, runs the engine, and writes the
+- [x] The forecast job runs only after the capture has written the day's Sales
+- [x] The entry point reads the active config, runs the engine, and writes the
       write-once log; it logs the config version and the row count
-- [ ] A failure exits non-zero and is visible in the Actions tab
-- [ ] `statsmodels` is installed for the job via a `forecast` extra; the default
+- [x] A failure exits non-zero and is visible in the Actions tab
+- [x] `statsmodels` is installed for the job via a `forecast` extra; the default
       `pytest` run still passes without it
-- [ ] The job is hand-runnable (`workflow_dispatch` or equivalent) for a missed day
-- [ ] A concurrency group prevents overlapping writes
+- [x] The job is hand-runnable (`workflow_dispatch` or equivalent) for a missed day
+- [x] A concurrency group prevents overlapping writes
 
 ## Blocked by
 

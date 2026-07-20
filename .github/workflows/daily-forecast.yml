@@ -1,0 +1,73 @@
+name: Daily Demand Forecast
+
+# Runs `python daily_forecast.py` each morning: reads the active configuration
+# from `forecast_configs`, runs the engine, and appends the day's Demand
+# Forecasts to the write-once `forecasts` log (ADR 0006). This is the single
+# config-driven compute job — adding a Forecast Target, retuning a
+# hyperparameter or widening the horizon is a row in `forecast_configs`, never
+# another workflow here.
+#
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL   Supabase session-pooler connection string (see
+#                  docs/postgres.md — the pooler is IPv4, which the runner
+#                  needs). No Toast credentials: this job never contacts Toast;
+#                  it reads the Sales the capture already wrote.
+
+on:
+  # Gated on the capture rather than scheduled on its own clock time. A bare
+  # cron would race "Daily Sales capture": on a slow Toast pull the forecast
+  # would read the Sales history *before* the just-closed day landed and log a
+  # whole morning fit to stale data — silently, since a forecast off by a day of
+  # history still looks like a forecast. Triggering on the capture's completion
+  # means the day is written before this starts, whether the capture ran on its
+  # cron or was kicked off by hand.
+  workflow_run:
+    workflows: ["Daily Sales capture"]
+    types: [completed]
+  # Also runnable by hand from the Actions tab, to re-run a missed or failed
+  # morning without re-pulling Toast. Safe to press twice: the log's write-once
+  # insert fills the gaps a failed run left and never overwrites what was
+  # already recorded.
+  workflow_dispatch: {}
+
+# Never let a hand-triggered run and the capture-triggered one overlap: they
+# would compute and write the same morning at once. Queue instead of cancel — a
+# run in progress is doing real writes and should finish.
+concurrency:
+  group: daily-forecast
+  cancel-in-progress: false
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    # A capture that failed wrote no Sales for the just-closed day, so
+    # forecasting off it would log rows built on an incomplete history. Skip the
+    # morning instead and let the re-run of the capture trigger a fresh one. A
+    # hand-triggered run carries no upstream conclusion and is always allowed.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # The `forecast` extra adds statsmodels, which models.ets_forecast imports
+      # lazily — so Holt-Winters runs here in production while the base and dev
+      # installs, and the default pytest run, stay light (ADR 0006).
+      - name: Install dependencies
+        run: pip install -e ".[forecast]"
+
+      - name: Run the day's forecast
+        env:
+          # daily_forecast.py reads this from the environment (see
+          # db.connection_string), the same name it would find in a local
+          # .env — so the same code runs on a laptop and here.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # A database, configuration or model failure exits non-zero, which fails
+        # this step and the workflow — visibly in the Actions tab, not silently.
+        # The command logs which config version it ran and how many rows it
+        # wrote.
+        run: python daily_forecast.py
