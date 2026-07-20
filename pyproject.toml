@@ -34,12 +34,6 @@ dev = [
 testdb = [
     "pgserver",
 ]
-# The inspection notebook only. Nothing under test imports these, so the test
-# suite still runs on a `dev`-only install.
-notebook = [
-    "matplotlib",
-    "jupyter",
-]
 # The ETS / Holt-Winters model in models.py only, imported lazily so importing
 # the module never requires it. Nothing under test requires it — the ETS tests
 # importorskip it — so the suite still runs on a `dev`-only install; the deployed
@@ -53,8 +47,10 @@ forecast = [
 # `pythonpath = ["."]` below. Installing this project (as the GitHub Actions
 # capture does with `pip install -e .`) means installing its dependencies, not
 # shipping an importable package. `py-modules = []` opts out of setuptools'
-# flat-layout auto-discovery, which would otherwise try to package the sibling
-# `data/` and `notebooks/` directories and fail on the ambiguity.
+# flat-layout auto-discovery, which would otherwise sweep up whatever sibling
+# directories a machine happens to have — `data/` is gitignored and generated,
+# so what discovery finds varies by clone. Opting out keeps the install
+# module-less regardless.
 [tool.setuptools]
 py-modules = []
 

@@ -21,9 +21,8 @@ date, and forecast.history_before is what guarantees that.
 
 **A zero actual has no MAPE.** The metric divides by the actual, and even a
 Product that sells nearly every open day records the occasional zero-Sales day.
-Those rows are carried in the comparison frame (the notebook charts them) but
-excluded from the mean, and counted in `unscored_days` so the exclusion is
-visible.
+Those rows are carried in the comparison frame but excluded from the mean, and
+counted in `unscored_days` so the exclusion is visible.
 
 **Both models are scored on identical rows.** forecast_demand emits no row for
 a Product on a weekday it never sold; the baseline, blind to weekday, always
@@ -173,8 +172,8 @@ def compare(
 ) -> pd.DataFrame:
     """Forecast-vs-actual over the holdout: one row per (Product, open day),
     carrying the actual Sales, both models' forecasts, and the two flags the
-    score functions reduce on. This is also what the notebook charts; a NaN
-    forecast means that model declined to forecast that day.
+    score functions reduce on. A NaN forecast means that model declined to
+    forecast that day.
     """
     start, end = holdout_window(sales, holdout_days)
     origins = replay_origins(start, end)
