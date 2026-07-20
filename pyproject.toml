@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sales-forecasting"
 version = "0.1.0"
 description = "Sales forecasting scripts"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 dependencies = [
     "requests",
     "pandas",
@@ -19,20 +19,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# The dev install pulls in the DB test wheel too, so `pytest` boots a throwaway
-# local Postgres by default (see conftest.py) and the DB integration tests run
-# out of the box.
+# Nothing here provisions a test database. The DB integration tests read
+# TEST_DATABASE_URL from the environment (see conftest.py) and the `test`
+# service in compose.yaml is what sets it, so the throwaway Postgres is a
+# container rather than a dependency.
 dev = [
     "pytest",
-    "sales-forecasting[testdb]",
-]
-# The DB integration tests only, split out so it can be installed on its own. By
-# default `pytest` boots a throwaway local Postgres from this wheel (bundled
-# binaries --- no Docker, no system install) and points TEST_DATABASE_URL at it.
-# Without the wheel (a `dev`-less install) those tests skip rather than fail, so
-# the suite still runs; `--no-ephemeral-postgres` skips them even when present.
-testdb = [
-    "pgserver",
 ]
 # The ETS / Holt-Winters model in models.py only, imported lazily so importing
 # the module never requires it. Nothing under test requires it — the ETS tests
