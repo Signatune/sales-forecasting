@@ -14,8 +14,9 @@ implementing ticket 01 (bagel Sales ingestion). Official docs:
   the Analytics API (`/era/v1/...`) but *not* the standard Orders/Menus/Labor
   APIs. Faster bulk pulls via `/orders/v2/ordersBulk` would need a
   differently-scoped credential.
-- The `restaurantGUID = IQID_3` line in `.env` is not a Toast identifier;
-  restaurant scope is set per-request (or by filtering rows), not by header.
+- An old `restaurantGUID = IQID_3` line in `.env` was not a Toast identifier and
+  nothing read it; it is gone as of the dotenv-format `.env`. Restaurant scope is
+  set per-request (or by filtering rows), not by header.
 
 ## The async report pattern
 

@@ -30,9 +30,11 @@ is in the repo:
 | `TOAST_STANDARD_CLIENT_SECRET` | standard-key client secret |
 | `DATABASE_URL` | Supabase **session-pooler** connection string ([docs/postgres.md](postgres.md) — the pooler is IPv4, which the runner needs) |
 
-The workflow exports the three Toast secrets as `URL`, `STANDARD_CLIENT_ID` and
-`STANDARD_CLIENT_SECRET` — the same names `daily_capture.py` reads from a local
-`.env` — so the same code runs on a laptop and on the runner.
+The workflow exports the three Toast secrets as `TOAST_BASE_URL`,
+`TOAST_STANDARD_CLIENT_ID` and `TOAST_STANDARD_CLIENT_SECRET` — the same names
+`daily_capture.py` reads from a local `.env` (see [`env.py`](../env.py)) — so the
+same code runs on a laptop and on the runner. There is no `.env` on the runner;
+the loader finds no file and leaves the secrets in place.
 
 ## Run it by hand
 

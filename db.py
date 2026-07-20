@@ -33,40 +33,41 @@ The objects (see `schema.sql`):
 `normalize.py` produces them), and both the fact and the map store them that
 way so the view's join lines up.
 """
-import os
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Mapping, Optional
 
 import pandas as pd
 import psycopg
 from psycopg.types.json import Jsonb
 
+import env
+
 CONNECTION_ENV_VAR = "DATABASE_URL"
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
 
-def connection_string(env=os.environ) -> str:
-    """The Postgres connection string from the environment. Raising here, rather
+def connection_string(environ: Optional[Mapping[str, str]] = None) -> str:
+    """The Postgres connection string from the environment — from `.env` on a
+    laptop, from secrets on a runner (see `env.load_env`). Raising here, rather
     than letting psycopg fail on an empty DSN, keeps the missing-config error
     pointing at the one variable a developer has to set."""
-    url = env.get(CONNECTION_ENV_VAR)
-    if not url:
-        raise RuntimeError(
-            f"{CONNECTION_ENV_VAR} is not set. Point it at your Postgres "
-            "database, e.g. "
-            f"{CONNECTION_ENV_VAR}='postgresql://user:pass@host:5432/dbname'. "
-            "See docs/postgres.md."
-        )
-    return url
+    return env.require(
+        CONNECTION_ENV_VAR,
+        env.resolve(environ),
+        RuntimeError,
+        "Point it at your Postgres database, e.g. "
+        f"{CONNECTION_ENV_VAR}='postgresql://user:pass@host:5432/dbname'. "
+        "See docs/postgres.md.",
+    )
 
 
-def connect(env=os.environ, **kwargs) -> psycopg.Connection:
+def connect(environ: Optional[Mapping[str, str]] = None, **kwargs) -> psycopg.Connection:
     """Open a connection to the database named by `DATABASE_URL`. Extra keyword
     arguments pass straight through to `psycopg.connect` — the reader seam uses
     `connect_timeout` so an unreachable host fails fast rather than hanging on a
     TCP timeout."""
-    return psycopg.connect(connection_string(env), **kwargs)
+    return psycopg.connect(connection_string(environ), **kwargs)
 
 
 def apply_schema(conn: psycopg.Connection) -> None:

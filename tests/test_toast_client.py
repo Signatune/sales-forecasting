@@ -12,38 +12,43 @@ from toast_client import (
     year_windows,
 )
 
-ENV_TEXT = """{
-  "userAccessType": "TOAST_MACHINE_CLIENT",
-  "clientId": "abc123",
-  "clientSecret": "s3cret",
+ENVIRON = {
+    "TOAST_BASE_URL": "https://ws-api.toasttab.com",
+    "TOAST_ANALYTICS_USER_ACCESS_TYPE": "TOAST_MACHINE_CLIENT",
+    "TOAST_ANALYTICS_CLIENT_ID": "abc123",
+    "TOAST_ANALYTICS_CLIENT_SECRET": "s3cret",
 }
-
-restaurantGUID = IQID_3
-URL = https://ws-api.toasttab.com
-"""
 
 
 class TestLoadCredentials:
-    def test_parses_json_ish_env_file(self, tmp_path):
-        env = tmp_path / ".env"
-        env.write_text(ENV_TEXT)
-        creds = load_credentials(env)
-        assert creds == {
+    def test_reads_the_analytics_key_from_the_environment(self):
+        assert load_credentials(ENVIRON) == {
             "userAccessType": "TOAST_MACHINE_CLIENT",
             "clientId": "abc123",
             "clientSecret": "s3cret",
             "baseUrl": "https://ws-api.toasttab.com",
         }
 
-    def test_missing_secret_fails_loudly(self, tmp_path):
-        env = tmp_path / ".env"
-        env.write_text(ENV_TEXT.replace("clientSecret", "clientTypo"))
-        with pytest.raises(ToastAuthError, match="clientSecret"):
-            load_credentials(env)
+    def test_strips_a_trailing_slash_from_the_base_url(self):
+        environ = {**ENVIRON, "TOAST_BASE_URL": "https://ws-api.toasttab.com/"}
+        assert load_credentials(environ)["baseUrl"] == "https://ws-api.toasttab.com"
 
-    def test_missing_file_fails_loudly(self, tmp_path):
-        with pytest.raises(ToastAuthError, match="not found"):
-            load_credentials(tmp_path / ".env")
+    def test_missing_secret_fails_loudly(self):
+        environ = {k: v for k, v in ENVIRON.items()
+                   if k != "TOAST_ANALYTICS_CLIENT_SECRET"}
+        with pytest.raises(ToastAuthError, match="TOAST_ANALYTICS_CLIENT_SECRET"):
+            load_credentials(environ)
+
+    def test_empty_value_fails_like_a_missing_one(self):
+        # A key left blank in .env.example reads as "" rather than absent; it is
+        # just as unusable, so it must fail the same way.
+        with pytest.raises(ToastAuthError, match="TOAST_ANALYTICS_CLIENT_ID"):
+            load_credentials({**ENVIRON, "TOAST_ANALYTICS_CLIENT_ID": ""})
+
+    def test_missing_base_url_fails_loudly(self):
+        environ = {k: v for k, v in ENVIRON.items() if k != "TOAST_BASE_URL"}
+        with pytest.raises(ToastAuthError, match="TOAST_BASE_URL"):
+            load_credentials(environ)
 
 
 class TestWindows:

@@ -29,11 +29,12 @@ import sys
 import time
 from collections import deque
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 import requests
 
+import env
 from normalize import (
     INCLUDED_RESTAURANTS,
     UnexpectedShapeError,
@@ -41,7 +42,7 @@ from normalize import (
     validate_modifier_rows,
 )
 
-ENV_PATH = Path(__file__).parent / ".env"
+ENV_HINT = "Copy .env.example to .env and fill it in, or export it."
 RAW_DIR = Path(__file__).parent / "data" / "raw"
 RESTAURANT_TZ = ZoneInfo("America/New_York")
 
@@ -59,25 +60,24 @@ class ToastAuthError(RuntimeError):
     """Authentication against the Toast API failed."""
 
 
-def load_credentials(env_path: Path = ENV_PATH) -> Dict[str, str]:
-    """Read API credentials from the .env file.
-
-    The file is JSON-ish (trailing commas) followed by KEY = value lines;
-    parse it leniently but fail loudly on anything missing.
-    """
-    if not env_path.exists():
-        raise ToastAuthError(f"credentials file not found: {env_path}")
-    text = env_path.read_text()
-    creds = {}
-    for key in ("userAccessType", "clientId", "clientSecret"):
-        match = re.search(rf'"{key}"\s*:\s*"([^"]+)"', text)
-        if not match:
-            raise ToastAuthError(f"{env_path} is missing {key!r}")
-        creds[key] = match.group(1)
-    url = re.search(r"^URL\s*=\s*(\S+)", text, re.MULTILINE)
-    if not url:
-        raise ToastAuthError(f"{env_path} is missing the URL line")
-    creds["baseUrl"] = url.group(1).rstrip("/")
+def load_credentials(
+    environ: Optional[Mapping[str, str]] = None
+) -> Dict[str, str]:
+    """Analytics-key credentials, read from the environment — from `.env` on a
+    laptop, from secrets on a runner (see `env.load_env`). Returns them in the
+    camelCase shape the Toast login body wants; `environ` is the test seam.
+    Fails loudly, naming the variable, on anything missing."""
+    environ = env.resolve(environ)
+    creds = {
+        key: env.require(name, environ, ToastAuthError, ENV_HINT)
+        for key, name in (
+            ("userAccessType", "TOAST_ANALYTICS_USER_ACCESS_TYPE"),
+            ("clientId", "TOAST_ANALYTICS_CLIENT_ID"),
+            ("clientSecret", "TOAST_ANALYTICS_CLIENT_SECRET"),
+        )
+    }
+    base_url = env.require("TOAST_BASE_URL", environ, ToastAuthError, ENV_HINT)
+    creds["baseUrl"] = base_url.rstrip("/")
     return creds
 
 

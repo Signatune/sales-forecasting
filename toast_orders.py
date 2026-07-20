@@ -16,18 +16,17 @@ they cover; orders aggregates fill the remaining dates.
 """
 import datetime as dt
 import json
-import os
-import re
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Mapping, Optional
 
 import requests
 
+import env
 from normalize import INCLUDED_RESTAURANTS, validate_modifier_rows
 from toast_client import (
-    ENV_PATH,
+    ENV_HINT,
     HTTP_TIMEOUT_SECONDS,
     RAW_DIR,
     RESTAURANT_TZ,
@@ -54,46 +53,19 @@ def _build_credentials(
     }
 
 
-def _standard_credentials_from_env(environ: Dict[str, str]) -> Optional[Dict[str, str]]:
-    """Read standard-key credentials from the environment, or `None` if any of
-    the three is absent. This is how the GitHub Actions runner supplies them —
-    from secrets, the same way `db.py` reads `DATABASE_URL` — so the daily
-    capture needs no `.env` file on disk. All-or-nothing: a stray `URL` in the
-    ambient environment must not shadow a local `.env`, so a partial set falls
-    back to the file."""
-    client_id = environ.get("STANDARD_CLIENT_ID")
-    client_secret = environ.get("STANDARD_CLIENT_SECRET")
-    url = environ.get("URL")
-    if client_id and client_secret and url:
-        return _build_credentials(client_id, client_secret, url)
-    return None
-
-
 def load_standard_credentials(
-    env_path: Path = ENV_PATH, environ: Dict[str, str] = os.environ
+    environ: Optional[Mapping[str, str]] = None
 ) -> Dict[str, str]:
-    """Standard-key (Orders API) credentials. Read from `environ` when all three
-    of `STANDARD_CLIENT_ID`, `STANDARD_CLIENT_SECRET` and `URL` are set there —
-    how the GitHub Actions runner supplies them from secrets — otherwise from the
-    `.env` file at `env_path`. Mirrors `db.connection_string`, so the same code
-    runs from a laptop and from the runner."""
-    from_env = _standard_credentials_from_env(environ)
-    if from_env is not None:
-        return from_env
-    if not env_path.exists():
-        raise ToastAuthError(f"credentials file not found: {env_path}")
-    text = env_path.read_text()
-    creds = {}
-    for key, name in (("clientId", "STANDARD_CLIENT_ID"),
-                      ("clientSecret", "STANDARD_CLIENT_SECRET")):
-        match = re.search(rf"^{name}\s*=\s*(\S+)", text, re.MULTILINE)
-        if not match:
-            raise ToastAuthError(f"{env_path} is missing the {name} line")
-        creds[key] = match.group(1)
-    url = re.search(r"^URL\s*=\s*(\S+)", text, re.MULTILINE)
-    if not url:
-        raise ToastAuthError(f"{env_path} is missing the URL line")
-    return _build_credentials(creds["clientId"], creds["clientSecret"], url.group(1))
+    """Standard-key (Orders API) credentials, read from the environment — from
+    `.env` on a laptop, from secrets on a runner (see `env.load_env`), so the
+    same code runs in both places. Mirrors `toast_client.load_credentials` and
+    `db.connection_string`; `environ` is the test seam."""
+    environ = env.resolve(environ)
+    return _build_credentials(
+        env.require("TOAST_STANDARD_CLIENT_ID", environ, ToastAuthError, ENV_HINT),
+        env.require("TOAST_STANDARD_CLIENT_SECRET", environ, ToastAuthError, ENV_HINT),
+        env.require("TOAST_BASE_URL", environ, ToastAuthError, ENV_HINT),
+    )
 
 
 class ToastOrdersClient:

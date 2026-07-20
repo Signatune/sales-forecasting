@@ -21,7 +21,8 @@ Their definitions live in [`schema.sql`](../schema.sql); all access goes through
 
 Every entry point reads one environment variable, `DATABASE_URL`, so the same
 code runs from a laptop and from a GitHub Actions runner. Put it in your local
-`.env` (already git-ignored — never commit a connection string):
+`.env` — standard dotenv format, `KEY=value` (already git-ignored — never commit
+a connection string; copy `.env.example` to start):
 
 ```
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
@@ -45,11 +46,13 @@ Session mode (port `5432`) — not Transaction mode (`6543`) — is what you wan
 applying the schema and the pipeline's multi-statement writes need a full
 session.
 
-`.env` is loaded automatically by any shell that sources it; if yours does not,
-export the variable before running:
+[`env.py`](../env.py) loads `.env` into the environment on every entry point, so
+no shell setup is needed — the variable is picked up wherever you run from. An
+environment variable that is already set always wins over the file, which is how
+the runner's secrets take precedence when there is no `.env` at all:
 
 ```
-export DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres'
+export DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/postgres'   # overrides .env
 ```
 
 ## Apply the schema

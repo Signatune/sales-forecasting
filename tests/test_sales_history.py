@@ -17,6 +17,7 @@ import psycopg
 import pytest
 
 import db
+import env
 import sales_history
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
@@ -41,7 +42,11 @@ class TestClearErrorWithoutADatabase:
     """A reader that calls the loader must get an actionable message, not a
     pandas/psycopg stack trace, when the database is missing or unreachable."""
 
-    def test_missing_database_url_raises_naming_the_variable(self, monkeypatch):
+    def test_missing_database_url_raises_naming_the_variable(self, monkeypatch, tmp_path):
+        # Nothing configured anywhere: not in the environment, and no .env to
+        # fall back on. Pointing env.ENV_PATH at an empty directory is what
+        # keeps this honest on a developer machine that does have a real .env.
+        monkeypatch.setattr(env, "ENV_PATH", tmp_path / "absent.env")
         monkeypatch.delenv("DATABASE_URL", raising=False)
         with pytest.raises(RuntimeError, match="DATABASE_URL"):
             sales_history.load_sales_history()

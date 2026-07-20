@@ -50,56 +50,48 @@ class TestAggregateModifierRows:
         assert all(r["businessDate"] == "20260707" for r in rows)
 
 
+ENVIRON = {
+    "TOAST_BASE_URL": "https://ws-api.toasttab.com",
+    "TOAST_STANDARD_CLIENT_ID": "std-id",
+    "TOAST_STANDARD_CLIENT_SECRET": "std-secret",
+}
+
+
 class TestLoadStandardCredentials:
-    def test_parses_standard_key_lines(self, tmp_path):
-        env = tmp_path / ".env"
-        env.write_text(
-            '{\n  "clientId": "analytics-id",\n  "clientSecret": "analytics-secret",\n'
-            '  "userAccessType": "TOAST_MACHINE_CLIENT",\n}\n'
-            "URL = https://ws-api.toasttab.com\n"
-            "STANDARD_CLIENT_ID = std-id\n"
-            "STANDARD_CLIENT_SECRET = std-secret\n"
-        )
-        creds = load_standard_credentials(env, environ={})
-        assert creds == {
+    def test_reads_the_standard_key_from_the_environment(self):
+        # Whether these came from a local .env or from secrets on a runner is
+        # env.load_env's business; by here it is all just the environment.
+        assert load_standard_credentials(ENVIRON) == {
             "clientId": "std-id",
             "clientSecret": "std-secret",
             "baseUrl": "https://ws-api.toasttab.com",
         }
 
-    def test_missing_standard_key_fails_loudly(self, tmp_path):
-        env = tmp_path / ".env"
-        env.write_text("URL = https://ws-api.toasttab.com\n")
-        with pytest.raises(ToastAuthError, match="STANDARD_CLIENT_ID"):
-            load_standard_credentials(env, environ={})
-
-    def test_environment_variables_win_over_the_file(self, tmp_path):
-        # On a GitHub Actions runner there is no .env; the credentials come from
-        # secrets exported as environment variables, the same way DATABASE_URL
-        # does. When all three are set, the file is never read.
-        creds = load_standard_credentials(
-            tmp_path / "does-not-exist.env",
-            environ={
-                "URL": "https://ws-api.toasttab.com/",
-                "STANDARD_CLIENT_ID": "env-id",
-                "STANDARD_CLIENT_SECRET": "env-secret",
-            },
+    def test_strips_a_trailing_slash_from_the_base_url(self):
+        environ = {**ENVIRON, "TOAST_BASE_URL": "https://ws-api.toasttab.com/"}
+        assert (
+            load_standard_credentials(environ)["baseUrl"]
+            == "https://ws-api.toasttab.com"
         )
-        assert creds == {
-            "clientId": "env-id",
-            "clientSecret": "env-secret",
-            "baseUrl": "https://ws-api.toasttab.com",
+
+    def test_ignores_the_analytics_key(self):
+        # The two keys are separate credentials; the analytics one must never
+        # stand in for a missing standard one.
+        environ = {
+            "TOAST_BASE_URL": "https://ws-api.toasttab.com",
+            "TOAST_ANALYTICS_CLIENT_ID": "analytics-id",
+            "TOAST_ANALYTICS_CLIENT_SECRET": "analytics-secret",
         }
+        with pytest.raises(ToastAuthError, match="TOAST_STANDARD_CLIENT_ID"):
+            load_standard_credentials(environ)
 
-    def test_partial_environment_falls_back_to_the_file(self, tmp_path):
-        # A stray URL in the ambient environment must not shadow the .env file:
-        # the env path is taken only when every credential is present there.
-        env = tmp_path / ".env"
-        env.write_text(
-            "URL = https://file.toasttab.com\n"
-            "STANDARD_CLIENT_ID = file-id\n"
-            "STANDARD_CLIENT_SECRET = file-secret\n"
-        )
-        creds = load_standard_credentials(env, environ={"URL": "https://stray.example"})
-        assert creds["clientId"] == "file-id"
-        assert creds["baseUrl"] == "https://file.toasttab.com"
+    def test_missing_standard_key_fails_loudly(self):
+        with pytest.raises(ToastAuthError, match="TOAST_STANDARD_CLIENT_SECRET"):
+            environ = {k: v for k, v in ENVIRON.items()
+                       if k != "TOAST_STANDARD_CLIENT_SECRET"}
+            load_standard_credentials(environ)
+
+    def test_missing_base_url_fails_loudly(self):
+        environ = {k: v for k, v in ENVIRON.items() if k != "TOAST_BASE_URL"}
+        with pytest.raises(ToastAuthError, match="TOAST_BASE_URL"):
+            load_standard_credentials(environ)

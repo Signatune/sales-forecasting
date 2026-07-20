@@ -52,10 +52,11 @@ jobs:
           # daily_capture.py reads these from the environment (see
           # toast_orders.load_standard_credentials and db.connection_string), the
           # same names it would find in a local .env — so the same code runs on a
-          # laptop and here.
-          URL: ${{ secrets.TOAST_URL }}
-          STANDARD_CLIENT_ID: ${{ secrets.TOAST_STANDARD_CLIENT_ID }}
-          STANDARD_CLIENT_SECRET: ${{ secrets.TOAST_STANDARD_CLIENT_SECRET }}
+          # laptop and here. There is no .env on the runner; env.load_env finds
+          # no file and leaves these secrets in place.
+          TOAST_BASE_URL: ${{ secrets.TOAST_URL }}
+          TOAST_STANDARD_CLIENT_ID: ${{ secrets.TOAST_STANDARD_CLIENT_ID }}
+          TOAST_STANDARD_CLIENT_SECRET: ${{ secrets.TOAST_STANDARD_CLIENT_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         # A Toast or database failure exits non-zero, which fails this step and
         # the workflow — visibly in the Actions tab, not silently. The command

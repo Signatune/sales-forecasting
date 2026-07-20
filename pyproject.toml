@@ -13,6 +13,9 @@ dependencies = [
     "pyarrow",
     # Postgres access (ADR 0003). db.py reads/writes the Sales pipeline tables.
     "psycopg[binary]",
+    # Reads the .env file into the environment (env.py). A runner has no .env
+    # and takes the same names from secrets, so this is a no-op there.
+    "python-dotenv",
 ]
 
 [project.optional-dependencies]
