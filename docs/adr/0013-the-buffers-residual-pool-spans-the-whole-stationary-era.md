@@ -3,7 +3,7 @@
 The retired rolling-origin evaluator fed `models.p95_buffer` from a 26-week
 warm-up window immediately before the days it scored (`WARMUP_WEEKS = 26`),
 matching the ~26-week evaluation window ADR 0002 chose for *ranking models*.
-Rebuilding that replay as `residuals.py` showed the two windows should not be
+Rebuilding that replay showed the two windows should not be
 the same length. **Model selection stays recent; the buffer's residual pool
 takes everything back to 2022-01-01.**
 
@@ -69,6 +69,6 @@ inflate the buffer with the shape of a recovery that is over.
   different shop — not to chase a nicer-looking number.
 - The forecast log (ADR 0006) is the intended long-run source of these residuals
   and is nine origins deep today. It cannot carry a pool of this length for years,
-  so the replay remains the source meanwhile; because `residuals.py` resolves
+  so the replay remains the source meanwhile; because it resolves
   Targets top-down exactly as the engine does, a replayed origin reproduces the
   row the log would hold, and the switch will not move the numbers.

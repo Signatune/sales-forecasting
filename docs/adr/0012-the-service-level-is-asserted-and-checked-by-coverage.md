@@ -69,7 +69,7 @@ intended feedback loop, and it costs nothing but elapsed time.
 
 ## What the ceiling turned out to be
 
-Measured by `residuals.py` — a rolling-origin lead-3 replay of the incumbent
+Measured by a rolling-origin lead-3 replay of the incumbent
 EWMA over the `wheat_bagels` total, one origin per open day, which yields
 **1,657 relative residuals** spanning 2022-01-01 to 2026-07-28. Consecutive
 residuals correlate (lag-1 ≈ +0.24: a busy week runs busy), so the pool is worth
@@ -124,6 +124,7 @@ actually produces". `backtest.py` produces no such pool: it is the pilot
 backtest, scoring MAPE across leads 2..7 from origins six days apart, and knows
 nothing of relative residuals or lead 3. The rolling-origin evaluator that did
 produce them, `model_comparison.py`, was retired in commit `1d62ef4`, which left
-`models.p95_buffer` taking an argument nothing in the tree could supply.
-`residuals.py` is that producer, rebuilt against today's `models.py` rather than
-restored.
+`models.p95_buffer` taking an argument nothing in the tree could supply. The
+rolling-origin replay above is that producer, rebuilt against today's
+`models.py` rather than restored, and run ad hoc rather than kept as a
+checked-in script.

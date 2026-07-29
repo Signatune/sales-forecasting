@@ -61,10 +61,10 @@ re-open that question without new evidence of the kind ADR 0012 names.
 
 **What remains, as its own effort.** Two pieces, in this order:
 
-1. ~~**Confirm the data supports the target.**~~ **Done.** `residuals.py` is the
-   lead-3 rolling-origin replay this needed; `backtest.py` never produced such a
-   pool and the evaluator that did was retired in `1d62ef4` (ADR 0012 records the
-   correction). The pool is 1,657 daily residuals back to 2022 — one per open day,
+1. ~~**Confirm the data supports the target.**~~ **Done.** A lead-3 rolling-origin
+   replay of the incumbent EWMA is what this needed; `backtest.py` never produced
+   such a pool and the evaluator that did was retired in `1d62ef4` (ADR 0012
+   records the correction). The pool is 1,657 daily residuals back to 2022 — one per open day,
    not one per lead span — and **the Service Level Ceiling is 97%, so 95% sits
    below it.** But that holds only over the full pool: at the 26-week warm-up the
    retired evaluator used, 95% costs ±16% of the bake in estimation noise and sits
