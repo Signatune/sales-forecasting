@@ -1,7 +1,35 @@
 # Deliver: upload to Drive, post a Google Chat card
 
-Status: ready-for-agent
+Status: done
 Blocked by: 03
+
+## Resolution note
+
+Built as planned in `report_delivery.py`, with the Drive client and the HTTP
+post as seams.
+
+`drive_credentials(environ)` was needed and not in the ticket: the service
+account key arrives as one secret holding the whole JSON, since a runner has no
+file to point at. The environment is read and the JSON parsed *before*
+google-auth is imported, so both of the ways this is normally misconfigured fail
+with a message about configuration even on a `dev`-only install.
+
+Two things the review changed.
+
+**The card now says when it is quoting a substitute model.** `Payload.headline`
+is `pages[0]`, which is not the named headline model when that model failed to
+cover the window — and the card was quoting it under a header that looked like
+every other week. That is the same silent substitution ADR 0010 refuses a stale
+window for.
+
+**The page's phrasing is imported, not re-spelled.** The card and the PDF are
+two renderings of one payload and had already drifted (`%a %d %b` against
+`%a %-d %b`, two wordings of the not-bake-quantities line). `report_render` owns
+`quantity`, `long_date`, `move_phrase` and `NOT_BAKE_QUANTITIES`; delivery
+imports them.
+
+Errors never carry the webhook URL — it is a bearer credential and the messages
+are printed into an Actions log.
 
 ## Parent
 

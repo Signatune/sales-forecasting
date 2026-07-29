@@ -56,6 +56,22 @@ def fact(date, restaurant_guid, source_name, quantity, source_type="modifier"):
     )
 
 
+class TestPostgresWeekday:
+    """The python-date-to-Postgres-DOW mapping `read_due_reports` filters on.
+    `report_configs.days_of_week` is stored in Postgres' convention (0 = Sunday)
+    and python's `date.weekday()` is Monday-based, so the two are off by one and
+    wrap differently --- worth pinning without a database."""
+
+    def test_sunday_is_zero_and_saturday_is_six(self):
+        # 2026-07-26 is a Sunday, 2026-08-01 a Saturday.
+        assert db.postgres_weekday(datetime.date(2026, 7, 26)) == 0
+        assert db.postgres_weekday(datetime.date(2026, 8, 1)) == 6
+
+    def test_every_weekday_maps_once(self):
+        week = [datetime.date(2026, 7, 26) + datetime.timedelta(days=n) for n in range(7)]
+        assert [db.postgres_weekday(day) for day in week] == [0, 1, 2, 3, 4, 5, 6]
+
+
 class TestConnectionString:
     def test_reads_the_url_from_the_environment(self):
         assert (
@@ -132,8 +148,11 @@ class TestAgainstPostgres:
         with psycopg.connect(TEST_DATABASE_URL) as c:
             db.apply_schema(c)
             c.execute(
+                # report_configs is listed because it references
+                # forecast_configs: Postgres refuses to truncate the referenced
+                # table unless the referencing one goes in the same statement.
                 "TRUNCATE raw_toast_responses, sales, product_sources, products, "
-                "forecasts, forecast_configs"
+                "forecasts, report_configs, forecast_configs"
             )
             c.commit()
             yield c
@@ -338,7 +357,7 @@ class TestAgainstPostgres:
     def test_new_tables_have_rls_enabled_and_no_policies(self, conn):
         # Private, as the rest of the schema is: RLS on, no policies, so the
         # Data API's anon/authenticated roles get no access to forecast data.
-        for table in ("forecast_configs", "forecasts"):
+        for table in ("forecast_configs", "forecasts", "report_configs"):
             rls_on = conn.execute(
                 "SELECT relrowsecurity FROM pg_class WHERE relname = %s", (table,)
             ).fetchone()[0]
@@ -473,3 +492,183 @@ class TestAgainstPostgres:
             assert other.execute(
                 "SELECT count(*) FROM forecasts"
             ).fetchone()[0] == 1
+
+    # --- Scheduled Reports as a subscription table (ADR 0010, ticket 01) -----
+
+    # 2026-08-01 is a Saturday, so SATURDAY_DOW is what read_due_reports filters
+    # on for it. Spelled as dates rather than numbers in the tests below so a
+    # weekday is read off the calendar, not off an off-by-one.
+    SATURDAY = datetime.date(2026, 8, 1)
+    SUNDAY = datetime.date(2026, 8, 2)
+    WEDNESDAY = datetime.date(2026, 8, 5)
+    THURSDAY = datetime.date(2026, 8, 6)
+
+    REPORT = {
+        "name": "Bagel forecast",
+        "headline_model": "ewma",
+        "target": "wheat_bagels",
+        "varieties": ["everything", "plain", "sesame"],
+        "delivery": "bagel-team",
+    }
+
+    def _insert_report(
+        self, conn, forecast_config_version, days_of_week, is_active=True, config=None
+    ):
+        """Insert one report_configs row and return its generated id."""
+        return conn.execute(
+            "INSERT INTO report_configs "
+            "(forecast_config_version, days_of_week, is_active, config) "
+            "VALUES (%s, %s, %s, %s) RETURNING id",
+            (
+                forecast_config_version,
+                list(days_of_week),
+                is_active,
+                json.dumps(self.REPORT if config is None else config),
+            ),
+        ).fetchone()[0]
+
+    def test_read_due_reports_returns_the_reports_firing_today(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 7})
+        saturday_report = self._insert_report(conn, version, [6])
+        self._insert_report(conn, version, [2])  # Tuesdays only
+        conn.commit()
+
+        due = db.read_due_reports(conn, self.SATURDAY)
+        assert [report["id"] for report in due] == [saturday_report]
+
+    def test_read_due_reports_ignores_inactive_reports(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 7})
+        # Every weekday, so only `is_active` can be what keeps it out.
+        self._insert_report(conn, version, [0, 1, 2, 3, 4, 5, 6], is_active=False)
+        conn.commit()
+
+        assert db.read_due_reports(conn, self.SATURDAY) == []
+        assert db.read_due_reports(conn, self.THURSDAY) == []
+
+    def test_a_report_listing_several_weekdays_fires_on_each(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 7})
+        report = self._insert_report(conn, version, [0, 3, 6])  # Sun, Wed, Sat
+        conn.commit()
+
+        for day in (self.SUNDAY, self.WEDNESDAY, self.SATURDAY):
+            assert [r["id"] for r in db.read_due_reports(conn, day)] == [report]
+        # ...and not on the days it does not list.
+        assert db.read_due_reports(conn, self.THURSDAY) == []
+
+    def test_read_due_reports_merges_the_config_document(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 7})
+        report_id = self._insert_report(conn, version, [6])
+        conn.commit()
+
+        report, = db.read_due_reports(conn, self.SATURDAY)
+        assert report == {
+            **self.REPORT,
+            "id": report_id,
+            "forecast_config_version": version,
+        }
+        # jsonb round-trips the list as a list, not as a string --- the payload
+        # builder iterates the varieties.
+        assert report["varieties"] == ["everything", "plain", "sesame"]
+
+    def test_the_row_columns_win_over_the_stored_document(self, conn):
+        # forecast_config_version is the foreign key the report is defined by
+        # (ADR 0010), so a stale copy of it inside the document must not shadow
+        # the column --- the same rule read_active_config applies to `version`.
+        version = self._insert_config(conn, {"horizon_days": 7})
+        self._insert_report(
+            conn, version, [6], config={**self.REPORT, "forecast_config_version": 999}
+        )
+        conn.commit()
+
+        report, = db.read_due_reports(conn, self.SATURDAY)
+        assert report["forecast_config_version"] == version
+
+    def test_a_report_must_reference_a_recorded_config_version(self, conn):
+        # The foreign key is the point of the table (ADR 0010): a report can
+        # never name a configuration that was never used to forecast.
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            self._insert_report(conn, 9999, [6])
+
+    def test_an_empty_days_of_week_is_rejected(self, conn):
+        # A report that silently never fires looks exactly like a broken one.
+        version = self._insert_config(conn, {"horizon_days": 7})
+        with pytest.raises(psycopg.errors.CheckViolation):
+            self._insert_report(conn, version, [])
+
+    def test_a_weekday_outside_zero_to_six_is_rejected(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 7})
+        with pytest.raises(psycopg.errors.CheckViolation):
+            self._insert_report(conn, version, [7])
+
+    def test_read_forecast_config_stamps_version_active_and_replacement(self, conn):
+        # What a refusal needs to tell "this row points at a superseded
+        # configuration" apart from "today's run did not happen" (ADR 0010).
+        old = self._insert_config(conn, {"horizon_days": 7}, is_active=False)
+        new = self._insert_config(conn, {"horizon_days": 9})
+        conn.commit()
+
+        assert db.read_forecast_config(conn, old) == {
+            "horizon_days": 7,
+            "version": old,
+            "is_active": False,
+            "active_version": new,
+        }
+        assert db.read_forecast_config(conn, new)["is_active"] is True
+
+    def test_read_forecast_config_reports_no_active_version(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 7}, is_active=False)
+        conn.commit()
+
+        assert db.read_forecast_config(conn, version)["active_version"] is None
+
+    def test_read_forecast_config_raises_on_a_version_that_does_not_exist(self, conn):
+        with pytest.raises(RuntimeError, match="9999"):
+            db.read_forecast_config(conn, 9999)
+
+    def test_read_latest_forecasts_returns_only_the_newest_origin(self, conn):
+        version = self._insert_config(conn, {"horizon_days": 1})
+        conn.commit()
+        for as_of in (datetime.date(2026, 7, 30), datetime.date(2026, 7, 31)):
+            db.insert_forecasts(conn, log_row(
+                as_of, version, "ewma", "wheat_bagels",
+                as_of + datetime.timedelta(days=1), 42.0,
+            ))
+
+        latest = db.read_latest_forecasts(conn, version)
+        assert list(latest.columns) == list(db.FORECAST_COLUMNS)
+        assert list(latest["as_of"]) == [datetime.date(2026, 7, 31)]
+
+    def test_read_latest_forecasts_ignores_other_config_versions(self, conn):
+        mine = self._insert_config(conn, {"horizon_days": 1}, is_active=False)
+        other = self._insert_config(conn, {"horizon_days": 1})
+        conn.commit()
+        db.insert_forecasts(conn, log_row(
+            datetime.date(2026, 7, 30), mine, "ewma", "wheat_bagels",
+            datetime.date(2026, 7, 31), 42.0,
+        ))
+        # A newer origin under a *different* version must not hide mine.
+        db.insert_forecasts(conn, log_row(
+            datetime.date(2026, 7, 31), other, "ewma", "wheat_bagels",
+            datetime.date(2026, 8, 1), 99.0,
+        ))
+
+        latest = db.read_latest_forecasts(conn, mine)
+        assert list(latest["as_of"]) == [datetime.date(2026, 7, 30)]
+        assert list(latest["forecast_quantity"]) == [42.0]
+
+    def test_read_latest_forecasts_of_an_unused_version_is_empty(self, conn):
+        # Not an error: it is how "nothing was ever logged under this version"
+        # reaches the payload builder.
+        version = self._insert_config(conn, {"horizon_days": 1})
+        conn.commit()
+
+        empty = db.read_latest_forecasts(conn, version)
+        assert empty.empty
+        assert list(empty.columns) == list(db.FORECAST_COLUMNS)
+
+    def test_a_null_weekday_is_rejected(self, conn):
+        # `{NULL}` passes both a length check and an array containment check on
+        # its own, so it is named explicitly.
+        version = self._insert_config(conn, {"horizon_days": 7})
+        with pytest.raises(psycopg.errors.CheckViolation):
+            self._insert_report(conn, version, [None])

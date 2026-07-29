@@ -1,0 +1,104 @@
+name: Scheduled Forecast Reports
+
+# Runs `python scheduled_reports.py` after each morning's forecast: asks
+# `report_configs` which Scheduled Reports fire on today's weekday, renders each
+# to a PDF from the forecasts already logged, uploads it to Drive and posts a
+# Google Chat card linking to it (ADR 0010). This is the single report job —
+# adding a report on another weekday is an INSERT into `report_configs`, never
+# another workflow here.
+#
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL                 Supabase session-pooler connection string (see
+#                                docs/postgres.md — the pooler is IPv4, which
+#                                the runner needs).
+#   GOOGLE_SERVICE_ACCOUNT_JSON  The Drive service-account key file, verbatim.
+#                                The account has no storage of its own, so a
+#                                folder is shared to it from a real account.
+#   CHAT_WEBHOOK_<NAME>          Per destination, one pair each. <NAME> is the
+#   DRIVE_FOLDER_<NAME>          report row's `delivery` value, upper-cased with
+#                                hyphens as underscores — `bagel-team` reads
+#                                CHAT_WEBHOOK_BAGEL_TEAM and
+#                                DRIVE_FOLDER_BAGEL_TEAM. A webhook URL is a
+#                                bearer credential and deliberately lives here
+#                                rather than in Postgres.
+#
+# Adding a destination means adding its two secrets *and* passing them through
+# the env block below; there is no way to enumerate secrets from a workflow.
+# See docs/reports.md for the one-time Google setup.
+
+on:
+  # Triggered by the forecast, not by a cron of its own. A report requires a
+  # Forecast Origin of *today* and refuses otherwise (ADR 0010) — so a bare
+  # cron racing "Daily Demand Forecast" would turn a forecast that ran a few
+  # minutes late into a weekly false alarm in the Chat space. Triggering on the
+  # forecast's completion means the origin is logged before this starts.
+  #
+  # `completed` covers every conclusion, not just success — see the job below.
+  workflow_run:
+    workflows: ["Daily Demand Forecast"]
+    types: [completed]
+  # Also runnable by hand, to re-deliver a missed report without re-forecasting.
+  # Safe to press: a re-run of the same Report Window uploads under the same
+  # name and posts the same numbers, since the origin's rows are frozen.
+  workflow_dispatch: {}
+
+# A run in progress is uploading to Drive and posting to Chat. Queue rather than
+# cancel: cancelling mid-flight can leave a PDF in Drive that nobody was told
+# about, which is worse than a late report.
+concurrency:
+  group: scheduled-reports
+  cancel-in-progress: false
+
+jobs:
+  reports:
+    runs-on: ubuntu-latest
+    # Deliberately **not** gated on the forecast's conclusion, unlike
+    # `daily-forecast.yml`'s gate on the capture. A forecast that failed logged
+    # no origin for today, and that is precisely the case the stale-origin
+    # refusal exists for: ADR 0010 wants a Chat message naming which failure it
+    # was. Skipping the job on a failed forecast would deliver silence to the
+    # space instead — and silence on a Saturday morning is indistinguishable
+    # from "no reports were due today", which is the confusion the whole refusal
+    # rule was written to prevent.
+    #
+    # This costs nothing on the days it does not matter. Most days no report is
+    # due, so a run after a failed forecast reads the table, finds nothing, and
+    # exits green in seconds. It speaks up only on the days someone was
+    # expecting a report.
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # WeasyPrint renders through Pango and does not bundle it; pip installs
+      # only the python side. Without these the import fails at run time, not
+      # at install time, so a missing library would surface as a failed
+      # delivery rather than a failed install.
+      - name: Install the WeasyPrint system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfribidi0
+
+      # `forecast` for statsmodels — the payload builder reads the *logged*
+      # forecasts and never runs a model, but `report_configs` may reference a
+      # configuration whose models include Holt-Winters, and the extra keeps
+      # this environment matched to the one that produced the log. `report` adds
+      # WeasyPrint and the Google client libraries.
+      - name: Install dependencies
+        run: pip install -e ".[forecast,report]"
+
+      - name: Deliver today's Scheduled Reports
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          # One pair per destination. Add a line here when you add a report
+          # with a new `delivery` name.
+          CHAT_WEBHOOK_BAGEL_TEAM: ${{ secrets.CHAT_WEBHOOK_BAGEL_TEAM }}
+          DRIVE_FOLDER_BAGEL_TEAM: ${{ secrets.DRIVE_FOLDER_BAGEL_TEAM }}
+        # Exits non-zero if any single report failed, so the Actions tab shows
+        # red — but the others were still delivered, and the log names which
+        # was which. Zero due reports is a green run that says so.
+        run: python scheduled_reports.py

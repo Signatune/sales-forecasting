@@ -1,7 +1,42 @@
 # Render a payload to a PDF, one page per model
 
-Status: ready-for-agent
+Status: done
 Blocked by: 02
+
+## Resolution note
+
+Built as planned in `report_render.py`, WeasyPrint behind a `report` extra,
+variant C's chart-first shape and palette carried over.
+
+Four things only a real render exposed.
+
+**`font-weight: 640`** — the prototype's web weight — is invalid CSS to
+WeasyPrint and was silently ignored. Now 600.
+
+**An SVG with an explicit `height` is laid out at its viewBox's intrinsic
+width**, not its container's, so the chart overflowed its card and clipped the
+busiest day off the right-hand edge. It now carries a `viewBox` and no
+width/height attributes, sized entirely by `.chart svg { width: 100%; height:
+auto }`.
+
+**One section did not fit one page.** The layout was tightened (chart height,
+table padding, heading margins) until it did; a seven-day window is comfortably
+one page per model, and the tests assert the page count through WeasyPrint's
+document model rather than off the PDF bytes — the page objects live in a
+compressed object stream, so grepping for `/Type /Page` finds nothing whatever
+the count is.
+
+**The totals row compared 7 days of forecast against 6 of baseline** with
+nothing saying so, so a reader dividing one by the other got a percentage the
+row did not show. The Typical cell now says "over 6 of 7 days" when they differ.
+
+Added after review: the chart's **legend**. Variant C had one; the first port
+dropped it, leaving two bar widths and no key. Its swatches are `rect.key`, so
+the per-day bar counts are unaffected.
+
+The prototype's full-bleed page tint was dropped for print — it is ink the
+reader pays for on every sheet. The surface tint stays on the chart card, which
+is where it was doing the work.
 
 ## Parent
 

@@ -190,8 +190,11 @@ class TestAgainstPostgres:
         with psycopg.connect(TEST_DATABASE_URL) as c:
             db.apply_schema(c)
             c.execute(
+                # report_configs is listed because it references
+                # forecast_configs: Postgres refuses to truncate the referenced
+                # table unless the referencing one goes in the same statement.
                 "TRUNCATE raw_toast_responses, sales, product_sources, products, "
-                "forecasts, forecast_configs"
+                "forecasts, report_configs, forecast_configs"
             )
             db.upsert_product_sources(
                 c,

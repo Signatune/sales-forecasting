@@ -1,7 +1,35 @@
 # Resolve a due report into a render-ready payload, or a refusal
 
-Status: ready-for-agent
+Status: done
 Blocked by: 01
+
+## Resolution note
+
+Built as planned in `report_payload.py`, pure, with `Payload`/`Refusal`
+dataclasses and every rule tested against in-memory frames.
+
+Three decisions the ticket left open.
+
+**`logged` is not pre-filtered to today.** The refusal has to name the origin it
+actually *found*, and rows filtered to today cannot tell a late run from an
+empty log. `db.read_latest_forecasts` supplies the newest origin's rows and the
+builder checks that origin against `today` itself.
+
+**A Weekday Baseline of zero is "no baseline".** Four closed same-weekdays
+average to nothing, and dividing by it manufactures exactly the spike the "no
+baseline" rule exists to prevent. The four candidates are calendar dates — the
+newest settled same weekday, then a week earlier, and so on — not the four
+newest *observations*, so a closed day shortens the mean rather than reaching a
+fifth week back.
+
+**The window's direction compares only the days that have a baseline.** Summing
+seven forecasts against four baselines would read as a collapse that is really a
+missing weekday. Ticket 03's page says over how many days the total was taken
+whenever the two differ.
+
+`Payload.headline_is_the_named_model` was added after review: `headline` is
+`pages[0]`, which is a *substitute* when the named headline model failed to
+cover the window, and the card was quoting it without saying so.
 
 ## Parent
 

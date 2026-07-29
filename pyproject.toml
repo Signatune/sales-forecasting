@@ -33,6 +33,18 @@ dev = [
 forecast = [
     "statsmodels",
 ]
+# The Scheduled Report's PDF only (report_render.render_pdf), imported lazily so
+# importing the module — and asserting on its SVG and its markup — never requires
+# it. The PDF tests importorskip it, exactly as the ETS tests do for statsmodels,
+# so the suite still runs on a `dev`-only install; the scheduled-reports job
+# installs this extra. WeasyPrint also needs system libraries (Pango and
+# friends) that pip does not carry — see docs/reports.md and the workflow.
+report = [
+    "weasyprint",
+    # Drive upload and the Google Chat webhook post (report_delivery.py).
+    "google-api-python-client",
+    "google-auth",
+]
 
 # Flat layout: the pipeline is a set of top-level scripts run in place
 # (`python daily_capture.py`) with the repo root on sys.path — see the tests'

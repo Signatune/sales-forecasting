@@ -1,6 +1,38 @@
 # Postgres schema: `report_configs`, and reading the reports due today
 
-Status: ready-for-agent
+Status: done
+
+## Resolution note
+
+Built as planned: `report_configs` in `schema.sql` with the foreign key to
+`forecast_configs (version)`, and `db.read_due_reports(conn, today)`.
+
+Two things the plan did not anticipate.
+
+**`array_length` is the wrong function for "non-empty".** The obvious spelling
+of the constraint, `array_length(days_of_week, 1) >= 1`, returns NULL rather
+than 0 for `{}` — so the comparison is NULL and the CHECK *accepts* the one
+value it exists to reject. The integration test caught it on the first real run.
+The constraint uses `cardinality`, and rejects a NULL member explicitly as well:
+`{NULL}` passes a length check and an array-containment check on its own.
+
+**The weekday conversion earned its own function.** `db.postgres_weekday` maps a
+python date onto Postgres' `EXTRACT(DOW)` convention — the two are off by one
+*and* wrap at different ends of the week — so the mapping is unit-tested without
+a database rather than buried in the query.
+
+Two extra readers landed here rather than in a ticket of their own, because they
+belong to `db.py`'s reader family and tickets 02/05 cannot be wired without
+them: `read_forecast_config(conn, version)` (the referenced document stamped
+with `version`, `is_active` and `active_version` — what lets a refusal name the
+version a superseded row should be repointed at) and
+`read_latest_forecasts(conn, config_version)` (the newest origin's rows only;
+the payload builder discards every older one, and the log grows by one origin a
+day forever).
+
+Also: every other suite's `TRUNCATE` had to list `report_configs` alongside
+`forecast_configs`, since Postgres refuses to truncate a referenced table on its
+own.
 
 ## Parent
 

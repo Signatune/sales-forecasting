@@ -1,7 +1,21 @@
 # Retire the weekly forecast prototype
 
-Status: ready-for-agent
+Status: done
 Blocked by: 03
+
+## Resolution note
+
+Done. `prototype_weekly_forecast.py`, `prototype_weekly_forecast.html` and
+`NOTES-prototype-weekly-forecast.md` are deleted.
+
+The ticket's placement table was checked line by line before deleting and holds:
+every verdict from the notes is recorded in `CONTEXT.md`, the PRD, ADR 0010 or
+tickets 02/03. No reference to the prototype survives outside `.scratch/`.
+
+The one genuinely open thread — whether this report should become what someone
+bakes off, which needs a Service Level buffer over the point forecasts — remains
+recorded in this ticket and in ADR 0012/0013. Until it exists, the page says in
+plain type that these are expected Demand and not bake quantities.
 
 ## Parent
 

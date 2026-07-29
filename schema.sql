@@ -175,3 +175,59 @@ CREATE TABLE IF NOT EXISTS forecasts (
 );
 
 ALTER TABLE forecasts ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- Scheduled Reports as a subscription table over the log (ADR 0010)
+-- ---------------------------------------------------------------------------
+
+-- report_configs: which reports exist and when they fire, as data rather than
+-- as a workflow file per report. Each row is a Scheduled Report — a forecast
+-- configuration it reads (by foreign key), the weekdays it should be delivered
+-- on, and a `config` jsonb document `{ name, headline_model, target, varieties,
+-- delivery }` saying what its pages contain and where it goes. A second report
+-- on Tuesdays is an INSERT here, never another cron to keep in step with the
+-- first.
+--
+-- The foreign key to `forecast_configs (version)` is the point of the table: a
+-- report is *defined by* the configuration it reads, so a row can never point
+-- at a configuration that was never used to forecast. What span of dates the
+-- report covers is deliberately not stored — the Report Window is
+-- `origin+1 .. origin+horizon_days` of the referenced configuration, which
+-- falls out of the weekday the report fires on (ADR 0010).
+--
+-- Unlike `forecast_configs`, this table is edited in place rather than
+-- versioned. It keys nothing: no logged row references a report, so
+-- rescheduling one is a change to that report and not a new report, and
+-- versioning it would accumulate history nothing reads.
+--
+-- `days_of_week` is in Postgres' EXTRACT(DOW) convention, 0 = Sunday. The
+-- check is three claims at once, and all three are needed: an empty array is a
+-- report that silently never fires and looks exactly like a broken one; a NULL
+-- member passes both of the other two clauses on its own (cardinality counts
+-- it, and containment over an array holding NULL yields NULL, which a CHECK
+-- accepts); and a member outside 0..6 matches no day the daily job ever asks
+-- for.
+--
+-- `cardinality`, not `array_length(days_of_week, 1)`: array_length returns
+-- NULL rather than 0 for `{}`, so the comparison would be NULL and the CHECK
+-- would accept the one value it exists to reject. cardinality returns 0.
+--
+-- `delivery` names a destination symbolically; the workflow resolves it to
+-- `CHAT_WEBHOOK_<NAME>` / `DRIVE_FOLDER_<NAME>` secrets. A Google Chat webhook
+-- URL is a bearer credential, so it stays out of Postgres — and so out of
+-- backups and table dumps — and rotating it stays a secrets change (ADR 0010).
+CREATE TABLE IF NOT EXISTS report_configs (
+    id                      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    forecast_config_version bigint      NOT NULL REFERENCES forecast_configs (version),
+    days_of_week            smallint[]  NOT NULL,
+    is_active               boolean     NOT NULL DEFAULT false,
+    created_at              timestamptz NOT NULL DEFAULT now(),
+    config                  jsonb       NOT NULL,
+    CONSTRAINT report_configs_days_of_week_valid CHECK (
+        cardinality(days_of_week) >= 1
+        AND array_position(days_of_week, NULL) IS NULL
+        AND days_of_week <@ ARRAY[0, 1, 2, 3, 4, 5, 6]::smallint[]
+    )
+);
+
+ALTER TABLE report_configs ENABLE ROW LEVEL SECURITY;

@@ -1,6 +1,6 @@
 # Scheduled Forecast Reports
 
-Status: ready-for-agent
+Status: done
 
 ## Problem Statement
 

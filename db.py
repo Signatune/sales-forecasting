@@ -27,12 +27,17 @@ The objects (see `schema.sql`):
   its version stamped in; `insert_forecasts` appends the log rows
   `forecast_engine.run_forecasts` produces, write-once, so a retry fills gaps
   and never rewrites what a past morning predicted.
+- Scheduled Reports as a subscription table over that log (ADR 0010).
+  `read_due_reports` returns the active reports whose weekdays include the day
+  the caller names, so which reports exist and when they fire is data rather
+  than a workflow file per report.
 
 `source_name` is stored in the normalized (stripped, lower-cased) form
 `normalize.py` matches on; callers pass names already normalized (as
 `normalize.py` produces them), and both the fact and the map store them that
 way so the view's join lines up.
 """
+import datetime as dt
 import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional
@@ -385,6 +390,111 @@ def insert_forecasts(conn: psycopg.Connection, frame: pd.DataFrame) -> int:
         inserted = cur.rowcount
     conn.commit()
     return inserted
+
+
+# --- Scheduled Reports as a subscription table over the log (ADR 0010) -----
+
+
+def postgres_weekday(day: dt.date) -> int:
+    """`day`'s weekday in Postgres' `EXTRACT(DOW)` convention, 0 = Sunday.
+
+    `report_configs.days_of_week` is stored in that convention so a row reads
+    the same from `psql` as from here, and python's `date.weekday()` is
+    Monday-based — so the two are off by one *and* wrap at different ends of the
+    week. Converting in one named function, rather than inline in the query,
+    keeps the mapping testable without a database."""
+    return (day.weekday() + 1) % 7
+
+
+def read_due_reports(conn: psycopg.Connection, today: dt.date) -> List[Dict]:
+    """The active Scheduled Reports that fire on `today`'s weekday, oldest
+    first, each as one flat dict: its stored `config` document with the row's
+    `id` and `forecast_config_version` merged in.
+
+    `today` is an argument rather than a reading of the clock because the caller
+    owns which day it is — the date in the restaurants' timezone, not the
+    runner's UTC date, exactly as `daily_forecast.py` computes its `as_of`. From
+    20:00 ET a runner has already rolled over, and asking the database for the
+    weekday would quietly deliver the wrong day's reports.
+
+    The row's columns win over anything the document happens to spell, the same
+    rule `read_active_config` applies to `version`: `forecast_config_version` is
+    the foreign key the report is *defined by* (ADR 0010), so a stale copy of it
+    inside the jsonb must not shadow it. `days_of_week` is deliberately not
+    returned — it is the question this reader has already answered, and a caller
+    re-checking it would be a second place for the weekday convention to drift.
+
+    No due reports is not an error: most days there are none."""
+    rows = conn.execute(
+        "SELECT id, forecast_config_version, config FROM report_configs "
+        "WHERE is_active AND %s = ANY (days_of_week) ORDER BY id",
+        (postgres_weekday(today),),
+    ).fetchall()
+    return [
+        {**config, "id": report_id, "forecast_config_version": version}
+        for report_id, version, config in rows
+    ]
+
+
+def read_forecast_config(conn: psycopg.Connection, version: int) -> Dict:
+    """The forecast configuration a Scheduled Report references, as
+    `report_payload.build_payload` takes it: the stored document with its own
+    `version`, its `is_active` flag, and `active_version` — the version
+    `forecast_configs` marks active *now* — stamped in.
+
+    `is_active` and `active_version` are what let a refusal distinguish "this
+    report points at a superseded configuration" from "today's run did not
+    happen", and name the version the row should be repointed at (ADR 0010).
+    They are read here rather than derived in the payload builder because which
+    version is active is a database question, and the builder is pure.
+
+    `active_version` is the newest active version, matching how
+    `read_active_config` settles the same ambiguity, and is `None` when nothing
+    is active at all. Raises when `version` names no row: `report_configs`'
+    foreign key makes that impossible for a report read out of the table, so it
+    means the configuration was deleted underneath one."""
+    row = conn.execute(
+        "SELECT is_active, config FROM forecast_configs WHERE version = %s",
+        (version,),
+    ).fetchone()
+    if row is None:
+        raise RuntimeError(
+            f"No forecast configuration with version {version}. A Scheduled "
+            "Report references one by foreign key, so this means the "
+            "configuration row was deleted — restore it, or repoint the "
+            "report_configs row at a version that exists."
+        )
+    is_active, config = row
+    active = conn.execute(
+        "SELECT version FROM forecast_configs WHERE is_active "
+        "ORDER BY version DESC LIMIT 1"
+    ).fetchone()
+    return {
+        **config,
+        "version": version,
+        "is_active": is_active,
+        "active_version": active[0] if active else None,
+    }
+
+
+def read_latest_forecasts(conn: psycopg.Connection, config_version: int) -> pd.DataFrame:
+    """The `forecasts` rows at the newest Forecast Origin logged under
+    `config_version`, in the frame `report_payload.build_payload` reads.
+
+    Only the newest origin, not the version's whole history: the payload builder
+    needs the origin to *be* today and refuses otherwise, so every older origin
+    would be read and discarded — and the log grows by one origin a day forever.
+    An empty frame is not an error; it is how "nothing has ever been logged under
+    this version" reaches the builder, which refuses on it with the same message
+    as an origin that is merely late."""
+    rows = conn.execute(
+        "SELECT as_of, config_version, model, target, target_date, forecast_quantity "
+        "FROM forecasts WHERE config_version = %s AND as_of = ("
+        "  SELECT max(as_of) FROM forecasts WHERE config_version = %s"
+        ") ORDER BY model, target, target_date",
+        (config_version, config_version),
+    ).fetchall()
+    return pd.DataFrame(rows, columns=list(FORECAST_COLUMNS))
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:

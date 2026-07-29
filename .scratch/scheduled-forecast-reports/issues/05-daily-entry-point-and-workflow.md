@@ -1,7 +1,31 @@
 # The daily entry point and its scheduled workflow
 
-Status: ready-for-agent
+Status: done
 Blocked by: 04
+
+## Resolution note
+
+Built as planned: `scheduled_reports.py`, `.github/workflows/scheduled-reports.yml`
+and `docs/reports.md`.
+
+**The workflow is deliberately *not* gated on the forecast's conclusion**, and
+this is the one place it departs from `daily-forecast.yml`'s gate on the
+capture. The first cut copied that gate; review caught that it makes the
+stale-origin refusal almost unreachable. A failed forecast is precisely the case
+ADR 0010 wants a Chat message for, and skipping the job would deliver *silence*
+to the space instead — indistinguishable, on a Saturday morning, from "no
+reports were due". It costs nothing on the days it does not matter: most days
+nothing is due and the run exits green in seconds.
+
+Drive credentials are built per report rather than once per run — a JSON parse,
+no network call — so a bad key is a failure of *that* report, reported into its
+own space, rather than something that takes the morning down before anything is
+attempted.
+
+`main` takes `render` and `delivery` as module-shaped seams alongside the
+`connect`/`load_sales`/`now` ones, so a fake records the whole outward chain in
+order; the db readers are monkeypatched, as `tests/test_daily_forecast.py`
+does.
 
 ## Parent
 
