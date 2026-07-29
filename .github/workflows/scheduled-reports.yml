@@ -12,8 +12,9 @@ name: Scheduled Forecast Reports
 #                                docs/postgres.md — the pooler is IPv4, which
 #                                the runner needs).
 #   GOOGLE_SERVICE_ACCOUNT_JSON  The Drive service-account key file, verbatim.
-#                                The account has no storage of its own, so a
-#                                folder is shared to it from a real account.
+#                                The account has no storage of its own, so it is
+#                                a Content manager on a shared Drive and writes
+#                                there; the Drive owns the files.
 #   CHAT_WEBHOOK_<NAME>          Per destination, one pair each. <NAME> is the
 #   DRIVE_FOLDER_<NAME>          report row's `delivery` value, upper-cased with
 #                                hyphens as underscores — `bagel-team` reads

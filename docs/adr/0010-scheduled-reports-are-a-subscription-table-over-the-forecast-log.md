@@ -55,5 +55,11 @@ Load-bearing decisions:
   and the webhook posts a card with a link. Nothing about this is a limitation of
   the report; it is a fixed property of webhooks, and switching to a full Chat app
   would be the only way around it.
-- The service account has no Drive storage of its own, so a folder is shared to
-  it from a real account and uploads name that folder as their parent.
+- The service account has no Drive storage of its own, so uploads name a parent
+  it is a member of. That parent is a **shared Drive**: files there are owned by
+  the Drive rather than by the account that wrote them, so rotating or deleting
+  the service account — or the departure of whoever set it up — cannot take the
+  back catalogue of reports with it, and the write-once links above keep opening.
+  Writing into a shared Drive needs the full `drive` scope rather than
+  `drive.file`; the account is bounded by *membership* instead, being a Content
+  manager on this one Drive and a member of nothing else.

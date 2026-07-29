@@ -43,26 +43,44 @@ Store the key file's **entire contents** as the repository secret
 `GOOGLE_SERVICE_ACCOUNT_JSON` — the JSON itself, braces included, not a path. A
 runner has no file to point at.
 
-## 2. A Drive folder, shared to it
+## 2. A shared Drive, with the account as a member
 
 **A service account has no Drive storage of its own.** It cannot create a file
-that has no parent, so every upload names a folder that a real account shared
-with it; the file then lives in that account's space and inherits its sharing.
+that has no parent, so every upload names a parent it was made a member of.
 
-1. In Drive, create a folder (e.g. *Bagel forecast reports*).
-2. **Share** it with the service account's email, as **Editor**.
-3. Share it with the people who should be able to open the reports — the Chat
-   card links to the file, and the link only opens for people the *folder*
+Reports go to a **shared Drive**, not to a folder in someone's My Drive. The
+difference is ownership: a file in a shared Drive is owned by the Drive, so
+deleting the service account — or the person who set this up leaving — cannot
+take the back catalogue with it, and old Chat links keep opening.
+
+1. In Drive, **Shared drives → + New**, name it (e.g. *Bagel forecast reports*).
+   You need to be a **Manager** of it to do the next step.
+2. **Manage members** → paste the service account's email → role **Content
+   manager** → **Send**. Google may warn that it is outside your organisation
+   and cannot receive mail; that is expected, add it anyway.
+3. Add the people who should be able to open the reports. **Viewer** is enough —
+   the Chat card links to the file, and the link only opens for people the Drive
    already reaches.
-4. Take the folder id out of its URL: `https://drive.google.com/drive/folders/`
-   **`<this-part>`**.
+4. Take the id out of the URL. For the Drive's root,
+   `https://drive.google.com/drive/folders/`**`<this-part>`**; for a subfolder
+   inside it, open that folder and take the same trailing segment.
 
 Store that id as `DRIVE_FOLDER_<NAME>` (see step 4 for `<NAME>`).
 
-> If you use a **shared Drive** rather than a folder in someone's My Drive, the
-> `drive.file` scope may not be enough. `DRIVE_SCOPES` in
-> [`report_delivery.py`](../report_delivery.py) is the one line to widen to
-> `https://www.googleapis.com/auth/drive`.
+> **If your Workspace admin restricts sharing outside the organisation**, step 2
+> fails — a service account's `…iam.gserviceaccount.com` address is a different
+> domain. The setting is *Admin console → Apps → Google Workspace → Drive and
+> Docs → Sharing settings → allow members outside the organisation*, scoped to
+> the OU the Drive belongs to. This is the one step here that may need an admin
+> who is not you.
+>
+> Uploading into a shared Drive needs the full
+> `https://www.googleapis.com/auth/drive` scope, which is what `DRIVE_SCOPES` in
+> [`report_delivery.py`](../report_delivery.py) is set to. The narrower
+> `drive.file` grants access only to files the app itself created and cannot
+> create into a folder it did not create. The account stays harmless through
+> *membership* instead: it is a Content manager on this one Drive and a member
+> of nothing else, so "everything it can see" is exactly this Drive.
 
 ## 3. A Google Chat webhook
 

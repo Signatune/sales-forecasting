@@ -22,9 +22,12 @@ Two more properties of the same API shape the code below:
   delivered sequentially with a gap (`WEBHOOK_MIN_INTERVAL_SECONDS`), never
   concurrently — the caller paces them.
 - **The service account has no Drive storage of its own.** Every upload must
-  name a parent folder that a real account shared with it; the file lives in
-  that account's space and inherits its sharing. A file created without a parent
-  has nowhere to live, so that is an error here rather than a call to Google.
+  name a parent it was made a member of; the file lives in that parent's space
+  and inherits its sharing. A file created without a parent has nowhere to live,
+  so that is an error here rather than a call to Google. Reports go to a **shared
+  Drive**, so the files are owned by the Drive rather than by the service
+  account — deleting or rotating the account cannot take the back catalogue of
+  reports with it, and the Chat links keep opening.
 
 Destinations are symbolic. A report's `config["delivery"]` names one, and it is
 resolved to `CHAT_WEBHOOK_<NAME>` / `DRIVE_FOLDER_<NAME>` through `env.py`. A
@@ -125,12 +128,14 @@ def report_filename(payload: Payload) -> str:
 
 SERVICE_ACCOUNT_ENV_VAR = "GOOGLE_SERVICE_ACCOUNT_JSON"
 
-# Per-file access: the token can touch the files this job created and nothing
-# else in the folder it was given. A shared *Drive* (rather than a folder shared
-# out of someone's My Drive) may need the broader
-# `https://www.googleapis.com/auth/drive` — that is the one line to change, and
-# docs/reports.md says so.
-DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+# Reports land in a shared Drive (docs/reports.md), which the narrower
+# `drive.file` does not reliably cover: that scope is per-file access to files
+# the app itself created, and creating *into* a shared-Drive folder the app did
+# not create is refused under it. So this is the full scope, and the account is
+# kept harmless by membership instead — it is a Content manager on exactly one
+# shared Drive and a member of nothing else, so "everything it can see" is that
+# Drive and nothing more.
+DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 
 def drive_credentials(environ: Optional[Mapping[str, str]] = None):
@@ -232,8 +237,8 @@ def upload_pdf(
         raise RuntimeError(
             "A Drive upload must name a parent folder: the service account has "
             "no storage of its own, so the file has nowhere to live. Set "
-            "DRIVE_FOLDER_<NAME> to a folder shared with the service account — "
-            "see docs/reports.md."
+            "DRIVE_FOLDER_<NAME> to a folder in a shared Drive the service "
+            "account is a Content manager on — see docs/reports.md."
         )
     client = client if client is not None else DriveClient(credentials)
     return client.create(filename, folder_id, pdf)
