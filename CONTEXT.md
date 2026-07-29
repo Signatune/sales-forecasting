@@ -46,6 +46,40 @@ _Avoid_: Forecast (alone), projection
 A named group of one or more Products whose Sales are summed into a single series that a model is fit to and forecast. A lone Product is the degenerate one-member group, so there is no separate "single product" case. Distinct from a Category: a Category is a merchandising grouping, a Forecast Target is a forecasting unit chosen because its aggregated series forecasts more accurately. A Product may belong to several Targets or none, and forecasting the members of a Target separately and summing the results (bottom-up) is a read-time aggregation, not a Target of its own.
 _Avoid_: Series, group (alone), aggregate
 
+**Forecast Origin**:
+The day a Demand Forecast was made on, seeing only the Sales available that
+morning. Every logged forecast belongs to exactly one Origin, and a forecast's
+lead is its target date minus its Origin.
+_Avoid_: Run date, as-of (informally), forecast date
+
+**Scheduled Report**:
+A standing subscription naming one forecast configuration, the weekdays it
+should be delivered on, and what its pages say. Reports are data rather than
+schedule code: a daily job asks which Scheduled Reports want delivering today.
+_Avoid_: Job, digest, subscription
+
+**Report Window**:
+The span of target dates a Scheduled Report covers — the day after its Forecast
+Origin through the end of the referenced configuration's horizon. The window is
+never configured; it falls out of the day a report is scheduled on. A report
+scheduled on Saturdays against a seven-day horizon therefore covers Sunday
+through Saturday, and the same report moved to Wednesdays would cover Thursday
+through Wednesday.
+_Avoid_: Forecast week, reporting period, upcoming week
+
+**Settled Sales**:
+Sales for a date old enough that the capture's trailing window has closed over
+it, so no further Toast correction is expected. Distinct from captured Sales,
+which include the most recent days that are still revisable.
+_Avoid_: Final sales, closed sales, actuals (alone)
+
+**Weekday Baseline**:
+The mean Settled Sales for a given weekday across the four most recent weeks,
+used as the reference a Demand Forecast is called up, down or flat against. A
+weekday average rather than the single preceding week, so one unusual day cannot
+flip the direction. A move smaller than 3% is called flat.
+_Avoid_: Last week, previous week, comparison
+
 ## Baking
 
 **Wheat Dough**:
@@ -61,5 +95,17 @@ The number of a single variety to shape and bake on a given day, decided ~2 days
 _Avoid_: Bake amount, production target
 
 **Service Level**:
-The probability that Demand is met without a Stockout, chosen as a target (currently 95%). It sets how much buffer the Poolish quantity carries above expected Demand: a lost sale is treated as far costlier than a leftover, so the total is forecast at that upper quantile rather than at the mean.
+The probability that Demand is met without a Stockout, chosen as a target (currently 95%). It sets how much buffer the Poolish quantity carries above expected Demand: a lost sale is treated as far costlier than a leftover, so the total is forecast at that upper quantile rather than at the mean. The target is asserted from operating knowledge rather than derived from measured costs (ADR 0012), and must sit below the Service Level Ceiling.
 _Avoid_: Fill rate, coverage
+
+**Residual Pool**:
+The set of past relative errors — actual Demand over forecast Demand, minus one — that a Service Level buffer reads its quantile from, collected at the Poolish lead from a single model's own replayed forecasts. Relative rather than absolute so one pool serves every weekday and every year (ADR 0002, ADR 0013).
+_Avoid_: Error history, residuals (alone), training window
+
+**Service Level Ceiling**:
+The highest Service Level a Residual Pool can actually estimate, above which a higher target buys noise rather than service. A property of the pool and of what its tail is made of, not of cost — currently 96-97% (ADR 0012).
+_Avoid_: Maximum service level, cap
+
+**Day-old**:
+A baked bagel unsold on its bake day and sold at a discount afterwards. Day-old sell-through is what makes a leftover cheap, and so is much of why the Service Level sits as high as it does: a leftover is partly recovered, a Stockout is not.
+_Avoid_: Stale, surplus, waste

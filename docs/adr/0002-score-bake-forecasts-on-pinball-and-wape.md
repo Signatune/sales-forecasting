@@ -37,3 +37,8 @@ Each day in the last ~26 weeks is forecast from only prior data (Poolish at lead
 the model that is best *now*; ~26 weeks, because a 28-day holdout gives only ~4
 of each weekday — too few to rank ~6 models without a single odd day flipping the
 winner.
+
+This window governs **which model wins**. It does not govern how many residuals
+the buffer above pools: ADR 0013 takes those back to 2022, because how wide a
+model's errors are is a slower-moving fact than which model is best, and 26 weeks
+of them cannot estimate a 95th percentile.
