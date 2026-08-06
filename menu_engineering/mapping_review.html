@@ -278,8 +278,10 @@
 
   .sign-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .sign-row .label { font-size: 12px; color: var(--ink-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .scale-fraction { display: inline-flex; align-items: center; gap: 6px; }
+  .scale-slash { color: var(--ink-faint); font-weight: 700; }
   .scale-input {
-    width: 90px;
+    width: 68px;
     padding: 6px 8px;
     border: 1px solid var(--paper-line);
     border-radius: var(--radius);
@@ -597,6 +599,29 @@
   var DATA = JSON.parse(document.getElementById("app-data").textContent);
 
   function fmtMoney(v) { return v === null || v === undefined ? "&mdash;" : "$" + v.toFixed(2); }
+  function scaleRowHtml(prefix) {
+    return (
+      '<div class="sign-row"><span class="label">Scale (&times; recipe yield)</span>' +
+      '<div class="scale-fraction">' +
+      '<input type="number" id="' + prefix + '-scale-num" class="scale-input" value="1" min="0" step="any" aria-label="Scale numerator">' +
+      '<span class="scale-slash">/</span>' +
+      '<input type="number" id="' + prefix + '-scale-den" class="scale-input" value="1" min="0" step="any" aria-label="Scale denominator">' +
+      "</div></div>"
+    );
+  }
+  function readScale(prefix) {
+    var numEl = document.getElementById(prefix + "-scale-num");
+    var denEl = document.getElementById(prefix + "-scale-den");
+    var num = numEl ? parseFloat(numEl.value) : NaN;
+    var den = denEl ? parseFloat(denEl.value) : NaN;
+    if (!isFinite(num) || num < 0) num = 1;
+    if (!isFinite(den) || den <= 0) den = 1;
+    return { num: num, den: den, value: num / den };
+  }
+  function fmtScale(d) {
+    if (!d) return "1/1";
+    return (d.scaleNum === undefined ? 1 : d.scaleNum) + "/" + (d.scaleDen === undefined ? 1 : d.scaleDen);
+  }
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -684,8 +709,7 @@
     return (
       '<div class="queue-card">' +
       '<div class="queue-head"><div><p class="eyebrow">Toast item</p><h2 class="name display">' + esc(entry.item) + "</h2></div></div>" +
-      '<div class="sign-row"><span class="label">Scale (&times; recipe yield)</span>' +
-      '<input type="number" id="item-scale-input" class="scale-input" value="1" min="0" step="any"></div>' +
+      scaleRowHtml("item") +
       (entry.candidates.length
         ? '<div class="candidates-grid">' + candHtml + "</div>"
         : '<p class="hint" style="margin-top:0">No suggested candidates &mdash; search the full book below.</p>') +
@@ -745,7 +769,7 @@
   function wireItemCard(entry) {
     var mount = document.getElementById("items-queue-mount");
     mount.querySelectorAll(".candidate").forEach(function (btn) {
-      btn.addEventListener("click", function () { pickItemDecision(entry.item, readCandidateData(btn, "item-scale-input")); });
+      btn.addEventListener("click", function () { pickItemDecision(entry.item, readCandidateData(btn, "item")); });
     });
     document.getElementById("item-no-match").addEventListener("click", function () {
       itemDecisions[entry.item] = "NO_MATCH";
@@ -768,15 +792,13 @@
       var matches = DATA.allRecipes.filter(function (r) { return r.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
       results.innerHTML = matches.map(resultRowHtml).join("") || '<p class="hint">No matches.</p>';
       results.querySelectorAll(".inline-result").forEach(function (btn) {
-        btn.addEventListener("click", function () { pickItemDecision(entry.item, readCandidateData(btn, "item-scale-input")); });
+        btn.addEventListener("click", function () { pickItemDecision(entry.item, readCandidateData(btn, "item")); });
       });
     }, 120));
   }
 
-  function readCandidateData(btn, scaleInputId) {
-    var scaleEl = scaleInputId && document.getElementById(scaleInputId);
-    var scale = scaleEl ? parseFloat(scaleEl.value) : NaN;
-    if (!isFinite(scale) || scale < 0) scale = 1;
+  function readCandidateData(btn, scalePrefix) {
+    var scale = scalePrefix ? readScale(scalePrefix) : { num: 1, den: 1, value: 1 };
     return {
       name: btn.dataset.name,
       id: btn.dataset.id,
@@ -785,7 +807,9 @@
       price: btn.dataset.price === "" ? null : parseFloat(btn.dataset.price),
       yieldQty: btn.dataset.yieldQty === "" ? null : parseFloat(btn.dataset.yieldQty),
       yieldUnit: btn.dataset.yieldUnit || null,
-      scale: scale,
+      scaleNum: scale.num,
+      scaleDen: scale.den,
+      scale: scale.value,
       source: btn.dataset.source,
     };
   }
@@ -814,7 +838,7 @@
       var status = d === "NO_MATCH" ? '<span class="status-pill nomatch">No match</span>' : '<span class="status-pill matched">Matched</span>';
       var name = d === "NO_MATCH" ? "&mdash;" : esc(d.name);
       var yield_ = d === "NO_MATCH" ? "&mdash;" : fmtYield(d.yieldQty, d.yieldUnit);
-      var scale = d === "NO_MATCH" ? "&mdash;" : (d.scale === undefined ? "1" : d.scale);
+      var scale = d === "NO_MATCH" ? "&mdash;" : fmtScale(d);
       var cost = d === "NO_MATCH" ? "&mdash;" : fmtMoney(d.cost);
       var effCost = d === "NO_MATCH" ? "&mdash;" : fmtMoney(effectiveCost(d));
       var price = d === "NO_MATCH" ? "&mdash;" : fmtMoney(d.price);
@@ -885,8 +909,7 @@
       '<button type="button" class="on add" data-sign="add">+ Add</button>' +
       '<button type="button" data-sign="subtract">&minus; Subtract</button>' +
       "</div></div>" +
-      '<div class="sign-row"><span class="label">Scale (&times; recipe yield)</span>' +
-      '<input type="number" id="mod-scale-input" class="scale-input" value="1" min="0" step="any"></div>' +
+      scaleRowHtml("mod") +
       (entry.candidates.length
         ? '<div class="candidates-grid">' + candHtml + "</div>"
         : '<p class="hint" style="margin-top:0">No suggested candidates &mdash; search the full book below.</p>') +
@@ -915,7 +938,7 @@
       });
     });
     mount.querySelectorAll(".candidate").forEach(function (btn) {
-      btn.addEventListener("click", function () { pickModDecision(entry.name, readCandidateData(btn, "mod-scale-input"), currentSign); });
+      btn.addEventListener("click", function () { pickModDecision(entry.name, readCandidateData(btn, "mod"), currentSign); });
     });
     document.getElementById("mod-exclude").addEventListener("click", function () {
       modDecisions[entry.name] = "EXCLUDED";
@@ -938,7 +961,7 @@
       var matches = DATA.allRecipes.filter(function (r) { return r.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
       results.innerHTML = matches.map(resultRowHtml).join("") || '<p class="hint">No matches.</p>';
       results.querySelectorAll(".inline-result").forEach(function (btn) {
-        btn.addEventListener("click", function () { pickModDecision(entry.name, readCandidateData(btn, "mod-scale-input"), currentSign); });
+        btn.addEventListener("click", function () { pickModDecision(entry.name, readCandidateData(btn, "mod"), currentSign); });
       });
     }, 120));
   }
@@ -965,7 +988,7 @@
           '<td><button class="btn small ghost" data-undo-mod="' + esc(name) + '">Undo</button></td></tr>';
       }
       var signLabel = d.sign === "subtract" ? "&minus; Subtract" : "+ Add";
-      var scale = d.scale === undefined ? "1" : d.scale;
+      var scale = fmtScale(d);
       return (
         "<tr><td>" + esc(name) + '</td><td><span class="status-pill matched">Matched</span></td><td>' + esc(d.name) +
         '</td><td class="num mono">' + fmtYield(d.yieldQty, d.yieldUnit) + '</td><td class="num mono">' + scale +
@@ -1091,28 +1114,28 @@
   }
 
   document.getElementById("export-btn").addEventListener("click", function () {
-    var itemRows = [["toast_item", "match_status", "recipe_name", "recipe_id", "category", "yield_qty", "yield_unit", "scale", "cost", "effective_cost", "price", "match_source"]];
+    var itemRows = [["toast_item", "match_status", "recipe_name", "recipe_id", "category", "yield_qty", "yield_unit", "scale_numerator", "scale_denominator", "scale_decimal", "cost", "effective_cost", "price", "match_source"]];
     DATA.confidentItems.forEach(function (c) {
-      itemRows.push([c.item, "confident", c.name, c.id, c.category, c.yieldQty, c.yieldUnit, 1, c.cost, c.cost, c.price, "exact_name"]);
+      itemRows.push([c.item, "confident", c.name, c.id, c.category, c.yieldQty, c.yieldUnit, 1, 1, 1, c.cost, c.cost, c.price, "exact_name"]);
     });
     itemQueue.forEach(function (r) {
       var d = itemDecisions[r.item];
-      if (!d) itemRows.push([r.item, "unresolved", "", "", "", "", "", "", "", "", "", ""]);
-      else if (d === "NO_MATCH") itemRows.push([r.item, "no_match", "", "", "", "", "", "", "", "", "", ""]);
-      else itemRows.push([r.item, "reviewed", d.name, d.id, d.category, d.yieldQty, d.yieldUnit, d.scale, d.cost, effectiveCost(d), d.price, d.source]);
+      if (!d) itemRows.push([r.item, "unresolved", "", "", "", "", "", "", "", "", "", "", "", ""]);
+      else if (d === "NO_MATCH") itemRows.push([r.item, "no_match", "", "", "", "", "", "", "", "", "", "", "", ""]);
+      else itemRows.push([r.item, "reviewed", d.name, d.id, d.category, d.yieldQty, d.yieldUnit, d.scaleNum, d.scaleDen, d.scale, d.cost, effectiveCost(d), d.price, d.source]);
     });
     DATA.unmatchedToast.forEach(function (item) {
-      itemRows.push([item, "unresolved", "", "", "", "", "", "", "", "", "", ""]);
+      itemRows.push([item, "unresolved", "", "", "", "", "", "", "", "", "", "", "", ""]);
     });
 
-    var modRows = [["modifier_name", "qty_last_60_days", "last_seen", "status", "recipe_name", "recipe_id", "category", "yield_qty", "yield_unit", "scale", "cost", "effective_cost", "cost_sign", "match_source"]];
+    var modRows = [["modifier_name", "qty_last_60_days", "last_seen", "status", "recipe_name", "recipe_id", "category", "yield_qty", "yield_unit", "scale_numerator", "scale_denominator", "scale_decimal", "cost", "effective_cost", "cost_sign", "match_source"]];
     modQueue.forEach(function (m) {
       var d = modDecisions[m.name];
-      if (!d) modRows.push([m.name, m.qty, m.lastSeen, "unresolved", "", "", "", "", "", "", "", "", "", ""]);
-      else if (d === "EXCLUDED") modRows.push([m.name, m.qty, m.lastSeen, "excluded", "", "", "", "", "", "", "", "", "", ""]);
-      else modRows.push([m.name, m.qty, m.lastSeen, "reviewed", d.name, d.id, d.category, d.yieldQty, d.yieldUnit, d.scale, d.cost, effectiveCost(d), d.sign, d.source]);
+      if (!d) modRows.push([m.name, m.qty, m.lastSeen, "unresolved", "", "", "", "", "", "", "", "", "", "", "", ""]);
+      else if (d === "EXCLUDED") modRows.push([m.name, m.qty, m.lastSeen, "excluded", "", "", "", "", "", "", "", "", "", "", "", ""]);
+      else modRows.push([m.name, m.qty, m.lastSeen, "reviewed", d.name, d.id, d.category, d.yieldQty, d.yieldUnit, d.scaleNum, d.scaleDen, d.scale, d.cost, effectiveCost(d), d.sign, d.source]);
     });
-    modRows.push(["(stale — not seen in 60 days)", "", "", "excluded", "", "", "", "", "", "", "", "", "", "bulk:" + DATA.staleModifierCount + "_names"]);
+    modRows.push(["(stale — not seen in 60 days)", "", "", "excluded", "", "", "", "", "", "", "", "", "", "", "", "bulk:" + DATA.staleModifierCount + "_names"]);
 
     downloadCsv("toast_item_mapping.csv", itemRows);
     setTimeout(function () { downloadCsv("toast_modifier_mapping.csv", modRows); }, 250);
