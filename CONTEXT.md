@@ -17,8 +17,8 @@ The Analytics client (`toast_client.py`) is off this daily path. It is kept for 
 ## Language
 
 **Product**:
-A single forecastable item sold in the deli or bakery (e.g. a sourdough loaf, a turkey club sandwich).
-_Avoid_: Item, SKU, good
+A single item sold in the deli or bakery (e.g. a sourdough loaf, a turkey club sandwich). Not every Product is currently forecast or has a MarginEdge recipe mapped — being sold is what makes something a Product, not being a Forecast Target or having a mapping.
+_Avoid_: Item, SKU, good, Menu Item
 
 **Category**:
 A grouping of related Products (e.g. Bakery, Deli, Prepared Foods).
@@ -111,3 +111,21 @@ _Avoid_: Maximum service level, cap
 **Day-old**:
 A baked bagel unsold on its bake day and sold at a discount afterwards. Day-old sell-through is what makes a leftover cheap, and so is much of why the Service Level sits as high as it does: a leftover is partly recovered, a Stockout is not.
 _Avoid_: Stale, surplus, waste
+
+## Menu Engineering
+
+**Modifier**:
+A Toast-configured selection attached to a Product's order line — a flavor pick, an add-on, a "no X" removal — that is not itself sold as a Product. Toast books all revenue to the Product, not the Modifier; a Modifier's own recorded price is usually (though not always) zero even when it changes what's actually produced.
+_Avoid_: Add-on (informally), option
+
+**Base Recipe**:
+The MarginEdge recipe a Product maps to on its own, independent of whichever Modifiers are attached to a given sale. May be left unmapped for a Product whose entire composition is determined by its Modifiers (e.g. a bagel multi-pack with no fixed flavor).
+_Avoid_: Recipe (alone, when a Modifier's mapped recipe is meant instead)
+
+**Cost Sign**:
+Whether a mapped Modifier's recipe cost is added to or subtracted from a Product's Base Recipe cost — e.g. "add cheese" is add, "no cheese" is subtract, both mapped to the same Cheese recipe. Set once per Modifier mapping, not per sale; a Modifier's price effect (unlike its cost effect) is read from order data instead and is never set manually here.
+_Avoid_: Sign (alone), polarity
+
+**Realized Cost**:
+A Product's actual cost for one unit sold: its Base Recipe cost plus the signed cost of every Modifier attached to that sale. Distinct from a Product's Base Recipe cost alone, which excludes Modifiers entirely.
+_Avoid_: Recipe cost (when realized cost is meant), theoretical cost

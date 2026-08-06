@@ -1,0 +1,65 @@
+toast_item,me_recipe_name,me_recipe_id,me_recipe_type,me_category,recipe_cost,menu_price,is_inactive
+12oz Black Iced Tea,12oz Black Iced Tea,298395533,Drinks,MENU,0.84,0.84,False
+12oz Hot Coffee,12oz Hot Coffee,298381189,Drinks,MENU,1,1,False
+12oz Iced Coffee,12oz Iced Coffee,298386283,Drinks,MENU,0.99,0.99,False
+16oz Hot Coffee,16oz Hot Coffee,298381803,Drinks,MENU,1.26,1.26,False
+20oz Black Iced Tea,20oz Black Iced Tea,298396068,Drinks,MENU,0.98,0.98,False
+Apple Sauce (half pint),Apple Sauce (half pint),236410029,Deli Case,MENU,1.21,1.21,False
+"Bagel, Schmear, and Vegetables (v)","Bagel, Schmear, and Vegetables",247937282,Sandwiches,MENU,1.45,1.45,False
+Black & White Milkshake,Black and White Milkshake,401527771,Drinks,MENU,3.57,3.57,True
+Black Cherry Float,Black Cherry Float,401526461,Drinks,MENU,3.36,3.36,True
+Build A Bagel (v),Build a Bagel,377220586,Sandwiches,MENU,0.58,0.58,True
+Bubbe's Broth (12oz),Bubbe's Broth - 12oz.,376421575,Drinks,MENU,0.78,0.78,False
+Campari & OJ (for 1),Campari & OJ for 1,401524529,Drinks,MENU,4.02,4.02,True
+Chicken Salad (half pint),Chicken Salad (half pint),239547824,Deli Case,MENU,1.39,1.39,False
+Chicken Salad Sandwich,Chicken Salad Sandwich,245861165,Sandwiches,MENU,1.52,1.52,False
+Chicken Schnitzel Sandwich,Chicken Schnitzel Sandwich,245862457,Sandwiches,MENU,2.8,2.8,False
+Chocolate Layer Cake Slice (v),Chocolate Layer Cake - Slice,401515594,Pastries,MENU,1.16,1.16,False
+Chocolate Milkshake,Chocolate Milkshake,298401036,Drinks,MENU,3.31,3.31,False
+Challah Rolls (bag of 4),Challah Rolls (bag of 4),301912727,Breads,MENU,0.62,0.62,False
+Chopped Liver (half pint),Chopped Liver (half pint),239549614,Deli Case,MENU,1.28,1.28,False
+Chopped Liver Sandwich,Chopped Liver Sandwich,240470423,Sandwiches,MENU,2.61,2.61,False
+Coke,Coke,379457658,Drinks,MENU,0.86,0.86,False
+Coke Float,Coke Float,401529065,Drinks,MENU,3.42,3.42,True
+Corned Beef Rachel,Corned Beef Rachel,245344993,Sandwiches,MENU,4.07,4.07,False
+Corned Beef Reuben,Corned Beef Reuben,240473398,Sandwiches,MENU,4.27,4.27,False
+Diet Coke,Diet Coke,379457885,Drinks,MENU,0.86,0.86,False
+Dr. Brown's Ginger Ale,Dr. Brown's - Ginger Ale,379453493,Drinks,MENU,1.09,1.09,False
+Dr. Browns Black Cherry,Dr. Brown's - Black Cherry,379454137,Drinks,MENU,0.94,0.94,False
+Dr. Browns Cel-Ray,Dr. Brown's - Cel-Ray,379456052,Drinks,MENU,0.94,0.94,False
+Dr. Browns Cream Soda,Dr. Brown's - Cream Soda,379452051,Drinks,MENU,0.94,0.94,False
+Dr. Browns Diet Black Cherry,Dr. Brown's - Diet Black Cherry,379455657,Drinks,MENU,1.09,1.09,False
+Dr. Browns Diet Cream Soda,Dr. Brown's - Diet Cream Soda,379453143,Drinks,MENU,0.94,0.94,False
+Dr. Browns Root Beer,Dr. Brown's - Root Beer,379456666,Drinks,MENU,0.94,0.94,False
+Egg and Cheese Sandwich (v),Egg and Cheese Sandwich,245921399,Sandwiches,MENU,0.56,0.56,False
+Egg Salad (half pint),Egg Salad (half pint),239549801,Deli Case,MENU,1.02,1.02,False
+Egg Salad Sandwich (v),Egg Salad Sandwich,245863877,Sandwiches,MENU,1.13,1.13,False
+Glass of Milk (12oz),Glass of Milk - 12oz.,379461212,Drinks,MENU,0.97,0.97,False
+Hummus Sandwich (v+),Hummus Sandwich,301805602,Sandwiches,MENU,0.92,0.92,False
+LEO,LEO,301785092,Sandwiches,MENU,1.56,1.56,False
+Mamaleh's Big Salad,Mamaleh's Big Salad,245887524,Soups & Salads,MENU,4.92,4.92,False
+Martinelli's Apple Juice,Martinelli's Apple Juice,411551508,Drinks,MENU,1.77,1.77,False
+Mimosa,Mimosa,478055141,Drinks,MENU,5.3,5.3,False
+"Mushroom, Egg, and Cheese (v)","Mushroom, Egg & Cheese",409362374,Sandwiches,MENU,1.51,1.51,False
+Nova Lox Sandwich,Nova Lox Sandwich,247935973,Sandwiches,MENU,3.41,3.41,False
+NY Cheesecake Slice (v) (gf),NY Cheesecake Slice,401561499,Pastries,MENU,1.2,1.2,True
+Pastrami Chopped Liver Sandwich,Pastrami/Chopped Liver Sandwich,240471167,Sandwiches,MENU,4.01,4.01,False
+Pastrami Rachel,Pastrami Rachel,245803238,Sandwiches,MENU,3.42,3.42,False
+Pastrami Reuben,Pastrami Reuben,245810170,Sandwiches,MENU,3.63,3.63,False
+Potato Latkes (frozen) (v),Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False
+Potato Salad (half pint),Potato Salad (half pint),239573598,Deli Case,MENU,0.78,0.78,False
+Quart Matzah Ball Soup (hot),Quart Matzah Ball Soup (hot),245899631,Soups & Salads,MENU,1.76,1.76,False
+Root Beer Float,Root Beer Float,401533092,Drinks,MENU,3.61,3.61,True
+sauerkraut (half pint),Sauerkraut (half pint),301898755,Deli Case,MENU,1.12,1.12,False
+Smoked Salmon & Chickpea Bowl,Smoked Salmon & Chickpea Bowl,920931787,Soups & Salads,MENU,3.44,3.44,False
+Sour Cream (half pint),Sour Cream (half pint),236404696,Deli Case,MENU,0.92,0.92,False
+The Ida (v),The Ida,247938515,Sandwiches,MENU,0.84,0.84,False
+The Lastnamer,The Lastnamer,247939626,Sandwiches,MENU,3.28,3.28,False
+Tuna Salad (half pint),Tuna Salad (half pint),239553062,Deli Case,MENU,3.63,3.63,False
+Tuna Salad Sandwich,Tuna Salad Sandwich,245833379,Sandwiches,MENU,3.11,3.11,False
+Turkey Rachel,Turkey Rachel,245804085,Sandwiches,MENU,3.2,3.2,False
+Turkey Reuben,Turkey Reuben,245811336,Sandwiches,MENU,3.28,3.28,False
+Vanilla Milkshake,Vanilla Milkshake,298400223,Drinks,MENU,4.08,4.08,False
+Vegan Egg Sandwich (v+),Vegan Egg Sandwich,839533481,Brunch Menu,MENU,2.32,2.32,False
+Whitefish Salad (half pint),Whitefish Salad (half pint),239547019,Deli Case,MENU,2.84,2.84,False
+Whitefish Salad Sandwich,Whitefish Salad Sandwich,247942817,Sandwiches,MENU,1.93,1.93,False
