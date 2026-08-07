@@ -138,6 +138,161 @@ class TestForecastRows:
         assert db.forecast_rows(pd.DataFrame(columns=db.FORECAST_COLUMNS)) == []
 
 
+class TestMigrationFiles:
+    """Reading `migrations/` — the half of the runner that needs no database."""
+
+    def test_the_repo_has_a_readable_baseline(self):
+        versions = [version for version, _ in db.migration_files()]
+        assert versions[0] == "0001"
+        # Ordered and unique is the whole contract; asserting the rest of the
+        # list would just restate whatever migrations exist this week.
+        assert versions == sorted(set(versions))
+
+    def test_ordering_is_numeric_and_not_alphabetical(self, tmp_path):
+        for name in ("0002-b.sql", "0010-c.sql", "0009-a.sql"):
+            (tmp_path / name).write_text("SELECT 1;")
+        assert [v for v, _ in db.migration_files(tmp_path)] == ["0002", "0009", "0010"]
+
+    def test_a_file_that_is_not_a_migration_raises_rather_than_being_skipped(
+        self, tmp_path
+    ):
+        # The failure this prevents: a migration that looks committed, never
+        # runs, and is noticed only when a later one fails.
+        (tmp_path / "add_column.sql").write_text("SELECT 1;")
+        with pytest.raises(RuntimeError, match="not a migration filename"):
+            db.migration_files(tmp_path)
+
+    def test_two_migrations_sharing_a_version_raise(self, tmp_path):
+        # Two PRs each adding 0002 merge cleanly in git; one would otherwise be
+        # left permanently unapplied.
+        (tmp_path / "0002-one.sql").write_text("SELECT 1;")
+        (tmp_path / "0002-two.sql").write_text("SELECT 1;")
+        with pytest.raises(RuntimeError, match="share version 0002"):
+            db.migration_files(tmp_path)
+
+
+@pytest.mark.skipif(
+    not TEST_DATABASE_URL,
+    reason="set TEST_DATABASE_URL to a throwaway Postgres to run DB integration tests",
+)
+class TestMigrationRunner:
+    """Applying migrations against a real Postgres (ADR 0015).
+
+    Its own connection rather than the shared `conn` fixture: these tests write
+    to `schema_migrations` and create and drop tables of their own, which the
+    truncating fixture neither expects nor cleans up.
+    """
+
+    @pytest.fixture()
+    def conn(self):
+        with psycopg.connect(TEST_DATABASE_URL) as c:
+            db.apply_migrations(c)
+            yield c
+            c.rollback()
+            c.execute("DROP TABLE IF EXISTS runner_scratch")
+            c.execute("DELETE FROM schema_migrations WHERE version <> '0001'")
+            c.commit()
+
+    @pytest.fixture()
+    def migrations(self, tmp_path):
+        """A migration directory the tests own, holding a copy of the real
+        baseline so the runner does not see 0001 as applied-but-missing."""
+        baseline = dict(db.migration_files())["0001"]
+        (tmp_path / baseline.name).write_bytes(baseline.read_bytes())
+        return tmp_path
+
+    def test_a_pending_migration_applies_and_is_recorded(self, conn, migrations):
+        (migrations / "0002-runner-scratch.sql").write_text(
+            "CREATE TABLE runner_scratch (note text NOT NULL);"
+        )
+
+        assert db.apply_migrations(conn, migrations) == ["0002"]
+
+        recorded = conn.execute(
+            "SELECT filename FROM schema_migrations WHERE version = '0002'"
+        ).fetchone()
+        assert recorded == ("0002-runner-scratch.sql",)
+        assert conn.execute(
+            "SELECT to_regclass('public.runner_scratch') IS NOT NULL"
+        ).fetchone() == (True,)
+
+    def test_applying_twice_runs_it_once(self, conn, migrations):
+        (migrations / "0002-runner-scratch.sql").write_text(
+            "CREATE TABLE runner_scratch (note text NOT NULL);"
+        )
+        db.apply_migrations(conn, migrations)
+
+        # Not merely "does not raise": a second CREATE TABLE would, so the
+        # empty list is the evidence the file was not re-run.
+        assert db.apply_migrations(conn, migrations) == []
+
+    def test_a_migration_that_fails_partway_leaves_nothing_behind(
+        self, conn, migrations
+    ):
+        # The first statement is valid and the second is not, so anything less
+        # than a per-file transaction would leave runner_scratch created and
+        # 0002 unrecorded --- the exact state that makes a retry impossible.
+        (migrations / "0002-half-broken.sql").write_text(
+            "CREATE TABLE runner_scratch (note text NOT NULL);\n"
+            "CREATE TABLE runner_scratch (note text NOT NULL);"
+        )
+
+        with pytest.raises(psycopg.errors.DuplicateTable):
+            db.apply_migrations(conn, migrations)
+
+        assert conn.execute(
+            "SELECT to_regclass('public.runner_scratch') IS NULL"
+        ).fetchone() == (True,)
+        assert conn.execute(
+            "SELECT count(*) FROM schema_migrations WHERE version = '0002'"
+        ).fetchone() == (0,)
+
+    def test_an_earlier_migration_arriving_late_is_refused(self, conn, migrations):
+        # A branch adding 0002 merged after 0003 already applied: running it now
+        # would apply it against a schema its author never saw.
+        (migrations / "0002-late.sql").write_text("SELECT 1;")
+        (migrations / "0003-early.sql").write_text("SELECT 1;")
+        db.apply_migrations(conn, migrations)
+        conn.execute("DELETE FROM schema_migrations WHERE version = '0002'")
+        conn.commit()
+
+        with pytest.raises(RuntimeError, match="merged out of order"):
+            db.pending_migrations(conn, migrations)
+
+    def test_a_database_ahead_of_the_checkout_is_refused(self, conn, migrations):
+        conn.execute(
+            "INSERT INTO schema_migrations (version, filename) "
+            "VALUES ('0099', '0099-from-the-future.sql')"
+        )
+        conn.commit()
+
+        with pytest.raises(RuntimeError, match="newer than this code"):
+            db.pending_migrations(conn, migrations)
+
+    def test_baseline_records_a_version_without_running_it(self, conn, migrations):
+        # The live-database case: the schema is already there, so the file must
+        # not run --- proven by a migration that would fail if it did.
+        (migrations / "0002-would-fail.sql").write_text(
+            "CREATE TABLE products (this_would_collide text);"
+        )
+
+        db.baseline(conn, "0002", migrations)
+
+        assert db.pending_migrations(conn, migrations) == []
+        assert conn.execute(
+            "SELECT count(*) FROM schema_migrations WHERE version = '0002'"
+        ).fetchone() == (1,)
+
+    def test_baseline_is_repeatable(self, conn, migrations):
+        (migrations / "0002-noop.sql").write_text("SELECT 1;")
+        db.baseline(conn, "0002", migrations)
+        db.baseline(conn, "0002", migrations)
+
+        assert conn.execute(
+            "SELECT count(*) FROM schema_migrations WHERE version = '0002'"
+        ).fetchone() == (1,)
+
+
 @pytest.mark.skipif(
     not TEST_DATABASE_URL,
     reason="set TEST_DATABASE_URL to a throwaway Postgres to run DB integration tests",
@@ -146,7 +301,7 @@ class TestAgainstPostgres:
     @pytest.fixture()
     def conn(self):
         with psycopg.connect(TEST_DATABASE_URL) as c:
-            db.apply_schema(c)
+            db.apply_migrations(c)
             c.execute(
                 # report_configs is listed because it references
                 # forecast_configs: Postgres refuses to truncate the referenced
@@ -157,10 +312,9 @@ class TestAgainstPostgres:
             c.commit()
             yield c
 
-    def test_apply_schema_is_idempotent(self, conn):
-        # The fixture already applied it once; a second apply must not raise.
-        db.apply_schema(conn)
-        db.apply_schema(conn)
+    def test_migrating_an_up_to_date_database_does_nothing(self, conn):
+        # The fixture already migrated; a second run has nothing left to apply.
+        assert db.apply_migrations(conn) == []
 
     def test_repeat_write_of_a_fact_row_replaces_it(self, conn):
         # The ticket's demoable: write the same (date, restaurant, source) twice

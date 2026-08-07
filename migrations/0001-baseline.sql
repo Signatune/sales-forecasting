@@ -1,3 +1,17 @@
+-- Migration 0001 — the baseline (ADR 0015).
+--
+-- This was `schema.sql`, the desired-state file that predated migrations, moved
+-- here unchanged. It is the schema the live database already had on 2026-08-07,
+-- verified by diffing a `pg_dump --schema-only` of production against this file
+-- applied to an empty Postgres 17: the two dumps were byte-identical. Production
+-- was baselined by recording this version as applied, so these statements have
+-- never run there and never will. They run only when a database is built from
+-- scratch — a test container, a new laptop.
+--
+-- Everything after 0001 is an ordered step, not a state: later migrations are
+-- plain DDL, and none of them should copy this file's IF NOT EXISTS /
+-- CREATE OR REPLACE style. That style is a fossil of what this file used to be.
+--
 -- Postgres schema for the Sales pipeline (ADR 0003, ADR 0005) and the
 -- config-driven, write-once Demand Forecast log (ADR 0006).
 --

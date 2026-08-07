@@ -33,3 +33,11 @@ other branch still apply manually via `python db.py`, exactly as before —
 only pushes to `main` are automated. A failed apply fails the workflow
 visibly in the Actions tab, the same way a Toast or database failure already
 fails `daily-capture.yml` / `daily-forecast.yml`.
+
+---
+
+**Superseded in mechanism by [ADR 0015](0015-schema-changes-are-forward-only-numbered-sql-migrations.md).** The conclusion below stands — merging to `main` still applies schema
+changes automatically — but `schema.sql` and its idempotent DDL are gone,
+replaced by forward-only numbered migrations. The reasoning that auto-apply is
+safe *because every statement is idempotent* no longer holds; see ADR 0015 for
+what makes it safe now.

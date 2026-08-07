@@ -13,9 +13,14 @@
 services:
   # Throwaway Postgres for the test suite. Pinned to 17 to match what the
   # managed Supabase instance provisions --- a query must not be able to pass
-  # here and fail in production. The hard floor is 15: schema.sql sets
+  # here and fail in production. The hard floor is 15: migration 0001 sets
   # `security_invoker` on the product_sales view, which earlier versions reject
   # outright. If this ever drifts, re-check it against the real instance.
+  #
+  # This database starts empty every run (the tmpfs below), so the test suites'
+  # fixtures build it by running every migration in order --- which means the
+  # migration path is exercised on every `make test`, not only in production
+  # (ADR 0015).
   postgres:
     image: postgres:17
     environment:
@@ -66,8 +71,8 @@ services:
       - .:/app
       - ./docker/no-secrets.env:/app/.env:ro
 
-  # Anything that must reach the real Supabase instance --- applying the
-  # schema, a manual capture. `docker compose run --rm app python migrate.py`.
+  # Anything that must reach the real Supabase instance --- applying pending
+  # migrations, a manual capture. `docker compose run --rm app python db.py`.
   # This is the only service that receives .env, and so the only one holding
   # DATABASE_URL.
   app:

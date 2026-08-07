@@ -17,7 +17,7 @@ sharing, and the secrets. Do it once per destination.
 
 | Piece | Where it lives |
 |---|---|
-| Which reports exist, and their weekdays | `report_configs` ([`schema.sql`](../schema.sql)) |
+| Which reports exist, and their weekdays | `report_configs` ([`migrations/0001-baseline.sql`](../migrations/0001-baseline.sql)) |
 | Whether a report can honestly be drawn | [`report_payload.py`](../report_payload.py) |
 | The page | [`report_render.py`](../report_render.py) |
 | Drive upload and the Chat card | [`report_delivery.py`](../report_delivery.py) |
