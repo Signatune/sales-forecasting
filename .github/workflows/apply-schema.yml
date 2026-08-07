@@ -1,10 +1,14 @@
-name: Apply DB schema
+name: Apply DB migrations
 
-# Runs `python db.py` (schema.sql's idempotent DDL) against the managed
-# Postgres whenever schema.sql changes on main (ADR 0007). Triggering on push
-# rather than a local git hook is what catches PR merges too — a hook only
-# fires on `git push` from a contributor's own machine and never runs when a
-# PR is merged through GitHub's UI.
+# Runs `python db.py migrate` against the managed Postgres whenever a migration
+# lands on main (ADR 0007 for the trigger, ADR 0015 for what is applied).
+# Triggering on push rather than a local git hook is what catches PR merges too
+# — a hook only fires on `git push` from a contributor's own machine and never
+# runs when a PR is merged through GitHub's UI.
+#
+# Read ADR 0015 before touching this. Migrations are applied-once and can be
+# destructive, so unlike the idempotent `schema.sql` this replaced, **PR review
+# is the only gate**: a migration reaches production the moment it merges.
 #
 # Secrets (Settings -> Secrets and variables -> Actions):
 #   DATABASE_URL   Supabase session-pooler connection string (see
@@ -14,20 +18,21 @@ name: Apply DB schema
 on:
   push:
     branches: [main]
-    paths: ["schema.sql"]
+    paths: ["migrations/**"]
   # Also runnable by hand from the Actions tab, to retry an apply that failed
-  # on a transient DB issue without waiting for another schema.sql edit.
+  # on a transient DB issue without waiting for another migration.
   workflow_dispatch: {}
 
-# Never let a hand-triggered run and a push-triggered one overlap: they would
-# apply the same schema at once. Queue instead of cancel — a run in progress is
-# doing a real DDL apply and should finish.
+# Never let a hand-triggered run and a push-triggered one overlap. This matters
+# more than it did under schema.sql: two runs applying the same pending
+# migration at once is no longer a harmless double-apply. Queue instead of
+# cancel — a run in progress is doing a real DDL apply and should finish.
 concurrency:
   group: apply-schema
   cancel-in-progress: false
 
 jobs:
-  apply-schema:
+  apply-migrations:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -39,11 +44,21 @@ jobs:
       - name: Install dependencies
         run: pip install -e .
 
-      - name: Apply schema.sql
+      - name: Apply pending migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        # schema.sql is idempotent (IF NOT EXISTS / CREATE OR REPLACE), so this
-        # is safe to run even when nothing actually changed. A DB or DDL
-        # failure exits non-zero, which fails this step and the workflow —
-        # visibly in the Actions tab, not silently.
-        run: python db.py
+        # Applies only what `schema_migrations` says is outstanding, each file
+        # in its own transaction, so a run with nothing pending is a no-op and
+        # a failure part-way leaves the failing migration entirely unapplied. A
+        # DB or DDL failure exits non-zero, which fails this step and the
+        # workflow — visibly in the Actions tab, not silently.
+        run: python db.py migrate
+
+      - name: Show migration status
+        if: always()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # Runs even when the apply failed: forward-only means the recovery is
+        # writing the next migration, and the first thing anyone needs to know
+        # is which files actually made it in.
+        run: python db.py status

@@ -1,0 +1,746 @@
+toast_item,reason,candidate_recipe_name,candidate_recipe_id,candidate_recipe_type,candidate_category,recipe_cost,menu_price,is_inactive,score
+12oz Herbal Hibiscus Orange Iced Tea,fuzzy match,12oz Hibiscus Iced Tea,298395647,Drinks,MENU,0.87,0.87,False,0.759
+12oz Herbal Hibiscus Orange Iced Tea,fuzzy match,20oz Hibiscus Iced Tea,298397909,Drinks,MENU,0.87,0.87,False,0.724
+12oz Herbal Hibiscus Orange Iced Tea,fuzzy match,12oz Black Iced Tea,298395533,Drinks,MENU,0.84,0.84,False,0.618
+12oz Herbal Hibiscus Orange Iced Tea,fuzzy match,20oz Black Iced Tea,298396068,Drinks,MENU,0.98,0.98,False,0.582
+12oz Herbal Hibiscus Orange Iced Tea,fuzzy match,Orange Juice - 8oz.,379458695,Drinks,MENU,1.8,1.8,False,0.538
+16oz MEM Hot Tea,fuzzy match,16oz Hot Coffee,298381803,Drinks,MENU,1.26,1.26,False,0.645
+16oz MEM Hot Tea,fuzzy match,12oz Hot Coffee,298381189,Drinks,MENU,1,1,False,0.581
+16oz MEM Hot Tea,fuzzy match,12oz Hibiscus Iced Tea,298395647,Drinks,MENU,0.87,0.87,False,0.579
+16oz MEM Hot Tea,fuzzy match,12oz Black Iced Tea,298395533,Drinks,MENU,0.84,0.84,False,0.571
+16oz MEM Hot Tea,fuzzy match,Go Sport Team,677950626,Cocktail,BAR,3.55,3.55,True,0.552
+1 Bagel (v+),fuzzy match,Plain Bagel,246264737,Breads,MENU,0.1,0.1,False,0.667
+1 Bagel (v+),fuzzy match,Sesame Bagel,246303515,Breads,MENU,0.16,0.16,False,0.632
+1 Bagel (v+),fuzzy match,Build a Bagel,377220586,Sandwiches,MENU,0.58,0.58,True,0.6
+1 Bagel (v+),fuzzy match,Elijah Craig 18 ,753735179,Spirits,BAR,6.83,6.83,False,0.545
+1 Bagel (v+),fuzzy match,1/4# Sable,247932342,Deli Case,MENU,7.38,7.38,False,0.526
+1 Pickle,fuzzy match,Pickled Egg,252656457,Appetizers,MENU,0.43,0.43,False,0.737
+1 Pickle,fuzzy match,Side of Pickles,301811410,Sides,MENU,0.93,0.93,False,0.609
+1 Pickle,fuzzy match,Pickles the 'Tini,298380004,Cocktail,BAR,39.89,39.89,False,0.6
+1 Pickle,fuzzy match,Cap- Pickles the Great,413859033,Retail,MENU,15,15,False,0.56
+1 Pickle,fuzzy match,Pint Pickled Eggs,467049715,Retail,MENU,1.95,1.95,False,0.56
+20oz Herbal Hibiscus Orange Iced Tea,fuzzy match,20oz Hibiscus Iced Tea,298397909,Drinks,MENU,0.87,0.87,False,0.759
+20oz Herbal Hibiscus Orange Iced Tea,fuzzy match,12oz Hibiscus Iced Tea,298395647,Drinks,MENU,0.87,0.87,False,0.724
+20oz Herbal Hibiscus Orange Iced Tea,fuzzy match,20oz Black Iced Tea,298396068,Drinks,MENU,0.98,0.98,False,0.618
+20oz Herbal Hibiscus Orange Iced Tea,fuzzy match,12oz Black Iced Tea,298395533,Drinks,MENU,0.84,0.84,False,0.582
+20oz Herbal Hibiscus Orange Iced Tea,fuzzy match,Orange Juice - 8oz.,379458695,Drinks,MENU,1.8,1.8,False,0.538
+20oz Raspberry Lime Rickey,fuzzy match,Raspberry Lime Ricky (HSP),476126381,Drinks,MENU,0.7,0.7,False,0.84
+20oz Raspberry Lime Rickey,fuzzy match,Raspberry Lime Rickey (HQ/WS),417106209,Drinks,MENU,1.57,1.57,False,0.83
+20oz Raspberry Lime Rickey,fuzzy match,"Rugelach, Raspberry - 1 each",338660566,Pastries,MENU,0.14,0.14,False,0.565
+20oz Raspberry Lime Rickey,fuzzy match,Sakiskes Raspberry Gose Sour Ale 11.2oz Bottle,1040109445,Beer,BAR,6.33,6.33,True,0.556
+20oz Raspberry Lime Rickey,fuzzy match,Raspberry Sufganiyot,316351508,Holiday Items,MENU,0.84,0.84,False,0.522
+20oz Sparkling Pickle Cucumber Lemonade,fuzzy match,Pickled Cucumber Lemonade,842978234,Drinks,MENU,1.25,1.25,False,0.75
+20oz Sparkling Pickle Cucumber Lemonade,fuzzy match,20oz Black Iced Tea,298396068,Drinks,MENU,0.98,0.98,False,0.483
+20oz Sparkling Pickle Cucumber Lemonade,fuzzy match,Sparkling Watermelon Daiquiri,434939474,Cocktail,BAR,1.63,1.63,False,0.471
+20oz Sparkling Pickle Cucumber Lemonade,fuzzy match,"Candy, Pickle Cotton Candy",413236627,Retail,MENU,2.54,2.54,False,0.469
+20oz Sparkling Pickle Cucumber Lemonade,fuzzy match,Hoodie- Pickle the Great,413859830,Retail,MENU,13.75,13.75,False,0.452
+A&J King's Light Seeded Rye Bread  (half loaf),fuzzy match,Half Loaf A&J King Seeded Rye Bread,333484518,Breads,MENU,3.8,3.8,False,0.896
+A&J King's Light Seeded Rye Bread  (half loaf),fuzzy match,Seeded Rye Manhattan,297795570,Cocktail,BAR,1.01,1.01,False,0.561
+A&J King's Light Seeded Rye Bread  (half loaf),fuzzy match,Sour Cream (half pint),236404696,Deli Case,MENU,0.92,0.92,False,0.5
+A&J King's Light Seeded Rye Bread  (half loaf),fuzzy match,Russian Dressing (retail-12 oz squeeze bottle),297615674,Deli Case,MENU,2.08,2.08,False,0.469
+A&J King's Light Seeded Rye Bread  (half loaf),fuzzy match,1/4# Nova Lox - hand sliced,301908283,Deli Case,MENU,3.91,3.91,False,0.469
+add 1 matzah ball,fuzzy match,Quart Matzah Ball Soup,245901621,Freezer,MENU,1.95,1.95,False,0.667
+add 1 matzah ball,fuzzy match,Vegan Matzah Ball Soup,842800239,Freezer,MENU,3.91,3.91,False,0.667
+add 1 matzah ball,fuzzy match,Cup Matzah Ball Soup,245898926,Soups & Salads,MENU,0.73,0.73,False,0.649
+add 1 matzah ball,fuzzy match,Quart Matzah Ball Soup (hot),245899631,Soups & Salads,MENU,1.76,1.76,False,0.605
+add 1 matzah ball,fuzzy match,Add Old Fashioned Bacon,973501897,Sides,MENU,0.23,0.23,False,0.5
+Artichoke Chickpea Tagine (frozen pint) (v+),fuzzy match,Artichoke/Chickpea Tagine,551776174,Dinner Catering,MENU,12.64,12.64,False,0.806
+Artichoke Chickpea Tagine (frozen pint) (v+),fuzzy match,Eggplant and Chickpea Tagine (bulk),247963228,Freezer,MENU,74.19,74.19,False,0.667
+Artichoke Chickpea Tagine (frozen pint) (v+),fuzzy match,Baharat Spiced Chickpea Burger,1112150326,Sandwiches,MENU,2.14,2.14,False,0.567
+Artichoke Chickpea Tagine (frozen pint) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.523
+Artichoke Chickpea Tagine (frozen pint) (v+),fuzzy match,Repo Cocktail - Negroni,253800296,Cocktail,BAR,1.35,1.35,True,0.517
+Bag of Bubbe's Beans,fuzzy match,Bubbe's Broth - 12oz.,376421575,Drinks,MENU,0.78,0.78,False,0.552
+Bag of Bubbe's Beans,fuzzy match,Bee's Knees,662846632,Cocktail,BAR,1.8,1.8,False,0.545
+Bag of Bubbe's Beans,fuzzy match,BEST BUDDY,381676829,Cocktail,BAR,2.85,2.85,True,0.545
+Bag of Bubbe's Beans,fuzzy match,A Few Small Beers,1139976860,Beer,BAR,2.44,2.44,True,0.5
+Bag of Bubbe's Beans,fuzzy match,Bread and Butter Pickles ,1176918695,Appetizers,MENU,0.56,0.56,False,0.5
+Baker's Dozen (v+),fuzzy match,Bulk Bagels - Baker's Dozen,375238896,Breads,MENU,2.35,2.35,False,0.667
+Baker's Dozen (v+),fuzzy match,1/2 Dozen Bialys,246657553,Freezer,MENU,0.68,0.68,False,0.643
+Baker's Dozen (v+),fuzzy match,Chet Baker,862216123,Cocktail,BAR,2.37,2.37,False,0.636
+Baker's Dozen (v+),fuzzy match,Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False,0.562
+Baker's Dozen (v+),fuzzy match,Blintzes (frozen bag of 4),238013764,Freezer,MENU,4.08,4.08,False,0.552
+Babka French Toast (v),fuzzy match,Babka French Toast (brunch),842797492,Brunch Menu,MENU,1.45,1.45,False,0.837
+Babka French Toast (v),fuzzy match,Babka French Toast - Retail,375799173,Brunch Menu,MENU,1.82,1.82,False,0.837
+Babka French Toast (v),fuzzy match,Chocolate Babka Loaf,471591660,Freezer,MENU,2.9,2.9,True,0.579
+Babka French Toast (v),fuzzy match,French Onion Aioli,826808259,Big Dipper Sauces,MENU,0.17,0.17,False,0.556
+Babka French Toast (v),fuzzy match,"Babka Muffin, Chocolate",246966666,Pastries,MENU,0.64,0.64,True,0.55
+Babka Loaf (fresh-frozen),fuzzy match,Babka French Toast (brunch),842797492,Brunch Menu,MENU,1.45,1.45,False,0.667
+Babka Loaf (fresh-frozen),fuzzy match,Babka French Toast - Retail,375799173,Brunch Menu,MENU,1.82,1.82,False,0.667
+Babka Loaf (fresh-frozen),fuzzy match,Cinnamon Babka Loaf,471591882,Freezer,MENU,1.72,1.72,True,0.619
+Babka Loaf (fresh-frozen),fuzzy match,Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False,0.605
+Babka Loaf (fresh-frozen),fuzzy match,Chocolate Babka Loaf,471591660,Freezer,MENU,2.9,2.9,True,0.558
+Barrington Coffee Bubbe's Beans 5 lb regular,fuzzy match,Milk & Sugar (Coffee Box),362815721,Drinks,MENU,2.07,2.07,False,0.469
+Bottled Water,fuzzy match,Native Water,619957899,N/A Bev,BAR,0.24,0.24,False,0.64
+Bottled Water,fuzzy match,"Bottle Spring Water, 16.9oz.",379447213,Drinks,MENU,0.24,0.24,False,0.615
+Bottled Water,fuzzy match,White Tea Shot,563652962,Cocktail,BAR,1.32,1.32,False,0.593
+Bottled Water,fuzzy match,Golden Gate,306030131,Cocktail,BAR,1.85,1.85,False,0.583
+Bottled Water,fuzzy match,Little Park,924126272,Cocktail,BAR,1.31,1.31,True,0.583
+"Bourbon, Four Roses (1.5oz)",fuzzy match,Four Roses Shot,562538428,Spirits,BAR,1.12,1.12,False,0.615
+"Bourbon, Four Roses (1.5oz)",fuzzy match,Wild Turkey 101 Bourbon Shot,562538063,Spirits,BAR,1.15,1.15,False,0.538
+"Bourbon, Four Roses (1.5oz)",fuzzy match,15 Stars Timeless Reserve 13yr Bourbon,1058129258,Spirits,BAR,11.97,11.97,False,0.516
+"Bourbon, Four Roses (1.5oz)",fuzzy match,Leon Gold Rose,684911854,Wine,BAR,2.22,2.22,True,0.474
+"Bourbon, Four Roses (1.5oz)",fuzzy match,Crooked Stave Sour Rose Can,840764024,Beer,BAR,0,,True,0.471
+Bourbon Vanilla Milkshake (boozy! 21+),fuzzy match,Bourbon-Vanilla Milkshake,401541711,Drinks,MENU,5,5,True,0.833
+Bourbon Vanilla Milkshake (boozy! 21+),fuzzy match,Fomu Vanilla Milkshake,505857822,Drinks,MENU,2,2,False,0.702
+Bourbon Vanilla Milkshake (boozy! 21+),fuzzy match,Vanilla Milkshake,298400223,Drinks,MENU,4.08,4.08,False,0.654
+Bourbon Vanilla Milkshake (boozy! 21+),fuzzy match,Fomu Vanilla Milkshake (inactive),401529926,Drinks,MENU,2.25,2.25,True,0.636
+Bourbon Vanilla Milkshake (boozy! 21+),fuzzy match,Heaven Hill 7yr Bourbon,1134724453,Spirits,BAR,2.36,2.36,False,0.586
+Brisket and Black Bean Chili (frozen pint),fuzzy match,Black Bean Chili (freezer retail),842799335,Freezer,MENU,3.71,3.71,False,0.687
+Brisket and Black Bean Chili (frozen pint),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.531
+Brisket and Black Bean Chili (frozen pint),fuzzy match,Babka French Toast (brunch),842797492,Brunch Menu,MENU,1.45,1.45,False,0.525
+Brisket and Black Bean Chili (frozen pint),fuzzy match,Brick and Feather Saurons Porter,1032062192,Beer,BAR,3.08,3.08,True,0.5
+Brisket and Black Bean Chili (frozen pint),fuzzy match,Black and White Milkshake,401527771,Drinks,MENU,3.57,3.57,True,0.491
+Cheddar Cheese (1 lb),fuzzy match,Cheddar Cheese (retail 1/2#),301897827,Deli Case,MENU,2.27,2.27,False,0.809
+Cheddar Cheese (1 lb),fuzzy match,Cream Cheese 2oz.,401556376,Sides,MENU,0,,True,0.629
+Cheddar Cheese (1 lb),fuzzy match,Beer Cheese,252640319,Appetizers,MENU,3.17,3.17,True,0.6
+Cheddar Cheese (1 lb),fuzzy match,Lox Cream Cheese (half pint),239550745,Deli Case,MENU,3.4,3.4,False,0.591
+Cheddar Cheese (1 lb),fuzzy match,Dill Cream Cheese (half pint),239548270,Deli Case,MENU,1.9,1.9,False,0.578
+Cheddar Cheese (1/2 lb),fuzzy match,Cheddar Cheese (retail 1/2#),301897827,Deli Case,MENU,2.27,2.27,False,0.857
+Cheddar Cheese (1/2 lb),fuzzy match,Lox Cream Cheese (half pint),239550745,Deli Case,MENU,3.4,3.4,False,0.652
+Cheddar Cheese (1/2 lb),fuzzy match,Cream Cheese 2oz.,401556376,Sides,MENU,0,,True,0.649
+Cheddar Cheese (1/2 lb),fuzzy match,Dill Cream Cheese (half pint),239548270,Deli Case,MENU,1.9,1.9,False,0.638
+Cheddar Cheese (1/2 lb),fuzzy match,Plain Cream Cheese (half pint),239549060,Deli Case,MENU,1.92,1.92,False,0.625
+Cheese Blintzes (frozen) (v),fuzzy match,Blintzes (frozen bag of 4),238013764,Freezer,MENU,4.08,4.08,False,0.769
+Cheese Blintzes (frozen) (v),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.68
+Cheese Blintzes (frozen) (v),fuzzy match,Hot Blintzes,842814175,Appetizers,MENU,2.49,2.49,False,0.647
+Cheese Blintzes (frozen) (v),fuzzy match,"Blintzes, Platter",849917379,Dinner Catering,MENU,12.43,12.43,False,0.579
+Cheese Blintzes (frozen) (v),fuzzy match,Cream Cheese 2oz.,401556376,Sides,MENU,0,,True,0.579
+Cheese Blintzes (hot) (v),fuzzy match,Hot Blintzes,842814175,Appetizers,MENU,2.49,2.49,False,0.774
+Cheese Blintzes (hot) (v),fuzzy match,Hot Blintz,842815210,Appetizers,MENU,2.49,2.49,False,0.69
+Cheese Blintzes (hot) (v),fuzzy match,Beer Cheese,252640319,Appetizers,MENU,3.17,3.17,True,0.6
+Cheese Blintzes (hot) (v),fuzzy match,"Blintzes, Platter",849917379,Dinner Catering,MENU,12.43,12.43,False,0.571
+Cheese Blintzes (hot) (v),fuzzy match,Probitas Shot,562604321,Spirits,BAR,1.32,1.32,False,0.562
+Chocolate Babka Slice (v),fuzzy match,Chocolate Cake - Slice,621144826,Pastries,MENU,1.14,1.14,False,0.878
+Chocolate Babka Slice (v),fuzzy match,Chocolate Babka Loaf,471591660,Freezer,MENU,2.9,2.9,True,0.829
+Chocolate Babka Slice (v),fuzzy match,"Babka Muffin, Chocolate",246966666,Pastries,MENU,0.64,0.64,True,0.791
+Chocolate Babka Slice (v),fuzzy match,Chocolate Layer Cake - Slice,401515594,Pastries,MENU,1.16,1.16,False,0.766
+Chocolate Babka Slice (v),fuzzy match,Chocolate Cake - 8in,312691918,Pastries,MENU,11.98,11.98,False,0.718
+Chocolate Rugelach each (v),fuzzy match,"Rugelach, Chocolate - 1 each",338646536,Pastries,MENU,0.09,0.09,False,0.947
+Chocolate Rugelach each (v),fuzzy match,Chocolate Sufganiyot,622637235,Holiday Items,MENU,0.8,0.8,False,0.684
+Chocolate Rugelach each (v),fuzzy match,Chocolate Tartlets,545320774,Pastries,MENU,1.46,1.46,False,0.667
+Chocolate Rugelach each (v),fuzzy match,Chocolate Cake - Slice,621144826,Pastries,MENU,1.14,1.14,False,0.651
+Chocolate Rugelach each (v),fuzzy match,Chocolate Cream Sufganiyot,510290297,Holiday Items,MENU,0.8,0.8,False,0.636
+Challah Loaf (Fridays Only),fuzzy match,Challah Loaf,245860740,Breads,MENU,1.38,1.38,False,0.649
+Challah Loaf (Fridays Only),fuzzy match,"Challah - Decorative Loaf, small",632237639,Dinner Catering,MENU,5.21,5.21,False,0.63
+Challah Loaf (Fridays Only),fuzzy match,Challah - Round w/ Raisins,475319143,Breads,MENU,2.04,2.04,False,0.609
+Challah Loaf (Fridays Only),fuzzy match,Challah Roll,245858740,Breads,MENU,0.14,0.14,False,0.595
+Challah Loaf (Fridays Only),fuzzy match,"Challah - Decorative Loaf, large",632237697,Dinner Catering,MENU,11.73,11.73,False,0.593
+Challah Loaf (frozen),fuzzy match,Challah Loaf,245860740,Breads,MENU,1.38,1.38,False,0.774
+Challah Loaf (frozen),fuzzy match,Challah Roll,245858740,Breads,MENU,0.14,0.14,False,0.71
+Challah Loaf (frozen),fuzzy match,Challah - Round,475317693,Breads,MENU,1.21,1.21,False,0.688
+Challah Loaf (frozen),fuzzy match,Frozen Paloma Cocktail,253785511,Cocktail List,BAR,3.41,3.41,False,0.683
+Challah Loaf (frozen),fuzzy match,Challah Rolls (bag of 4),301912727,Breads,MENU,0.62,0.62,False,0.647
+Choward's Lemon Mints,fuzzy match,"Candy,  C-Howard's Lemon Mints",413232677,Retail,MENU,0.9,0.9,False,0.889
+Choward's Lemon Mints,fuzzy match,"Candy, C-Howard's Spearmint Mints",413234058,Retail,MENU,0.9,0.9,False,0.706
+Choward's Lemon Mints,fuzzy match,"Candy, C-Howard's Violets",413235074,Retail,MENU,0.9,0.9,False,0.634
+Choward's Lemon Mints,fuzzy match,"Candy, C-Howard's Scented Gum",413233021,Retail,MENU,0.9,0.9,False,0.533
+Choward's Lemon Mints,fuzzy match,Leon Gold Rose,684911854,Wine,BAR,2.22,2.22,True,0.529
+Choward's Spearmint Mints,fuzzy match,"Candy, C-Howard's Spearmint Mints",413234058,Retail,MENU,0.9,0.9,False,0.906
+Choward's Spearmint Mints,fuzzy match,"Candy,  C-Howard's Lemon Mints",413232677,Retail,MENU,0.9,0.9,False,0.706
+Choward's Spearmint Mints,fuzzy match,"Candy, C-Howard's Scented Gum",413233021,Retail,MENU,0.9,0.9,False,0.588
+Choward's Spearmint Mints,fuzzy match,Hamantaschen - Chocolate Sprinkle ,1113910441,Pastries,MENU,0.29,0.29,False,0.545
+Choward's Spearmint Mints,fuzzy match,Ford's Martini,484623322,Cocktail,BAR,2.12,2.12,False,0.541
+Choward's Violet Mints,fuzzy match,"Candy, C-Howard's Violets",413235074,Retail,MENU,0.9,0.9,False,0.727
+Choward's Violet Mints,fuzzy match,"Candy,  C-Howard's Lemon Mints",413232677,Retail,MENU,0.9,0.9,False,0.708
+Choward's Violet Mints,fuzzy match,"Candy, C-Howard's Spearmint Mints",413234058,Retail,MENU,0.9,0.9,False,0.68
+Choward's Violet Mints,fuzzy match,Charoset Pie,490457274,Holiday Items,MENU,7.83,7.83,False,0.545
+Choward's Violet Mints,fuzzy match,Ford's Gimlet,484613627,Cocktail,BAR,1.77,1.77,False,0.545
+Choward’s Scented Gum,fuzzy match,"Candy, C-Howard's Scented Gum",413233021,Retail,MENU,0.9,0.9,False,0.851
+Choward’s Scented Gum,fuzzy match,"Candy, C-Howard's Spearmint Mints",413234058,Retail,MENU,0.9,0.9,False,0.612
+Choward’s Scented Gum,fuzzy match,"Candy,  C-Howard's Lemon Mints",413232677,Retail,MENU,0.9,0.9,False,0.578
+Choward’s Scented Gum,fuzzy match,"Seed & Mill, Chocolate",413242300,Retail,MENU,6.35,6.35,False,0.564
+Choward’s Scented Gum,fuzzy match,Ford's Gimlet,484613627,Cocktail,BAR,1.77,1.77,False,0.562
+Citizen Cider / Unified Press (16oz can),fuzzy match,Citizen Cider,499732131,Beer,BAR,2.77,2.77,True,0.578
+Citizen Cider / Unified Press (16oz can),fuzzy match,Belleflower Violet Palms 16oz Can,1176827003,Beer,BAR,3.19,3.19,False,0.522
+Citizen Cider / Unified Press (16oz can),fuzzy match, Jester King Le Petit Prince Farmhouse 16oz Can,833067715,Beer,BAR,2.88,2.88,True,0.488
+Citizen Cider / Unified Press (16oz can),fuzzy match,Hot Corned Beef (4 oz.) Sandwich,240471688,Sandwiches,MENU,3.6,3.6,False,0.462
+Citizen Cider / Unified Press (16oz can),fuzzy match,Hot Corned Beef (8 oz.) Sandwich,240472598,Sandwiches,MENU,6.12,6.12,False,0.462
+Cinnamon Babka Slice (v),fuzzy match,Cinnamon Babka Loaf,471591882,Freezer,MENU,1.72,1.72,True,0.821
+Cinnamon Babka Slice (v),fuzzy match,"Babka Muffin, Cinnamon",246966550,Pastries,MENU,0.37,0.37,True,0.78
+Cinnamon Babka Slice (v),fuzzy match,Honey Cake - slice,621149792,Pastries,MENU,1.03,1.03,False,0.611
+Cinnamon Babka Slice (v),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.596
+Cinnamon Babka Slice (v),fuzzy match,Coffee Cake - Slice,472339488,Pastries,MENU,0.53,0.53,True,0.595
+Coleslaw (half pint),multiple exact matches,Coleslaw (1/2 pint),842853102,Retail,MENU,0.86,0.86,False,1.0
+Coleslaw (half pint),multiple exact matches,Coleslaw (Half Pint),1021105968,Deli Case,MENU,0.65,0.65,False,1.0
+Cottage Cheese & Fresh Fruit Cup,fuzzy match,Passionfruit Cheesecake - Slice,592993931,Holiday Items,MENU,1.91,1.91,True,0.576
+Cottage Cheese & Fresh Fruit Cup,fuzzy match,Whole Passionfruit Cheesecake,592997892,Holiday Items,MENU,6.37,6.37,True,0.576
+Cottage Cheese & Fresh Fruit Cup,fuzzy match,"Mushroom, Egg & Cheese",409362374,Sandwiches,MENU,1.51,1.51,False,0.531
+Cottage Cheese & Fresh Fruit Cup,fuzzy match,Mushroom Grilled Cheese,976728904,Sandwiches,MENU,4.71,4.71,True,0.528
+Cottage Cheese & Fresh Fruit Cup,fuzzy match,Side of Cream Cheese,301813400,Sides,MENU,0.29,0.29,False,0.511
+Cream Cheese (half pint),fuzzy match,Lox Cream Cheese (half pint),239550745,Deli Case,MENU,3.4,3.4,False,0.913
+Cream Cheese (half pint),fuzzy match,Dill Cream Cheese (half pint),239548270,Deli Case,MENU,1.9,1.9,False,0.894
+Cream Cheese (half pint),fuzzy match,Plain Cream Cheese (half pint),239549060,Deli Case,MENU,1.92,1.92,False,0.875
+Cream Cheese (half pint),fuzzy match,Veggie Cream Cheese (half pint),239554050,Deli Case,MENU,1.79,1.79,False,0.857
+Cream Cheese (half pint),fuzzy match,Scallion Cream Cheese (half pint),239548659,Deli Case,MENU,1.93,1.93,False,0.833
+Deli Mustard (10oz),fuzzy match,Mustard Broccolini,551763074,Dinner Catering,MENU,2.8,2.8,False,0.629
+Deli Mustard (10oz),fuzzy match,Side of Mustard,301816892,Sides,MENU,0.28,0.28,False,0.625
+Deli Mustard (10oz),fuzzy match,Del Mar,348323773,Cocktail,BAR,2.69,2.69,False,0.583
+Deli Mustard (10oz),fuzzy match,Deli Mustard (retail - 12 oz squeeze bottle),297616305,Deli Case,MENU,2.32,2.32,False,0.561
+Deli Mustard (10oz),fuzzy match,Meletti Amaro,816679534,Spirits,BAR,1.05,1.05,False,0.533
+Djuce Fizzy Rose,fuzzy match,Negroni de Maiz,715561094,Cocktail,BAR,3.27,3.27,False,0.516
+Djuce Fizzy Rose,fuzzy match,Orange Juice,973681426,N/A Bev,BAR,1.02,1.02,False,0.5
+Djuce Fizzy Rose,fuzzy match,Tucher Hefeweisen,421844816,Beer,BAR,1.72,1.72,True,0.485
+Djuce Fizzy Rose,fuzzy match,Fried Brussels Sprouts,298744790,Appetizers,MENU,2.07,2.07,True,0.474
+Djuce Fizzy Rose,fuzzy match,Leon Gold Rose,684911854,Wine,BAR,2.22,2.22,True,0.467
+Djuce White Wine,fuzzy match,White Noise,307263921,Cocktail,BAR,1.86,1.86,False,0.593
+Djuce White Wine,fuzzy match,Terraces White Gl,684912808,Wine,BAR,2.37,2.37,True,0.545
+Djuce White Wine,fuzzy match,Punch Bowl Pitcher With Genever,484597561,Cocktail,BAR,8.34,8.34,False,0.511
+Djuce White Wine,fuzzy match,Chocolate Cake - Slice,621144826,Pastries,MENU,1.14,1.14,False,0.5
+Djuce White Wine,fuzzy match,Black and White Milkshake,401527771,Drinks,MENU,3.57,3.57,True,0.488
+Double Dogs,fuzzy match,Hot Dogs,301802477,Sandwiches,MENU,2.73,2.73,False,0.632
+Double Dogs,fuzzy match,Dot Dash,311635574,Cocktail,BAR,2.39,2.39,True,0.526
+Double Dogs,fuzzy match,Bandolero,280317440,Cocktail,BAR,5.91,5.91,False,0.5
+Double Dogs,fuzzy match,Leon Gold Rose,684911854,Wine,BAR,2.22,2.22,True,0.48
+Double Dogs,fuzzy match,Sophie Siadou Glass,562623886,Wine,BAR,2.37,2.37,True,0.467
+Everything Spice (4oz),fuzzy match,Retail - Everything Spice,413836310,Retail,MENU,1.19,1.19,False,0.744
+Everything Spice (4oz),fuzzy match,Everything Bagel,246271713,Breads,MENU,0.18,0.18,False,0.667
+Everything Spice (4oz),fuzzy match,Orange Juice - 8oz.,379458695,Drinks,MENU,1.8,1.8,False,0.556
+Everything Spice (4oz),fuzzy match,Retail - Seedy Everything Crackers,425513959,Retail,MENU,1.46,1.46,False,0.538
+Everything Spice (4oz),fuzzy match,Revery Sour,445373796,Cocktail,BAR,1.92,1.92,True,0.516
+Farmers and Cooks Turkey (1/2 lb retail),fuzzy match,1/2 Sour Pickles (retail Quart),301895879,Deli Case,MENU,4.08,4.08,False,0.635
+Farmers and Cooks Turkey (1/2 lb retail),fuzzy match,Cheddar Cheese (retail 1/2#),301897827,Deli Case,MENU,2.27,2.27,False,0.613
+Farmers and Cooks Turkey (1/2 lb retail),fuzzy match,Swiss Cheese (retail 1/2#),301897650,Deli Case,MENU,1.45,1.45,False,0.6
+Farmers and Cooks Turkey (1/2 lb retail),fuzzy match,Turkey by the 1/2#,301905560,Deli Case,MENU,4.28,4.28,False,0.56
+Farmers and Cooks Turkey (1/2 lb retail),fuzzy match,Pearl Salami - 1/2# retail,375804563,Deli Case,MENU,3.34,3.34,False,0.533
+Filthy / Tito's Bloody Mary,fuzzy match,Mamaleh's Bloody Mary,535295942,Cocktail,BAR,1.26,1.26,False,0.682
+Filthy / Tito's Bloody Mary,fuzzy match,Tito's Milwaukee Bloody Mary,467841649,Cocktail,BAR,2.31,2.31,False,0.667
+Filthy / Tito's Bloody Mary,fuzzy match,Bloody Mary Pitcher,624363677,Cocktail,BAR,5.59,5.59,False,0.651
+Filthy / Tito's Bloody Mary,fuzzy match,Bloody Mary,485389419,Drinks,MENU,2.59,2.59,False,0.629
+Filthy / Tito's Bloody Mary,fuzzy match,Virgin Bloody Moira,401549202,Drinks,MENU,1.35,1.35,True,0.558
+Fooda Food,fuzzy match,Bloody Moira w/vodka,331240578,Cocktail,BAR,57.6,57.6,True,0.571
+Fooda Food,fuzzy match,Old Fashioned,484616986,Cocktail,BAR,1.63,1.63,False,0.522
+Fooda Food,fuzzy match,Old Fashioned ,1185714005,Cocktail,BAR,1.71,1.71,False,0.522
+Fooda Food,fuzzy match,Bloody Moira for 1,401550472,Drinks,MENU,1.23,1.23,True,0.5
+Fooda Food,fuzzy match,Bloody Moira for 2,401547997,Drinks,MENU,2.01,2.01,True,0.5
+Fox's U Bet (22oz),fuzzy match,Bubbe's Broth - 12oz.,376421575,Drinks,MENU,0.78,0.78,False,0.467
+Fruit Slice Candy each,fuzzy match,"Candy, Fruit Slice",413230709,Retail,MENU,0.66,0.66,False,1.0
+Fruit Slice Candy each,fuzzy match,"Candy, Pickle Cotton Candy",413236627,Retail,MENU,2.54,2.54,False,0.611
+Fruit Slice Candy each,fuzzy match,"Candy, Sesame Crunch",413237895,Retail,MENU,0.09,0.09,False,0.611
+Fruit Slice Candy each,fuzzy match,Passionfruit Cheesecake - Slice,592993931,Holiday Items,MENU,1.91,1.91,True,0.609
+Fruit Slice Candy each,fuzzy match,Honey Cake - slice,621149792,Pastries,MENU,1.03,1.03,False,0.606
+GG's Sprinkle Cookie (v),fuzzy match,GG's Sprinkle Cookies,348846958,Pastries,MENU,0.11,0.11,False,0.974
+GG's Sprinkle Cookie (v),fuzzy match,Pumpernickel Cookies,401564709,Pastries,MENU,0.56,0.56,False,0.667
+GG's Sprinkle Cookie (v),fuzzy match,Cookie Plate,488122267,Pastries,MENU,0.99,0.99,True,0.645
+GG's Sprinkle Cookie (v),fuzzy match,Pickled Egg,252656457,Appetizers,MENU,0.43,0.43,False,0.6
+GG's Sprinkle Cookie (v),fuzzy match,Tahini Cookie,401565134,Pastries,MENU,0.2,0.2,False,0.562
+"Gin, Perry's Tot (1.5oz)",fuzzy match,Fords Gin Shot,549525198,Spirits,BAR,1.11,1.11,False,0.529
+"Gin, Perry's Tot (1.5oz)",fuzzy match,Graingers Shot,507282305,Spirits,BAR,0.44,0.44,True,0.529
+"Gin, Perry's Tot (1.5oz)",fuzzy match,Hendricks Gin Shot,522468498,Spirits,BAR,0.26,0.26,False,0.526
+"Gin, Perry's Tot (1.5oz)",fuzzy match,Retail - Gribenes (4oz),465932917,Retail,MENU,0.66,0.66,False,0.513
+"Gin, Perry's Tot (1.5oz)",fuzzy match,Sauerkraut (half pint),301898755,Deli Case,MENU,1.12,1.12,False,0.513
+Glorious Morning Muffin (v+),fuzzy match,Running With Flowers,535294426,Cocktail,BAR,2.33,2.33,False,0.526
+Glorious Morning Muffin (v+),fuzzy match,"Babka Muffin, Cinnamon",246966550,Pastries,MENU,0.37,0.37,True,0.5
+Glorious Morning Muffin (v+),fuzzy match,Onion Rings,981715930,Appetizers,MENU,0.78,0.78,False,0.471
+Glorious Morning Muffin (v+),fuzzy match,Sumac Onions (pint),301899929,Deli Case,MENU,0.84,0.84,False,0.45
+Goldenberg's Peanut Chews,fuzzy match,"Candy, Goldenberg's Peanut Chews",413235404,Retail,MENU,1.1,1.1,False,0.889
+Goldenberg's Peanut Chews,fuzzy match,Whole Passionfruit Cheesecake,592997892,Holiday Items,MENU,6.37,6.37,True,0.528
+Goldenberg's Peanut Chews,fuzzy match,Goldfarb Rachel,301808550,Sandwiches,MENU,4.39,4.39,True,0.513
+Goldenberg's Peanut Chews,fuzzy match,"Candy, C-Howard's Spearmint Mints",413234058,Retail,MENU,0.9,0.9,False,0.491
+Goldenberg's Peanut Chews,fuzzy match,Old Cuban Bitcher,628077342,Cocktail,BAR,14.39,14.39,False,0.488
+Gribenes (4oz bag),fuzzy match,Retail - Gribenes (4oz),465932917,Retail,MENU,0.66,0.66,False,0.774
+Gribenes (4oz bag),fuzzy match,Blintzes (frozen bag of 4),238013764,Freezer,MENU,4.08,4.08,False,0.55
+Gribenes (4oz bag),fuzzy match,Onion Rings,981715930,Appetizers,MENU,0.78,0.78,False,0.522
+Gribenes (4oz bag),fuzzy match,Fries - Large,298769112,Appetizers,MENU,1,1,False,0.519
+Gribenes (4oz bag),fuzzy match,Bols Genever,816667875,Spirits,BAR,1.56,1.56,False,0.5
+Hal's Potato Chips,fuzzy match,Hal's Potato Chips  - BBQ,412110878,Sides,MENU,1,1,True,0.895
+Hal's Potato Chips,fuzzy match,Hal's Potato Chips - Salted,412111470,Sides,MENU,0.98,0.98,False,0.829
+Hal's Potato Chips,fuzzy match,Bag O' Potato Chips,301817180,Sides,MENU,1.21,1.21,True,0.828
+Hal's Potato Chips,fuzzy match,Hal's Potato Chips - Salt & Vinegar,412112578,Sides,MENU,0.98,0.98,False,0.723
+Hal's Potato Chips,fuzzy match,"Hal's Potato Chips, Sour Cream & Onion",412112115,Sides,MENU,0.98,0.98,False,0.667
+Half Hot Corned Beef (1/4 lb),fuzzy match,1/2# Corned Beef,247932824,Deli Case,MENU,5.46,5.46,False,0.857
+Half Hot Corned Beef (1/4 lb),fuzzy match,Hot Corned Beef (4 oz.) Sandwich,240471688,Sandwiches,MENU,3.6,3.6,False,0.679
+Half Hot Corned Beef (1/4 lb),fuzzy match,Corned Beef Rachel,245344993,Sandwiches,MENU,4.07,4.07,False,0.667
+Half Hot Corned Beef (1/4 lb),fuzzy match,Hot Corned Beef (8 oz.) Sandwich,240472598,Sandwiches,MENU,6.12,6.12,False,0.655
+Half Hot Corned Beef (1/4 lb),fuzzy match,Corned Beef Reuben,240473398,Sandwiches,MENU,4.27,4.27,False,0.619
+Half Hot Pastrami (1/4 lb),fuzzy match,1/2# Pastrami,247932478,Deli Case,MENU,4.97,4.97,False,0.833
+Half Hot Pastrami (1/4 lb),fuzzy match,1/2 Pint Hot Paste,467047904,Retail,MENU,2.5,2.5,False,0.667
+Half Hot Pastrami (1/4 lb),fuzzy match,Hot Pastrami (4 oz.) Sandwich,240471448,Sandwiches,MENU,3.36,3.36,False,0.638
+Half Hot Pastrami (1/4 lb),fuzzy match,Pastrami Lox - Retail 1/4#,408874951,Deli Case,MENU,2.38,2.38,True,0.638
+Half Hot Pastrami (1/4 lb),fuzzy match,Hot Pastrami (8 oz.) Sandwich,240471777,Sandwiches,MENU,6.1,6.1,False,0.612
+Half Sour Pickles (quart),fuzzy match,1/2 Sour Pickles (retail Quart),301895879,Deli Case,MENU,4.08,4.08,False,0.863
+Half Sour Pickles (quart),fuzzy match,Sour Cream (half pint),236404696,Deli Case,MENU,0.92,0.92,False,0.585
+Half Sour Pickles (quart),fuzzy match,1/2 Pint Pickled Shiitakes,467048996,Retail,MENU,2.03,2.03,False,0.583
+Half Sour Pickles (quart),fuzzy match,Chicken Salad (half pint),239547824,Deli Case,MENU,1.39,1.39,False,0.545
+Half Sour Pickles (quart),fuzzy match,Side of Pickles,301811410,Sides,MENU,0.93,0.93,False,0.541
+Half-Dozen Assorted Bagels (fresh-frozen) (v+),fuzzy match,6-pack Assorted Bagels ,246304090,Freezer,MENU,0.92,0.92,False,0.567
+Half-Dozen Assorted Bagels (fresh-frozen) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.545
+Half-Dozen Assorted Bagels (fresh-frozen) (v+),fuzzy match,1/2 doz Cinnamon Raisin Bagels,375806678,Freezer,MENU,1.6,1.6,False,0.529
+Half-Dozen Assorted Bagels (fresh-frozen) (v+),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.523
+Half-Dozen Assorted Bagels (fresh-frozen) (v+),fuzzy match,Half Dozen Oyster,861504991,Appetizers,MENU,4.83,4.83,False,0.519
+Half-Dozen Bialys (fresh-frozen) (v+),fuzzy match,1/2 Dozen Bialys,246657553,Freezer,MENU,0.68,0.68,False,0.711
+Half-Dozen Bialys (fresh-frozen) (v+),fuzzy match,Half Dozen Oyster,861504991,Appetizers,MENU,4.83,4.83,False,0.578
+Half-Dozen Bialys (fresh-frozen) (v+),fuzzy match,Blintzes (frozen bag of 4),238013764,Freezer,MENU,4.08,4.08,False,0.565
+Half-Dozen Bialys (fresh-frozen) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.561
+Half-Dozen Bialys (fresh-frozen) (v+),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.5
+Half-Dozen Cinnamon Raisin Bagels (fresh-frozen) (v+),fuzzy match,1/2 doz Cinnamon Raisin Bagels,375806678,Freezer,MENU,1.6,1.6,False,0.8
+Half-Dozen Cinnamon Raisin Bagels (fresh-frozen) (v+),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.75
+Half-Dozen Cinnamon Raisin Bagels (fresh-frozen) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.575
+Half-Dozen Cinnamon Raisin Bagels (fresh-frozen) (v+),fuzzy match,"Babka Muffin, Cinnamon",246966550,Pastries,MENU,0.37,0.37,True,0.485
+Half-Dozen Cinnamon Raisin Bagels (fresh-frozen) (v+),fuzzy match,Blintzes (frozen bag of 4),238013764,Freezer,MENU,4.08,4.08,False,0.484
+Half-Dozen Everything Bagels (fresh-frozen) (v+),fuzzy match,Everything Bagel,246271713,Breads,MENU,0.18,0.18,False,0.571
+Half-Dozen Everything Bagels (fresh-frozen) (v+),fuzzy match,1/2 doz Cinnamon Raisin Bagels,375806678,Freezer,MENU,1.6,1.6,False,0.543
+Half-Dozen Everything Bagels (fresh-frozen) (v+),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.537
+Half-Dozen Everything Bagels (fresh-frozen) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.529
+Half-Dozen Everything Bagels (fresh-frozen) (v+),fuzzy match,Retail - Seedy Everything Crackers,425513959,Retail,MENU,1.46,1.46,False,0.528
+Half-Dozen Original Sunshine Gluten-Free Bagels (v+),fuzzy match,1/2 doz Cinnamon Raisin Bagels,375806678,Freezer,MENU,1.6,1.6,False,0.526
+Half-Dozen Original Sunshine Gluten-Free Bagels (v+),fuzzy match,"Pumpernickel Bagels, Frozen 6-pacl",246309288,Freezer,MENU,1,1,False,0.506
+Half-Dozen Original Sunshine Gluten-Free Bagels (v+),fuzzy match,Pizza Bagels - 4-Frozen Salami & Jalapeno,375228430,Freezer,MENU,3.15,3.15,True,0.506
+Half-Dozen Original Sunshine Gluten-Free Bagels (v+),fuzzy match,Half Dozen Oyster,861504991,Appetizers,MENU,4.83,4.83,False,0.484
+Half-Dozen Original Sunshine Gluten-Free Bagels (v+),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.466
+Half-Dozen Plain Bagels (fresh-frozen) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.667
+Half-Dozen Plain Bagels (fresh-frozen) (v+),fuzzy match,Cinnamon Raisin Bagel - Fresh ,606317604,Breads,MENU,0.26,0.26,False,0.613
+Half-Dozen Plain Bagels (fresh-frozen) (v+),fuzzy match,1/2 doz Cinnamon Raisin Bagels,375806678,Freezer,MENU,1.6,1.6,False,0.585
+Half-Dozen Plain Bagels (fresh-frozen) (v+),fuzzy match,1/2 Dozen Bialys,246657553,Freezer,MENU,0.68,0.68,False,0.549
+Half-Dozen Plain Bagels (fresh-frozen) (v+),fuzzy match,Plain Cream Cheese (half pint),239549060,Deli Case,MENU,1.92,1.92,False,0.548
+Half-Dozen Pumpernickel Bagels (fresh-frozen) (v+),fuzzy match,"Pumpernickel Bagels, Frozen 6-pacl",246309288,Freezer,MENU,1,1,False,0.72
+Half-Dozen Pumpernickel Bagels (fresh-frozen) (v+),fuzzy match,Pizza Bagels - 4-Frozen Cheese,375224072,Freezer,MENU,1.49,1.49,True,0.6
+Half-Dozen Pumpernickel Bagels (fresh-frozen) (v+),fuzzy match,Pumpernickel Bagel,246309202,Breads,MENU,0.16,0.16,False,0.6
+Half-Dozen Pumpernickel Bagels (fresh-frozen) (v+),fuzzy match,Pumpernickel Cookies,401564709,Pastries,MENU,0.56,0.56,False,0.516
+Half-Dozen Pumpernickel Bagels (fresh-frozen) (v+),fuzzy match,Bulk Bagels - Baker's Dozen,375238896,Breads,MENU,2.35,2.35,False,0.515
+Hot 50/50 (1/2 lb),fuzzy match,Hot 50/50 (8 oz),245831932,Sandwiches,MENU,6.66,6.66,False,0.733
+Hot 50/50 (1/2 lb),fuzzy match,1/2# Corned Beef,247932824,Deli Case,MENU,5.46,5.46,False,0.581
+Hot 50/50 (1/2 lb),fuzzy match,Schmaltz - 1/2#,375817918,Freezer,MENU,1.5,1.5,False,0.581
+Hot 50/50 (1/2 lb),fuzzy match,Potato Salad (half pint),239573598,Deli Case,MENU,0.78,0.78,False,0.529
+Hot 50/50 (1/2 lb),fuzzy match,1/2 Pint Retail Hot Aioli,467017731,Retail,MENU,1.99,1.99,False,0.526
+Hot Potato Latkes (v),fuzzy match,Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False,0.811
+Hot Potato Latkes (v),fuzzy match,Schmaltz Potatoes,551764976,Dinner Catering,MENU,7.35,7.35,False,0.647
+Hot Potato Latkes (v),fuzzy match,Bag O' Potato Chips,301817180,Sides,MENU,1.21,1.21,True,0.621
+Hot Potato Latkes (v),fuzzy match,Sweet Potato Pie,490514059,Holiday Items,MENU,5.86,5.86,False,0.606
+Hot Potato Latkes (v),fuzzy match,Latke Platter,1014084547,Dinner Catering,MENU,6.17,6.17,False,0.6
+Hot Tongue Sandwich (1/4 lb),fuzzy match,Hot Tongue (4 oz) Sandwich,245345490,Sandwiches,MENU,4.89,4.89,True,0.88
+Hot Tongue Sandwich (1/4 lb),fuzzy match,Cold Turkey Sandwich,245900811,Sandwiches,MENU,3.22,3.22,False,0.652
+Hot Tongue Sandwich (1/4 lb),fuzzy match,Charlie's Turkey Sandwich,413846256,Sandwiches,MENU,1.28,1.28,False,0.6
+Hot Tongue Sandwich (1/4 lb),fuzzy match,Sturgeon Sandwich 2.0,409363482,Sandwiches,MENU,5.11,5.11,False,0.596
+Hot Tongue Sandwich (1/4 lb),fuzzy match,Hot Corned Beef (4 oz.) Sandwich,240471688,Sandwiches,MENU,3.6,3.6,False,0.582
+Joyva Chocolate Covered Halvah Bar,fuzzy match,"Candy, Chocolate Covered Halvah",413232462,Retail,MENU,1.61,1.61,False,0.812
+Joyva Chocolate Covered Halvah Bar,fuzzy match,"Banana, Halvah & Chocolate Chunk Muffins",249891257,Pastries,MENU,0.59,0.59,False,0.62
+Joyva Chocolate Covered Halvah Bar,fuzzy match,Chocolate Babka Loaf,471591660,Freezer,MENU,2.9,2.9,True,0.556
+Joyva Chocolate Covered Halvah Bar,fuzzy match,Chocolate Cream Sufganiyot,510290297,Holiday Items,MENU,0.8,0.8,False,0.533
+Joyva Chocolate Covered Halvah Bar,fuzzy match,Mamalehs Chocolate Cake,298769813,Pastries,MENU,2.03,2.03,False,0.526
+Joyva Jell Rings,fuzzy match,"Candy, Joyva Jelly Rings",413235773,Retail,MENU,1.21,1.21,False,0.821
+Joyva Jell Rings,fuzzy match,Covalle Gin,945065575,Spirits,BAR,1.6,1.6,False,0.593
+Joyva Jell Rings,fuzzy match,Bella's Revenge,564354672,Cocktail,BAR,1.85,1.85,True,0.533
+Joyva Jell Rings,fuzzy match,Onion Rings,981715930,Appetizers,MENU,0.78,0.78,False,0.519
+Joyva Jell Rings,fuzzy match,Barr Hill Gin Gibson,306017721,Cocktail,BAR,3.28,3.28,False,0.5
+Lactaid Pill,fuzzy match,Lawhill,280319641,Cocktail,BAR,3.3,3.3,False,0.526
+Lactaid Pill,fuzzy match,Apple Custard Pie - slice,622617086,Holiday Items,MENU,1.05,1.05,True,0.514
+Lactaid Pill,fuzzy match,Apple Custard Pie - whole,622616424,Holiday Items,MENU,9.95,9.95,True,0.514
+Lactaid Pill,fuzzy match,Air Mail,387317621,Cocktail,BAR,2.05,2.05,False,0.5
+Lactaid Pill,fuzzy match,Cactus Prick,972605858,Cocktail List,BAR,0.29,0.29,False,0.5
+Lawson's Sip of Sunshine IPA,fuzzy match,Lawson's Sip of Sunshine,468682248,Beer,BAR,3.15,3.15,True,0.92
+Lawson's Sip of Sunshine IPA,fuzzy match,Sophie Siadou Glass,562623886,Wine,BAR,2.37,2.37,True,0.558
+Lawson's Sip of Sunshine IPA,fuzzy match,Lawson's Stout,1032061382,Beer,BAR,2.77,2.77,False,0.55
+Lawson's Sip of Sunshine IPA,fuzzy match,Lemon Lime - Fountainhead ,973350919,N/A Bev,BAR,0.26,0.26,False,0.52
+Lawson's Sip of Sunshine IPA,fuzzy match,Always Sunny,973152043,Cocktail,BAR,0.56,0.56,True,0.5
+Lemon Poppy Seed Muffin (v) (gf),fuzzy match,Lemon Poppyseed Cake,387306932,Pastries,MENU,0.44,0.44,True,0.744
+Lemon Poppy Seed Muffin (v) (gf),fuzzy match,Lemon Poppyseed Cake Slice,286327031,Pastries,MENU,0.44,0.44,False,0.694
+Lemon Poppy Seed Muffin (v) (gf),fuzzy match,Lemon Poppy Seed Cake - Whole,401563797,Pastries,MENU,4.2,4.2,False,0.68
+Lemon Poppy Seed Muffin (v) (gf),fuzzy match,"Seed & Mill, Coconut",413243105,Retail,MENU,1.11,1.11,True,0.5
+Lemon Poppy Seed Muffin (v) (gf),fuzzy match,"Seed & Mill, Cardamom",413241865,Retail,MENU,6.35,6.35,False,0.488
+"Life Savers, Wint O Green",fuzzy match,Green Walnut,387970942,Cocktail List,BAR,1.99,1.99,False,0.529
+"Life Savers, Wint O Green",fuzzy match,Chopped Liver (half pint),239549614,Deli Case,MENU,1.28,1.28,False,0.5
+"Life Savers, Wint O Green",fuzzy match,Goldfarb's Reuben,301806639,Sandwiches,MENU,4.46,4.46,True,0.5
+"Life Savers, Wint O Green",fuzzy match,Little Gem Wedge Salad,298744050,Appetizers,MENU,3.68,3.68,True,0.5
+"Life Savers, Wint O Green",fuzzy match,Fortaleza Winter Blend Shot,555657241,Spirits,BAR,1.43,1.43,True,0.49
+Larger Whole Chocolate Layer Cakes  (v),fuzzy match,Chocolate Layer Cake - Slice,401515594,Pastries,MENU,1.16,1.16,False,0.767
+Larger Whole Chocolate Layer Cakes  (v),fuzzy match,"Whole Chocolate Cake - 6""",351507596,Pastries,MENU,5.39,5.39,False,0.702
+Larger Whole Chocolate Layer Cakes  (v),fuzzy match,Mamalehs Chocolate Cake,298769813,Pastries,MENU,2.03,2.03,False,0.667
+Larger Whole Chocolate Layer Cakes  (v),fuzzy match,Chocolate Cake - Slice,621144826,Pastries,MENU,1.14,1.14,False,0.63
+Larger Whole Chocolate Layer Cakes  (v),fuzzy match,Flourless Chocolate Cake - Slice,380240253,Holiday Items,MENU,0.81,0.81,False,0.625
+Mamaleh's Corned Beef (1/2 lb retail),fuzzy match,1/2# Corned Beef,247932824,Deli Case,MENU,5.46,5.46,False,0.714
+Mamaleh's Corned Beef (1/2 lb retail),fuzzy match,Hot Corned Beef (4 oz.) Sandwich,240471688,Sandwiches,MENU,3.6,3.6,False,0.571
+Mamaleh's Corned Beef (1/2 lb retail),fuzzy match,Hot Corned Beef (8 oz.) Sandwich,240472598,Sandwiches,MENU,6.12,6.12,False,0.571
+Mamaleh's Corned Beef (1/2 lb retail),fuzzy match,Swiss Cheese (retail 1/2#),301897650,Deli Case,MENU,1.45,1.45,False,0.567
+Mamaleh's Corned Beef (1/2 lb retail),fuzzy match,Mamaleh's Big Salad (10-12 people),401579303,Platters,MENU,15.35,15.35,False,0.554
+Mamaleh's Pastrami (1/2 lb retail),fuzzy match,Pastrami Lox - Retail 1/4#,408874951,Deli Case,MENU,2.38,2.38,True,0.807
+Mamaleh's Pastrami (1/2 lb retail),fuzzy match,Pearl Salami - 1/2# retail,375804563,Deli Case,MENU,3.34,3.34,False,0.702
+Mamaleh's Pastrami (1/2 lb retail),fuzzy match,1/2# Pastrami,247932478,Deli Case,MENU,4.97,4.97,False,0.667
+Mamaleh's Pastrami (1/2 lb retail),fuzzy match,1/2 Pint Retail Hot Aioli,467017731,Retail,MENU,1.99,1.99,False,0.607
+Mamaleh's Pastrami (1/2 lb retail),fuzzy match,Mamaleh's Big Salad (10-12 people),401579303,Platters,MENU,15.35,15.35,False,0.581
+Mamaleh's Raspberry Jam (10oz),fuzzy match,Mamaleh's Bloody Mary,535295942,Cocktail,BAR,1.26,1.26,False,0.596
+Mamaleh's Raspberry Jam (10oz),fuzzy match,"Sticker- 3"" Mamalehs Face",413856077,Retail,MENU,0.46,0.46,False,0.588
+Mamaleh's Raspberry Jam (10oz),fuzzy match,Mamaleh's Draft Negroni,617470763,Cocktail,BAR,2.52,2.52,True,0.571
+Mamaleh's Raspberry Jam (10oz),fuzzy match,"Rugelach, Raspberry - 1 each",338660566,Pastries,MENU,0.14,0.14,False,0.538
+Mamaleh's Raspberry Jam (10oz),fuzzy match,Mamaleh's Draft Cape Codder,617471649,Cocktail,BAR,1.15,1.15,True,0.528
+Mamaleh's Tongue (1/4 lb),fuzzy match,Onesie- Mamalehs,413862184,Retail,MENU,11.25,11.25,False,0.649
+Mamaleh's Tongue (1/4 lb),fuzzy match,Mug- Mamaleh's Logo,413857198,Retail,MENU,5.66,5.66,False,0.615
+Mamaleh's Tongue (1/4 lb),fuzzy match,Mamaleh's Big Salad (10-12 people),401579303,Platters,MENU,15.35,15.35,False,0.604
+Mamaleh's Tongue (1/4 lb),fuzzy match,Mamaleh's Big Salad,245887524,Soups & Salads,MENU,4.92,4.92,False,0.6
+Mamaleh's Tongue (1/4 lb),fuzzy match,1/4# Sable,247932342,Deli Case,MENU,7.38,7.38,False,0.588
+MANISCHEWITZ (a whole bottle!),fuzzy match,Manischewitz Spritz,478090009,Drinks,MENU,1.08,1.08,False,0.609
+MANISCHEWITZ (a whole bottle!),fuzzy match,Hamantaschen - Apple Pie,1113912192,Pastries,MENU,0.24,0.24,False,0.531
+MANISCHEWITZ (a whole bottle!),fuzzy match,Folk Machine Rose,625205568,Wine,BAR,0,,True,0.524
+MANISCHEWITZ (a whole bottle!),fuzzy match,Black and White Poppy Hamantaschen,351519000,Pastries,MENU,0.35,0.35,False,0.509
+MANISCHEWITZ (a whole bottle!),fuzzy match,Apple Custard Pie - whole,622616424,Holiday Items,MENU,9.95,9.95,True,0.5
+Malted Brandy Alexander Milkshake (boozy! 21+),fuzzy match,Black and White Milkshake,401527771,Drinks,MENU,3.57,3.57,True,0.5
+Malted Brandy Alexander Milkshake (boozy! 21+),fuzzy match,Blandy's Bual Madeira 3 oz,507355296,Spirits,BAR,2.65,2.65,True,0.471
+Malted Brandy Alexander Milkshake (boozy! 21+),fuzzy match,Fomu Vanilla Milkshake,505857822,Drinks,MENU,2,2,False,0.462
+Mandel Bread (v),fuzzy match,MandelBread,401564088,Pastries,MENU,0.41,0.41,False,0.957
+Mandel Bread (v),fuzzy match,Grand Marnier,758737227,Spirits,BAR,2.51,2.51,False,0.64
+Mandel Bread (v),fuzzy match,Brand Gl,562622382,Wine,BAR,2.46,2.46,True,0.6
+Mandel Bread (v),fuzzy match,Deadman's Handle,847394771,Cocktail,BAR,3.5,3.5,True,0.593
+Mandel Bread (v),fuzzy match,Fortified H&H Madeira,752874686,Wine,BAR,2.05,2.05,False,0.552
+Manischewitz Shpritz,fuzzy match,Manischewitz Spritz,478090009,Drinks,MENU,1.08,1.08,False,0.974
+Manischewitz Shpritz,fuzzy match,Swedish Spritz,973143451,Cocktail,BAR,6.09,6.09,True,0.588
+Manischewitz Shpritz,fuzzy match,Aperol Spritz,697255440,Cocktail,BAR,2.67,2.67,False,0.545
+Manischewitz Shpritz,fuzzy match,Hugo Spritz,413490947,Cocktail,BAR,1.8,1.8,False,0.516
+Manischewitz Shpritz,fuzzy match,Shorty Narragansett,421896407,Draught Beer,BAR,0.5,0.5,False,0.513
+Mapleline Farm Chocolate Milk,fuzzy match,Chocolate Milk - Mapleline,379463189,Drinks,MENU,1.9,1.9,False,0.906
+Mapleline Farm Chocolate Milk,fuzzy match,Mamalehs Chocolate Cake,298769813,Pastries,MENU,2.03,2.03,False,0.615
+Mapleline Farm Chocolate Milk,fuzzy match,Chocolate Tartlets,545320774,Pastries,MENU,1.46,1.46,False,0.596
+Mapleline Farm Chocolate Milk,fuzzy match,Hamantaschen - Chocolate Tahini,351522472,Pastries,MENU,0.28,0.28,False,0.586
+Mapleline Farm Chocolate Milk,fuzzy match,Chocolate Milkshake,298401036,Drinks,MENU,3.31,3.31,False,0.583
+Matzah Ball Soup (frozen quart),fuzzy match,Quart Matzah Ball Soup (hot),245899631,Soups & Salads,MENU,1.76,1.76,False,0.873
+Matzah Ball Soup (frozen quart),fuzzy match,Quart Matzah Ball Soup,245901621,Freezer,MENU,1.95,1.95,False,0.863
+Matzah Ball Soup (frozen quart),fuzzy match,Cup Matzah Ball Soup,245898926,Soups & Salads,MENU,0.73,0.73,False,0.694
+Matzah Ball Soup (frozen quart),fuzzy match,Mushroom Barley Soup (retail quart),527932246,Freezer,MENU,3.5,3.5,False,0.645
+Matzah Ball Soup (frozen quart),fuzzy match,Tomato Tahini Soup - retail quart,375816488,Soups & Salads,MENU,4.75,4.75,False,0.633
+"Meat Knish (4, frozen)",fuzzy match,Meat Knish Frozen 4 Pack,375807978,Freezer,MENU,3.38,3.38,False,0.884
+"Meat Knish (4, frozen)",fuzzy match,Potato Knish Frozen 4 pack,375813038,Freezer,MENU,1.13,1.13,False,0.756
+"Meat Knish (4, frozen)",fuzzy match,Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False,0.615
+"Meat Knish (4, frozen)",fuzzy match,Green Tea Shot,549530719,Cocktail,BAR,2.5,2.5,False,0.545
+"Meat Knish (4, frozen)",fuzzy match,Frozen Pie Shell (Retail),541242301,Freezer,MENU,1.87,1.87,False,0.524
+Medusa Pilsner,fuzzy match,Mimosa Pitcher,624370021,Cocktail,BAR,11.15,11.15,False,0.571
+Medusa Pilsner,fuzzy match,Mustang Island,402696046,Cocktail List,BAR,1.74,1.74,False,0.571
+Medusa Pilsner,fuzzy match,Mustang Island - Single,404240679,Cocktail,BAR,1.74,1.74,False,0.571
+Medusa Pilsner,fuzzy match,Gl Pepiere Muscadet,933509995,Wine,BAR,0,,False,0.545
+Medusa Pilsner,fuzzy match,Punt e mes,816682337,Spirits,BAR,6.65,6.65,False,0.545
+Mimosa (prosecco and OJ),fuzzy match,Mimosa Pitcher,624370021,Cocktail,BAR,11.15,11.15,False,0.562
+Mimosa (prosecco and OJ),fuzzy match,Mimosa for 2,401525244,Drinks,MENU,12.28,12.28,True,0.529
+Mimosa (prosecco and OJ),fuzzy match,Campari and OJ,478066106,Cocktail,BAR,3.25,3.25,False,0.5
+Mimosa (prosecco and OJ),fuzzy match,Leon Gold Rose,684911854,Wine,BAR,2.22,2.22,True,0.5
+Mimosa (prosecco and OJ),fuzzy match,Mimosa,478055141,Drinks,MENU,5.3,5.3,False,0.5
+Mixed Up Classic Margarita,fuzzy match,Vida Margarita,485214780,Cocktail,BAR,2.86,2.86,False,0.65
+Mixed Up Classic Margarita,fuzzy match,Ocho Plata Margarita,485211406,Cocktail,BAR,2.94,2.94,False,0.609
+Mixed Up Classic Margarita,fuzzy match,Elvelo Margarita,562641056,Cocktail,BAR,3.82,3.82,False,0.571
+Mixed Up Classic Margarita,fuzzy match,Tommy's Margarita,801161242,Cocktail,BAR,3.59,3.59,False,0.571
+Mixed Up Classic Margarita,fuzzy match,Tequila Por Mi Amante Margarita,435614433,Cocktail,BAR,1.94,1.94,False,0.561
+Mixed Up Gin Grapefruit Mule,fuzzy match,Spindrift - Grapefruit,379449035,Drinks,MENU,0.97,0.97,False,0.583
+Mixed Up Gin Grapefruit Mule,fuzzy match,New Belgium Grape Fizz Ale,930008457,Beer,BAR,1.37,1.37,True,0.556
+Mixed Up Gin Grapefruit Mule,fuzzy match,Slice Pain De Mie,977794069,Sides,MENU,0.16,0.16,False,0.489
+Mixed Up Gin Grapefruit Mule,fuzzy match,Mixed Green Salad (10-12 people),413267158,Platters,MENU,7.6,7.6,False,0.483
+Mixed Up Gin Grapefruit Mule,fuzzy match,Salers Gentiane Aperitif,494490923,Spirits,BAR,1.02,1.02,False,0.462
+Mixed Up Lemon Raspberry Mojito,fuzzy match,Raspberry Lime Ricky (HSP),476126381,Drinks,MENU,0.7,0.7,False,0.473
+Mixed Up Lemon Raspberry Mojito,fuzzy match,Raspberry Sufganiyot,316351508,Holiday Items,MENU,0.84,0.84,False,0.471
+Mixed Up Lemon Raspberry Mojito,fuzzy match,"Rugelach, Raspberry - 1 each",338660566,Pastries,MENU,0.14,0.14,False,0.471
+Mixed Up Lemon Raspberry Mojito,fuzzy match,Pickled Cucumber Lemonade,842978234,Drinks,MENU,1.25,1.25,False,0.464
+Mixed Up Lemon Raspberry Mojito,fuzzy match,Strawberry Tequila Cooler,434939110,Cocktail,BAR,2.03,2.03,True,0.464
+Mocha Milkshake (boozy! 21+),fuzzy match,Mocha Milkshake,590520128,Drinks,MENU,4.38,4.38,False,0.75
+Mocha Milkshake (boozy! 21+),fuzzy match,Bourbon-Vanilla Milkshake,401541711,Drinks,MENU,5,5,True,0.6
+Mocha Milkshake (boozy! 21+),fuzzy match,Chocolate Milkshake,298401036,Drinks,MENU,3.31,3.31,False,0.591
+Mocha Milkshake (boozy! 21+),fuzzy match,Black and White Milkshake,401527771,Drinks,MENU,3.57,3.57,True,0.565
+Mocha Milkshake (boozy! 21+),fuzzy match,Fomu Vanilla Milkshake,505857822,Drinks,MENU,2,2,False,0.553
+Mushroom Barley Soup (frozen quart),fuzzy match,Mushroom Barley Soup (retail quart),527932246,Freezer,MENU,3.5,3.5,False,0.879
+Mushroom Barley Soup (frozen quart),fuzzy match,Quart Matzah Ball Soup (hot),245899631,Soups & Salads,MENU,1.76,1.76,False,0.644
+Mushroom Barley Soup (frozen quart),fuzzy match,Quart Matzah Ball Soup,245901621,Freezer,MENU,1.95,1.95,False,0.618
+Mushroom Barley Soup (frozen quart),fuzzy match,Tomato Tahini Soup - retail quart,375816488,Soups & Salads,MENU,4.75,4.75,False,0.562
+Mushroom Barley Soup (frozen quart),fuzzy match,Mushroom Grilled Cheese,976728904,Sandwiches,MENU,4.71,4.71,True,0.536
+"Need cutlery, napkins, or handle bag?",fuzzy match,Monsoon NOT AR Needs Ginger Habanero Syrup,973149888,Cocktail,BAR,1.03,1.03,False,0.519
+"Need cutlery, napkins, or handle bag?",fuzzy match,Deadman's Handle,847394771,Cocktail,BAR,3.5,3.5,True,0.48
+"Need cutlery, napkins, or handle bag?",fuzzy match,Deli Classics for the Whole Family,338665944,Packages,MENU,14.19,14.19,False,0.464
+"Need cutlery, napkins, or handle bag?",fuzzy match,1/4# Nova Lox - hand sliced,301908283,Deli Case,MENU,3.91,3.91,False,0.452
+Noodle Kugel (frozen) (v),fuzzy match,Noodle Kugel (retail),301909008,Freezer,MENU,3.81,3.81,False,0.789
+Noodle Kugel (frozen) (v),fuzzy match,Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False,0.615
+Noodle Kugel (frozen) (v),fuzzy match,Leon Gold Rose,684911854,Wine,BAR,2.22,2.22,True,0.545
+Noodle Kugel (frozen) (v),fuzzy match,Bulk Bagels - Baker's Dozen,375238896,Breads,MENU,2.35,2.35,False,0.512
+Noodle Kugel (frozen) (v),fuzzy match,Candy Apple Jack Rose,997226170,Cocktail,BAR,2.22,2.22,True,0.5
+Nova Lox (1/2 lb hand-sliced),fuzzy match,1/4# Nova Lox - hand sliced,301908283,Deli Case,MENU,3.91,3.91,False,0.963
+Nova Lox (1/2 lb hand-sliced),fuzzy match,1/2# Nova (hand-sliced),247931929,Deli Case,MENU,7.69,7.69,False,0.92
+Nova Lox (1/2 lb hand-sliced),fuzzy match,Nova Lox Sandwich,247935973,Sandwiches,MENU,3.41,3.41,False,0.636
+Nova Lox (1/2 lb hand-sliced),fuzzy match,Pearl Salami - 1/2# retail,375804563,Deli Case,MENU,3.34,3.34,False,0.528
+Nova Lox (1/2 lb hand-sliced),fuzzy match,Half Loaf A&J King Seeded Rye Bread,333484518,Breads,MENU,3.8,3.8,False,0.526
+Nova Lox (1/2 lb retail package),fuzzy match,Pastrami Lox - Retail 1/4#,408874951,Deli Case,MENU,2.38,2.38,True,0.714
+Nova Lox (1/2 lb retail package),fuzzy match,Pearl Salami - 1/2# retail,375804563,Deli Case,MENU,3.34,3.34,False,0.607
+Nova Lox (1/2 lb retail package),fuzzy match,1/4# Nova Lox - hand sliced,301908283,Deli Case,MENU,3.91,3.91,False,0.596
+Nova Lox (1/2 lb retail package),fuzzy match,1/2 Pint Retail Hot Aioli,467017731,Retail,MENU,1.99,1.99,False,0.582
+Nova Lox (1/2 lb retail package),fuzzy match,1/2# Nova (hand-sliced),247931929,Deli Case,MENU,7.69,7.69,False,0.528
+Nova Lox (1/4 lb retail package),fuzzy match,Pastrami Lox - Retail 1/4#,408874951,Deli Case,MENU,2.38,2.38,True,0.75
+Nova Lox (1/4 lb retail package),fuzzy match,1/4# Nova Lox - hand sliced,301908283,Deli Case,MENU,3.91,3.91,False,0.632
+Nova Lox (1/4 lb retail package),fuzzy match,Pearl Salami - 1/2# retail,375804563,Deli Case,MENU,3.34,3.34,False,0.571
+Nova Lox (1/4 lb retail package),fuzzy match,1/2 Pint Retail Hot Aioli,467017731,Retail,MENU,1.99,1.99,False,0.545
+Nova Lox (1/4 lb retail package),fuzzy match,Nova Lox Sandwich,247935973,Sandwiches,MENU,3.41,3.41,False,0.511
+Orthodox Chew each,fuzzy match,"Candy, Orthodox Chews",413232050,Retail,MENU,0.01,0.01,False,0.788
+Orthodox Chew each,fuzzy match,Oyster By the Each,873147925,Appetizers,MENU,0.8,0.8,False,0.556
+Orthodox Chew each,fuzzy match,"Rugelach, Chocolate - 1 each",338646536,Pastries,MENU,0.09,0.09,False,0.512
+Orthodox Chew each,fuzzy match,Hot Chicken,298755467,Entree Plates,MENU,7.55,7.55,True,0.5
+Orthodox Chew each,fuzzy match,Rochefort 8,421845248,Beer,BAR,3.83,3.83,False,0.5
+"Pastrami Bolognese (frozen, pint)",fuzzy match,Pastrami Burger,245904775,Sandwiches,MENU,3.32,3.32,True,0.578
+"Pastrami Bolognese (frozen, pint)",fuzzy match,"Pastrami, Egg, and Cheese Sandwich",245922083,Sandwiches,MENU,1.95,1.95,False,0.552
+"Pastrami Bolognese (frozen, pint)",fuzzy match,Hot Pastrami (4 oz.) Sandwich,240471448,Sandwiches,MENU,3.36,3.36,False,0.536
+"Pastrami Bolognese (frozen, pint)",fuzzy match,Hot Pastrami (8 oz.) Sandwich,240471777,Sandwiches,MENU,6.1,6.1,False,0.536
+"Pastrami Bolognese (frozen, pint)",fuzzy match,Pastrami Reuben,245810170,Sandwiches,MENU,3.63,3.63,False,0.533
+"Pastrami, Egg, and Cheese",fuzzy match,"Pastrami, Egg, and Cheese Sandwich",245922083,Sandwiches,MENU,1.95,1.95,False,0.836
+"Pastrami, Egg, and Cheese",fuzzy match,"Mushroom, Egg & Cheese",409362374,Sandwiches,MENU,1.51,1.51,False,0.783
+"Pastrami, Egg, and Cheese",fuzzy match,"Salami, Egg, and Cheese Sandwich",245925260,Sandwiches,MENU,1.8,1.8,False,0.717
+"Pastrami, Egg, and Cheese",fuzzy match,Warm Goat Cheese,576545570,Appetizers,MENU,2.05,2.05,True,0.686
+"Pastrami, Egg, and Cheese",fuzzy match,Egg and Cheese Sandwich,245921399,Sandwiches,MENU,0.56,0.56,False,0.684
+Pickle Cotton Candy,fuzzy match,"Candy, Pickle Cotton Candy",413236627,Retail,MENU,2.54,2.54,False,1.0
+Pickle Cotton Candy,fuzzy match,Bread and Butter Pickles ,1176918695,Appetizers,MENU,0.56,0.56,False,0.615
+Pickle Cotton Candy,fuzzy match,"Candy, Fruit Slice",413230709,Retail,MENU,0.66,0.66,False,0.611
+Pickle Cotton Candy,fuzzy match,Cap- Pickles the Great,413859033,Retail,MENU,15,15,False,0.611
+Pickle Cotton Candy,fuzzy match,Cactus Prick,972605858,Cocktail List,BAR,0.29,0.29,False,0.581
+Pickle Salt (4oz),fuzzy match,Pickled Carrots - Retail,375801415,Deli Case,MENU,0.57,0.57,False,0.595
+Pickle Salt (4oz),fuzzy match,Pickles the 'Tini,298380004,Cocktail,BAR,39.89,39.89,False,0.593
+Pickle Salt (4oz),fuzzy match,Side of Pickles,301811410,Sides,MENU,0.93,0.93,False,0.593
+Pickle Salt (4oz),fuzzy match,Pint Pickled Eggs,467049715,Retail,MENU,1.95,1.95,False,0.562
+Pickle Salt (4oz),fuzzy match,Retail - Pickled Herring,425498272,Deli Case,MENU,3.23,3.23,True,0.541
+Pickled Carrots (half pint),fuzzy match,Pickled Carrots - Retail,375801415,Deli Case,MENU,0.57,0.57,False,0.739
+Pickled Carrots (half pint),fuzzy match,Pint Pickled Eggs,467049715,Retail,MENU,1.95,1.95,False,0.683
+Pickled Carrots (half pint),fuzzy match,1/2 Pint Hot Paste,467047904,Retail,MENU,2.5,2.5,False,0.667
+Pickled Carrots (half pint),fuzzy match,1/2 Pint Pickled Shiitakes,467048996,Retail,MENU,2.03,2.03,False,0.667
+Pickled Carrots (half pint),fuzzy match,Apple Sauce (half pint),236410029,Deli Case,MENU,1.21,1.21,False,0.636
+Pickled Green Tomatoes (quart),fuzzy match,Pickled Green Tomatoes (retail Pint),301896777,Deli Case,MENU,3.29,3.29,False,0.806
+Pickled Green Tomatoes (quart),fuzzy match,1/2 Sour Pickles (retail Quart),301895879,Deli Case,MENU,4.08,4.08,False,0.596
+Pickled Green Tomatoes (quart),fuzzy match,1/2 Pint Pickled Shiitakes,467048996,Retail,MENU,2.03,2.03,False,0.556
+Pickled Green Tomatoes (quart),fuzzy match,Beef Borscht (retail quart),301910878,Freezer,MENU,5.22,5.22,False,0.491
+Pickled Green Tomatoes (quart),fuzzy match,Cap- Pickles the Great,413859033,Retail,MENU,15,15,False,0.49
+Pickled Herring in Wine (half pint),fuzzy match,Herring in Wine (half pint),301905947,Deli Case,MENU,3.3,3.3,False,0.857
+Pickled Herring in Wine (half pint),fuzzy match,1/2 Pint Pickled Shiitakes,467048996,Retail,MENU,2.03,2.03,False,0.691
+Pickled Herring in Wine (half pint),fuzzy match,Retail - Pickled Herring,425498272,Deli Case,MENU,3.23,3.23,True,0.667
+Pickled Herring in Wine (half pint),fuzzy match,Pint Pickled Eggs,467049715,Retail,MENU,1.95,1.95,False,0.652
+Pickled Herring in Wine (half pint),fuzzy match,Chicken Salad (half pint),239547824,Deli Case,MENU,1.39,1.39,False,0.588
+Pinot Project Pinot Grigio,fuzzy match,Pint Remnant Hangtime ,417057297,Draught Beer Pint,BAR,2.22,2.22,False,0.537
+Pinot Project Pinot Grigio,fuzzy match,Pint Sacred Profane Dark Lager,417307221,Draught Beer Pint,BAR,2.29,2.29,False,0.52
+Pinot Project Pinot Grigio,fuzzy match,St George Terroir Gin Gibson,601956351,Cocktail,BAR,2.86,2.86,False,0.5
+Pinot Project Pinot Grigio,fuzzy match,1/2 Pint Retail Hot Aioli,467017731,Retail,MENU,1.99,1.99,False,0.489
+Pinot Project Pinot Grigio,fuzzy match,Herring in Wine (half pint),301905947,Deli Case,MENU,3.3,3.3,False,0.488
+Pinot Project ROSE (Copy),fuzzy match,Este Vinho Verde Rose Can,401551612,Drinks,MENU,2.25,2.25,True,0.542
+Pinot Project ROSE (Copy),fuzzy match,Pint Prairie Rainbow Sherbet,421227881,Draught Beer,BAR,2.88,2.88,True,0.51
+Pinot Project ROSE (Copy),fuzzy match,Potato Salad (half pint),239573598,Deli Case,MENU,0.78,0.78,False,0.5
+Pinot Project ROSE (Copy),fuzzy match,Pint Sacred Profane Dark Lager,417307221,Draught Beer Pint,BAR,2.29,2.29,False,0.491
+Pinot Project ROSE (Copy),fuzzy match,Pimento Cheese Dip,298739889,Appetizers,MENU,0.91,0.91,False,0.488
+Polar Seltzer,fuzzy match,Polar Seltzer Water,379459268,Drinks,MENU,0.64,0.64,False,0.812
+Polar Seltzer,fuzzy match,Silver Dollar,323431456,Cocktail,BAR,2.88,2.88,True,0.692
+Polar Seltzer,fuzzy match,Siete Leguas,816649636,Spirits,BAR,88.07,88.07,False,0.56
+Polar Seltzer,fuzzy match,Pastry Platter (large),1262816611,Platters,MENU,14.56,14.56,False,0.545
+Polar Seltzer,fuzzy match,Seder Plate - Passover,587231076,Holiday Items,MENU,6.79,6.79,False,0.545
+Potato Knish (frozen) (v+),fuzzy match,Potato Knish Frozen 4 pack,375813038,Freezer,MENU,1.13,1.13,False,0.844
+Potato Knish (frozen) (v+),fuzzy match,Potato Latkes (Frozen),239723393,Freezer,MENU,2.01,2.01,False,0.821
+Potato Knish (frozen) (v+),fuzzy match,Meat Knish Frozen 4 Pack,375807978,Freezer,MENU,3.38,3.38,False,0.698
+Potato Knish (frozen) (v+),fuzzy match,Bag O' Potato Chips,301817180,Sides,MENU,1.21,1.21,True,0.581
+Potato Knish (frozen) (v+),fuzzy match,Hal's Potato Chips  - BBQ,412110878,Sides,MENU,1,1,True,0.55
+Raspberry Walnut Rugelach each (v),fuzzy match,"Rugelach, Raspberry - 1 each",338660566,Pastries,MENU,0.14,0.14,False,0.8
+Raspberry Walnut Rugelach each (v),fuzzy match,Raspberry Sufganiyot,316351508,Holiday Items,MENU,0.84,0.84,False,0.667
+Raspberry Walnut Rugelach each (v),fuzzy match,Raspberry Lime Rickey (HQ/WS),417106209,Drinks,MENU,1.57,1.57,False,0.561
+Raspberry Walnut Rugelach each (v),fuzzy match,Raspberry Lime Ricky (HSP),476126381,Drinks,MENU,0.7,0.7,False,0.556
+Raspberry Walnut Rugelach each (v),fuzzy match,Green Walnut,387970942,Cocktail List,BAR,1.99,1.99,False,0.541
+Redeemed Drink Ticket,fuzzy match,Red Drink,909515255,Cocktail,BAR,3.24,3.24,True,0.6
+Redeemed Drink Ticket,fuzzy match,De Ranke Cuvee,708774359,Beer,BAR,15,15,True,0.514
+Redeemed Drink Ticket,fuzzy match,Freezer Martini,841245484,Cocktail,BAR,2.14,2.14,False,0.5
+Redeemed Drink Ticket,fuzzy match,Retail - Everything Spice,413836310,Retail,MENU,1.19,1.19,False,0.5
+Redeemed Drink Ticket,fuzzy match,Bread and Butter Pickles ,1176918695,Appetizers,MENU,0.56,0.56,False,0.489
+Rendez Vous Hard Candy,fuzzy match,"Candy, Rendez Vous Hard Candy",413237108,Retail,MENU,1.92,1.92,False,1.0
+Rendez Vous Hard Candy,fuzzy match,"Candy, C-Howard's Violets",413235074,Retail,MENU,0.9,0.9,False,0.651
+Rendez Vous Hard Candy,fuzzy match,"Candy,  C-Howard's Lemon Mints",413232677,Retail,MENU,0.9,0.9,False,0.638
+Rendez Vous Hard Candy,fuzzy match,"Candy, C-Howard's Scented Gum",413233021,Retail,MENU,0.9,0.9,False,0.596
+Rendez Vous Hard Candy,fuzzy match,"Candy, C-Howard's Spearmint Mints",413234058,Retail,MENU,0.9,0.9,False,0.51
+Rescue Club Pils (non-alcoholic),fuzzy match,French Onion Aioli,826808259,Big Dipper Sauces,MENU,0.17,0.17,False,0.5
+Rescue Club Pils (non-alcoholic),fuzzy match,Red Curry Chicken Pot Pie,873140065,Entree Plates,MENU,2.22,2.22,False,0.473
+Rescue Club Pils (non-alcoholic),fuzzy match,"Seed & Mill, Coconut",413243105,Retail,MENU,1.11,1.11,True,0.468
+Rescue Club Pils (non-alcoholic),fuzzy match,Classic Nova Platter - NO BAGELS,1139943334,Platters,MENU,26.83,26.83,False,0.467
+Rescue Club Pils (non-alcoholic),fuzzy match,Side Sauce- Nashville Hot Aioli,298739247,Big Dipper Sauces,MENU,0.34,0.34,False,0.467
+Russian Dressing (10oz),fuzzy match,Side of Russian Dressing,301818243,Sides,MENU,0.1,0.1,False,0.762
+Russian Dressing (10oz),fuzzy match,Russian Dressing (retail-12 oz squeeze bottle),297615674,Deli Case,MENU,2.08,2.08,False,0.615
+Russian Dressing (10oz),fuzzy match,Mustang Island - Single,404240679,Cocktail,BAR,1.74,1.74,False,0.476
+Russian Dressing (10oz),fuzzy match,Gin Drink,513269294,Cocktail,BAR,1.57,1.57,True,0.467
+Russian Dressing (10oz),fuzzy match,Catering - Yogurt & Fruit Spread for 10,1256504673,Dinner Catering,MENU,18.17,18.17,False,0.462
+Salad Bar Salad (v/v+),fuzzy match,Kale Caesar Salad,1124637946,Appetizers,MENU,0.95,0.95,False,0.688
+Salad Bar Salad (v/v+),fuzzy match,Cottage Salad,245888847,Soups & Salads,MENU,7.36,7.36,True,0.636
+Salad Bar Salad (v/v+),fuzzy match,Mamaleh's Big Salad,245887524,Soups & Salads,MENU,4.92,4.92,False,0.606
+Salad Bar Salad (v/v+),fuzzy match,Air Mail,387317621,Cocktail,BAR,2.05,2.05,False,0.588
+Salad Bar Salad (v/v+),fuzzy match,Cold Brew,973679116,N/A Bev,BAR,0.6,0.6,False,0.556
+"Salami, Egg, and Cheese",fuzzy match,"Salami, Egg, and Cheese Sandwich",245925260,Sandwiches,MENU,1.8,1.8,False,0.824
+"Salami, Egg, and Cheese",fuzzy match,Egg and Cheese Sandwich,245921399,Sandwiches,MENU,0.56,0.56,False,0.778
+"Salami, Egg, and Cheese",fuzzy match,"Mushroom, Egg & Cheese",409362374,Sandwiches,MENU,1.51,1.51,False,0.773
+"Salami, Egg, and Cheese",fuzzy match,"Pastrami, Egg, and Cheese Sandwich",245922083,Sandwiches,MENU,1.95,1.95,False,0.717
+"Salami, Egg, and Cheese",fuzzy match,Mac & Cheese,488869537,Entree Plates,MENU,3.75,3.75,True,0.686
+Seed + Mill Chocolate Halva,fuzzy match,"Seed & Mill, Chocolate",413242300,Retail,MENU,6.35,6.35,False,0.864
+Seed + Mill Chocolate Halva,fuzzy match,"Seed & Mill, Coconut",413243105,Retail,MENU,1.11,1.11,True,0.714
+Seed + Mill Chocolate Halva,fuzzy match,Chocolate Milkshake,298401036,Drinks,MENU,3.31,3.31,False,0.682
+Seed + Mill Chocolate Halva,fuzzy match,Chocolate Milk - Mapleline,379463189,Drinks,MENU,1.9,1.9,False,0.653
+Seed + Mill Chocolate Halva,fuzzy match,"Banana, Halvah & Chocolate Chunk Muffins",249891257,Pastries,MENU,0.59,0.59,False,0.613
+Seed + Mill Pistachio Halva,fuzzy match,"Seed & Mill, Pistachio",413242624,Retail,MENU,6.35,6.35,False,0.864
+Seed + Mill Pistachio Halva,fuzzy match,"Seed & Mill, Chocolate",413242300,Retail,MENU,6.35,6.35,False,0.6
+Seed + Mill Pistachio Halva,fuzzy match,"Seed & Mill, Cardamom",413241865,Retail,MENU,6.35,6.35,False,0.558
+Seed + Mill Pistachio Halva,fuzzy match,Mini Pitcher SP Dark,933377659,Draught Beer,BAR,4.89,4.89,False,0.533
+Seed + Mill Pistachio Halva,fuzzy match,Side of Potato Salad,301817399,Sides,MENU,0.72,0.72,False,0.511
+Seedy Everything Crackers (9oz bag),fuzzy match,Retail - Seedy Everything Crackers,425513959,Retail,MENU,1.46,1.46,False,0.82
+Seedy Everything Crackers (9oz bag),fuzzy match,Everything Bagel,246271713,Breads,MENU,0.18,0.18,False,0.578
+Seedy Everything Crackers (9oz bag),fuzzy match,Retail - Everything Spice,413836310,Retail,MENU,1.19,1.19,False,0.536
+Seedy Everything Crackers (9oz bag),fuzzy match,Cranberry Sauce (half pint),500617995,Holiday Items,MENU,1.92,1.92,False,0.491
+Seedy Everything Crackers (9oz bag),fuzzy match,Honey Glazed Chicken Thighs,476843374,Holiday Items,MENU,5.09,5.09,False,0.464
+Sesame Crunch Candy each,fuzzy match,"Candy, Sesame Crunch",413237895,Retail,MENU,0.09,0.09,False,1.0
+Sesame Crunch Candy each,fuzzy match,"Candy, Fruit Slice",413230709,Retail,MENU,0.66,0.66,False,0.611
+Sesame Crunch Candy each,fuzzy match,Bodega Brunch - B.E.C.,593641439,Brunch Menu,MENU,0.93,0.93,False,0.558
+Sesame Crunch Candy each,fuzzy match,Kronan Swedish Punsch,816678041,Spirits,BAR,0,,False,0.55
+Sesame Crunch Candy each,fuzzy match,Bad Seed Cider,421842601,Beer,BAR,2.27,2.27,True,0.545
+Sesame Tahini Cookie (v),fuzzy match,Tahini Cookie,401565134,Pastries,MENU,0.2,0.2,False,0.788
+Sesame Tahini Cookie (v),fuzzy match,Hamantaschen - Chocolate Tahini,351522472,Pastries,MENU,0.28,0.28,False,0.571
+Sesame Tahini Cookie (v),fuzzy match,Chocolate Tahini Swirl Pie,490475812,Holiday Items,MENU,6.4,6.4,False,0.565
+Sesame Tahini Cookie (v),fuzzy match,Pickles the 'Tini,298380004,Cocktail,BAR,39.89,39.89,False,0.562
+Sesame Tahini Cookie (v),fuzzy match,Sesame Bagel,246303515,Breads,MENU,0.16,0.16,False,0.562
+Side of Bagel Topping Veggies,fuzzy match,Bagel & Veggie Platter,401577391,Platters,MENU,12.41,12.41,False,0.609
+Side of Bagel Topping Veggies,fuzzy match,Veggies per Person,259341922,Large Brunch Packages,MENU,0.94,0.94,False,0.591
+Side of Bagel Topping Veggies,fuzzy match,Veggies + Nova per Person,259342402,Large Brunch Packages,MENU,2.35,2.35,False,0.571
+Side of Bagel Topping Veggies,fuzzy match,"Bagel, Schmear, and Vegetables",247937282,Sandwiches,MENU,1.45,1.45,False,0.56
+Side of Bagel Topping Veggies,fuzzy match,Side of Pickles,301811410,Sides,MENU,0.93,0.93,False,0.545
+Side of Cream Cheese (2oz),fuzzy match,Side of Cream Cheese,301813400,Sides,MENU,0.29,0.29,False,0.909
+Side of Cream Cheese (2oz),fuzzy match,Cream Cheese 2oz.,401556376,Sides,MENU,0,,True,0.865
+Side of Cream Cheese (2oz),fuzzy match,Lox Cream Cheese (half pint),239550745,Deli Case,MENU,3.4,3.4,False,0.696
+Side of Cream Cheese (2oz),fuzzy match,Veggie Cream Cheese (half pint),239554050,Deli Case,MENU,1.79,1.79,False,0.694
+Side of Cream Cheese (2oz),fuzzy match,Dill Cream Cheese (half pint),239548270,Deli Case,MENU,1.9,1.9,False,0.681
+Side of Deli Mustard,fuzzy match,Side of Mustard,301816892,Sides,MENU,0.28,0.28,False,0.857
+Side of Deli Mustard,fuzzy match,Side of Russian Dressing,301818243,Sides,MENU,0.1,0.1,False,0.632
+Side of Deli Mustard,fuzzy match,Side of Coleslaw,301812373,Sides,MENU,1,1,False,0.611
+Side of Deli Mustard,fuzzy match,Apple Custard Pie - slice,622617086,Holiday Items,MENU,1.05,1.05,True,0.6
+Side of Deli Mustard,fuzzy match,Del Mar,348323773,Cocktail,BAR,2.69,2.69,False,0.583
+Side of Homemade Russian Dressing,fuzzy match,Side of Russian Dressing,301818243,Sides,MENU,0.1,0.1,False,0.842
+Side of Homemade Russian Dressing,fuzzy match,Russian Dressing (retail-12 oz squeeze bottle),297615674,Deli Case,MENU,2.08,2.08,False,0.622
+Side of Homemade Russian Dressing,fuzzy match,Side of Mustard,301816892,Sides,MENU,0.28,0.28,False,0.542
+Side of Homemade Russian Dressing,fuzzy match,Bodega Brunch - Side Bacon,593671244,Brunch Menu,MENU,0.76,0.76,False,0.519
+Side of Homemade Russian Dressing,fuzzy match,Bodega Brunch - Side Sausage,593672488,Brunch Menu,MENU,0.84,0.84,False,0.5
+Side of Lox (2oz),fuzzy match,Glass of Milk - 12oz.,379461212,Drinks,MENU,0.97,0.97,False,0.606
+Side of Lox (2oz),fuzzy match,Side of Pickles,301811410,Sides,MENU,0.93,0.93,False,0.6
+Side of Lox (2oz),fuzzy match,12oz Black Iced Tea,298395533,Drinks,MENU,0.84,0.84,False,0.581
+Side of Lox (2oz),fuzzy match,20oz Black Iced Tea,298396068,Drinks,MENU,0.98,0.98,False,0.581
+Side of Lox (2oz),fuzzy match,Side of Coleslaw,301812373,Sides,MENU,1,1,False,0.581
+Slivovitz (1oz),fuzzy match,Hugo Spritz,413490947,Cocktail,BAR,1.8,1.8,False,0.5
+Slivovitz (1oz),fuzzy match,Bubbe's Broth - 12oz.,376421575,Drinks,MENU,0.78,0.78,False,0.467
+Slivovitz (1oz),fuzzy match,Notch Kolsch 16oz can,935944204,Beer,BAR,2.65,2.65,True,0.467
+Slivovitz (1oz),fuzzy match,Aperol Spritz,697255440,Cocktail,BAR,2.67,2.67,False,0.462
+Slivovitz (1oz),fuzzy match,Chopped Liver (half pint),239549614,Deli Case,MENU,1.28,1.28,False,0.457
+Smoked Fish Platter (serves 6),fuzzy match,Smoked Fish Platter (for 6),316850942,Large Brunch Packages,MENU,22.26,22.26,False,0.868
+Smoked Fish Platter (serves 6),fuzzy match,Smoked FIsh Platter (for 2),316851975,Large Brunch Packages,MENU,11.7,11.7,False,0.83
+Smoked Fish Platter (serves 6),fuzzy match,Fish Platter for 6,301792367,Sandwiches,MENU,19.14,19.14,False,0.696
+Smoked Fish Platter (serves 6),fuzzy match,Fish Platter for 2,301792056,Sandwiches,MENU,7.6,7.6,False,0.652
+Smoked Fish Platter (serves 6),fuzzy match,Fish Plate Veggies,301814958,Sides,MENU,1.2,1.2,False,0.609
+Smoked Fish Platter for Two,fuzzy match,Smoked FIsh Platter (for 2),316851975,Large Brunch Packages,MENU,11.7,11.7,False,0.923
+Smoked Fish Platter for Two,fuzzy match,Smoked Fish Platter (for 6),316850942,Large Brunch Packages,MENU,22.26,22.26,False,0.923
+Smoked Fish Platter for Two,fuzzy match,Fish Platter for 2,301792056,Sandwiches,MENU,7.6,7.6,False,0.756
+Smoked Fish Platter for Two,fuzzy match,Fish Platter for 6,301792367,Sandwiches,MENU,19.14,19.14,False,0.756
+Smoked Fish Platter for Two,fuzzy match,Fish Plate Veggies,301814958,Sides,MENU,1.2,1.2,False,0.585
+Smoked Mushroom Rachel (v),fuzzy match,Mushroom Rachel,301808180,Sandwiches,MENU,2.94,2.94,False,0.811
+Smoked Mushroom Rachel (v),fuzzy match,Mushroom Reuben,301806339,Sandwiches,MENU,3.14,3.14,False,0.649
+Smoked Mushroom Rachel (v),fuzzy match,Mushroom Gratin,576532188,Appetizers,MENU,13.17,13.17,True,0.595
+Smoked Mushroom Rachel (v),fuzzy match,"Mushroom, Egg & Cheese",409362374,Sandwiches,MENU,1.51,1.51,False,0.578
+Smoked Mushroom Rachel (v),fuzzy match,Mushroom Grilled Cheese,976728904,Sandwiches,MENU,4.71,4.71,True,0.578
+Smoked Mushroom Reuben (v),fuzzy match,Mushroom Reuben,301806339,Sandwiches,MENU,3.14,3.14,False,0.811
+Smoked Mushroom Reuben (v),fuzzy match,Mushroom Gratin,576532188,Appetizers,MENU,13.17,13.17,True,0.595
+Smoked Mushroom Reuben (v),fuzzy match,Mushroom Rachel,301808180,Sandwiches,MENU,2.94,2.94,False,0.595
+Smoked Mushroom Reuben (v),fuzzy match,Smoke Show,882322928,Cocktail,BAR,2.17,2.17,False,0.562
+Smoked Mushroom Reuben (v),fuzzy match,Corned Beef Reuben,240473398,Sandwiches,MENU,4.27,4.27,False,0.55
+Smoked Sable (1/4 lb hand sliced),fuzzy match,1/2# Nova (hand-sliced),247931929,Deli Case,MENU,7.69,7.69,False,0.704
+Smoked Sable (1/4 lb hand sliced),fuzzy match,1/4# Nova Lox - hand sliced,301908283,Deli Case,MENU,3.91,3.91,False,0.69
+Smoked Sable (1/4 lb hand sliced),fuzzy match,Smoked Salmon & Chickpea Bowl,920931787,Soups & Salads,MENU,3.44,3.44,False,0.581
+Smoked Sable (1/4 lb hand sliced),fuzzy match,1/4# Sable,247932342,Deli Case,MENU,7.38,7.38,False,0.571
+Smoked Sable (1/4 lb hand sliced),fuzzy match,Hot Corned Beef (4 oz.) Sandwich,240471688,Sandwiches,MENU,3.6,3.6,False,0.5
+Smoked Sable Sandwich,fuzzy match,Sable Sandwich,247940838,Sandwiches,MENU,4.11,4.11,False,0.8
+Smoked Sable Sandwich,fuzzy match,Egg Salad Sandwich,245863877,Sandwiches,MENU,1.13,1.13,False,0.718
+Smoked Sable Sandwich,fuzzy match,Sable Sandwich 2.0,409363094,Sandwiches,MENU,4.11,4.11,False,0.718
+Smoked Sable Sandwich,fuzzy match,Chicken Salad Sandwich,245861165,Sandwiches,MENU,1.52,1.52,False,0.698
+Smoked Sable Sandwich,fuzzy match,Chopped Liver Sandwich,240470423,Sandwiches,MENU,2.61,2.61,False,0.698
+Soom Chocolate Tahini (11oz),fuzzy match,Chocolate Tahini Swirl Pie,490475812,Holiday Items,MENU,6.4,6.4,False,0.692
+Soom Chocolate Tahini (11oz),fuzzy match,Hamantaschen - Chocolate Tahini,351522472,Pastries,MENU,0.28,0.28,False,0.655
+Soom Chocolate Tahini (11oz),fuzzy match,Chocolate Sufganiyot,622637235,Holiday Items,MENU,0.8,0.8,False,0.609
+Soom Chocolate Tahini (11oz),fuzzy match,"Rugelach, Chocolate - 1 each",338646536,Pastries,MENU,0.09,0.09,False,0.609
+Soom Chocolate Tahini (11oz),fuzzy match,Chocolate Milk - Mapleline,379463189,Drinks,MENU,1.9,1.9,False,0.6
+Soom Sesame Tahini (11oz),fuzzy match,Dark Espresso Martini,253781084,Cocktail List,BAR,2.49,2.49,False,0.5
+Soom Sesame Tahini (11oz),fuzzy match,Tahini Cookie,401565134,Pastries,MENU,0.2,0.2,False,0.5
+Soom Sesame Tahini (11oz),fuzzy match,Chocolate Tahini Swirl Pie,490475812,Holiday Items,MENU,6.4,6.4,False,0.49
+Soom Sesame Tahini (11oz),fuzzy match,Tomato Tahini Soup - retail quart,375816488,Soups & Salads,MENU,4.75,4.75,False,0.481
+Soom Sesame Tahini (11oz),fuzzy match,12oz Hot Coffee,298381189,Drinks,MENU,1,1,False,0.474
+Spindrift Grapefruit Sparkling Water,fuzzy match,Spindrift - Grapefruit,379449035,Drinks,MENU,0.97,0.97,False,0.714
+Spindrift Grapefruit Sparkling Water,fuzzy match,Sparkling Watermelon Daiquiri,434939474,Cocktail,BAR,1.63,1.63,False,0.585
+Spindrift Grapefruit Sparkling Water,fuzzy match,Sprindrift - Orange Mango,379450135,Drinks,MENU,0.97,0.97,False,0.542
+Spindrift Grapefruit Sparkling Water,fuzzy match,Spindrift Blood Orange Tangerine,684889075,Beer,BAR,1.3,1.3,True,0.529
+Spindrift Grapefruit Sparkling Water,fuzzy match,State Park Kid's Fried Chicken Sandwich,488874133,Sandwiches,MENU,2.34,2.34,False,0.514
+Spindrift Orange Mango Sparkling Water,fuzzy match,Sprindrift - Orange Mango,379450135,Drinks,MENU,0.97,0.97,False,0.754
+Spindrift Orange Mango Sparkling Water,fuzzy match,Spindrift Blood Orange Tangerine,684889075,Beer,BAR,1.3,1.3,True,0.686
+Spindrift Orange Mango Sparkling Water,fuzzy match,Spindrift - Grapefruit,379449035,Drinks,MENU,0.97,0.97,False,0.552
+Spindrift Orange Mango Sparkling Water,fuzzy match,Sparkling Watermelon Daiquiri,434939474,Cocktail,BAR,1.63,1.63,False,0.537
+Spindrift Orange Mango Sparkling Water,fuzzy match,Blood Orange Margarita,638962075,Cocktail,BAR,2.74,2.74,True,0.533
+Spindrift Pineapple Sparkling Water,fuzzy match,Spindrift - Pineapple,379450542,Drinks,MENU,0.97,0.97,False,0.704
+Spindrift Pineapple Sparkling Water,fuzzy match,Spindrift - Grapefruit,379449035,Drinks,MENU,0.97,0.97,False,0.582
+Spindrift Pineapple Sparkling Water,fuzzy match,Sprindrift - Orange Mango,379450135,Drinks,MENU,0.97,0.97,False,0.552
+Spindrift Pineapple Sparkling Water,fuzzy match,Sparkling Watermelon Daiquiri,434939474,Cocktail,BAR,1.63,1.63,False,0.531
+Spindrift Pineapple Sparkling Water,fuzzy match,"Bottle Spring Water, 16.9oz.",379447213,Drinks,MENU,0.24,0.24,False,0.525
+Sour Cream Walnut Coffee Cake Slice (v),fuzzy match,Coffee Cake - Slice,472339488,Pastries,MENU,0.53,0.53,True,0.654
+Sour Cream Walnut Coffee Cake Slice (v),fuzzy match,Flourless Chocolate Cake - Slice,380240253,Holiday Items,MENU,0.81,0.81,False,0.585
+Sour Cream Walnut Coffee Cake Slice (v),fuzzy match,Honey Walnut Layer Cake - 8in,642921983,Custom Cakes,MENU,12.87,12.87,False,0.581
+Sour Cream Walnut Coffee Cake Slice (v),fuzzy match,Passionfruit Cheesecake - Slice,592993931,Holiday Items,MENU,1.91,1.91,True,0.562
+Sour Cream Walnut Coffee Cake Slice (v),fuzzy match,Chocolate Cake - Slice,621144826,Pastries,MENU,1.14,1.14,False,0.545
+Swiss Cheese (1 lb),fuzzy match,Swiss Cheese (retail 1/2#),301897650,Deli Case,MENU,1.45,1.45,False,0.791
+Swiss Cheese (1 lb),fuzzy match,Egg and Cheese Sandwich,245921399,Sandwiches,MENU,0.56,0.56,False,0.611
+Swiss Cheese (1 lb),fuzzy match,Side of Cream Cheese,301813400,Sides,MENU,0.29,0.29,False,0.588
+Swiss Cheese (1 lb),fuzzy match,Cheddar Cheese (retail 1/2#),301897827,Deli Case,MENU,2.27,2.27,False,0.578
+Swiss Cheese (1 lb),fuzzy match,Lox Cream Cheese (half pint),239550745,Deli Case,MENU,3.4,3.4,False,0.571
+Swiss Cheese (1/2 lb),fuzzy match,Swiss Cheese (retail 1/2#),301897650,Deli Case,MENU,1.45,1.45,False,0.844
+Swiss Cheese (1/2 lb),fuzzy match,Cheddar Cheese (retail 1/2#),301897827,Deli Case,MENU,2.27,2.27,False,0.638
+Swiss Cheese (1/2 lb),fuzzy match,Lox Cream Cheese (half pint),239550745,Deli Case,MENU,3.4,3.4,False,0.636
+Swiss Cheese (1/2 lb),fuzzy match,Dill Cream Cheese (half pint),239548270,Deli Case,MENU,1.9,1.9,False,0.622
+Swiss Cheese (1/2 lb),fuzzy match,Schmaltz - 1/2#,375817918,Freezer,MENU,1.5,1.5,False,0.588
+Tea bags (from Box of Hot Water & MEM Tea bags),fuzzy match,White Tea Shot,563652962,Cocktail,BAR,1.32,1.32,False,0.533
+Tea bags (from Box of Hot Water & MEM Tea bags),fuzzy match,Latkes (hot from the kitchen),239726062,Sides,MENU,0.74,0.74,False,0.519
+Tea bags (from Box of Hot Water & MEM Tea bags),fuzzy match,Mini Bagel with Carrot Lox & Schmear,848870190,Dinner Catering,MENU,0.13,0.13,False,0.467
+Tea bags (from Box of Hot Water & MEM Tea bags),fuzzy match,Pint Foam Heavy Water,549526921,Draught Beer,BAR,2.51,2.51,True,0.462
+Tea bags (from Box of Hot Water & MEM Tea bags),fuzzy match,Classic Nova Platter - NO BAGELS,1139943334,Platters,MENU,26.83,26.83,False,0.459
+"Tequila, TC Craft  (1.5oz)",fuzzy match,12oz Black Iced Tea,298395533,Drinks,MENU,0.84,0.84,False,0.537
+"Tequila, TC Craft  (1.5oz)",fuzzy match,Tequila Por Mi Amante,435612653,Spirits,BAR,1.02,1.02,False,0.512
+"Tequila, TC Craft  (1.5oz)",fuzzy match,12oz Hibiscus Iced Tea,298395647,Drinks,MENU,0.87,0.87,False,0.5
+"Tequila, TC Craft  (1.5oz)",fuzzy match,ElVelo Blanco Tequila Shot,491088348,Spirits,BAR,2.43,2.43,False,0.5
+"Tequila, TC Craft  (1.5oz)",fuzzy match,G4 Tequila,816656044,Spirits,BAR,0,,False,0.5
+Tip Top Espresso Martini,fuzzy match,Light Espresso Martini,253789872,Cocktail,BAR,2.13,2.13,False,0.783
+Tip Top Espresso Martini,fuzzy match,Rum Espresso Martini,1159284789,Cocktail,BAR,3.16,3.16,False,0.773
+Tip Top Espresso Martini,fuzzy match,Dark Espresso Martini,253781084,Cocktail List,BAR,2.49,2.49,False,0.756
+Tip Top Espresso Martini,fuzzy match,Tito's Martini,493490772,Cocktail,BAR,1.86,1.86,False,0.703
+Tip Top Espresso Martini,fuzzy match,Ford's Martini,484623322,Cocktail,BAR,2.12,2.12,False,0.541
+Tip Top Negroni,fuzzy match,Catrina Negroni,323605448,Cocktail,BAR,2.44,2.44,False,0.667
+Tip Top Negroni,fuzzy match,Negroni,306012067,Cocktail,BAR,2.31,2.31,False,0.636
+Tip Top Negroni,fuzzy match,Tito's Martini,493490772,Cocktail,BAR,1.86,1.86,False,0.571
+Tip Top Negroni,fuzzy match,Barr Hill Negroni,485207840,Cocktail,BAR,2.95,2.95,False,0.562
+Tip Top Negroni,fuzzy match,Tanqueray Negroni,485206918,Cocktail,BAR,2.53,2.53,False,0.562
+Tip Top Old Fashioned,fuzzy match,Old Fashioned,484616986,Cocktail,BAR,1.63,1.63,False,0.765
+Tip Top Old Fashioned,fuzzy match,Old Fashioned ,1185714005,Cocktail,BAR,1.71,1.71,False,0.765
+Tip Top Old Fashioned,fuzzy match,La Gritona Old Fashioned,1018423353,Cocktail,BAR,3.23,3.23,False,0.756
+Tip Top Old Fashioned,fuzzy match,WT101 Old Fashioned,933510669,Cocktail,BAR,1.68,1.68,False,0.75
+Tip Top Old Fashioned,fuzzy match,Oaxacan Old Fashioned,671692260,Cocktail,BAR,2.75,2.75,False,0.714
+Ukrainian Beef Borscht (frozen quart),fuzzy match,Beef Borscht (retail quart),301910878,Freezer,MENU,5.22,5.22,False,0.733
+Ukrainian Beef Borscht (frozen quart),fuzzy match,Mushroom Barley Soup (retail quart),527932246,Freezer,MENU,3.5,3.5,False,0.5
+Ukrainian Beef Borscht (frozen quart),fuzzy match,"Pumpernickel Bagels, Frozen 6-pacl",246309288,Freezer,MENU,1,1,False,0.5
+Ukrainian Beef Borscht (frozen quart),fuzzy match,Black Bean Chili (freezer retail),842799335,Freezer,MENU,3.71,3.71,False,0.485
+Ukrainian Beef Borscht (frozen quart),fuzzy match,Bulk Bagels - Baker's Dozen,375238896,Breads,MENU,2.35,2.35,False,0.475
+Vegan Matzah Ball Soup (frozen quart),fuzzy match,Quart Matzah Ball Soup (hot),245899631,Soups & Salads,MENU,1.76,1.76,False,0.787
+Vegan Matzah Ball Soup (frozen quart),fuzzy match,Quart Matzah Ball Soup,245901621,Freezer,MENU,1.95,1.95,False,0.772
+Vegan Matzah Ball Soup (frozen quart),fuzzy match,Vegan Matzah Ball Soup,842800239,Freezer,MENU,3.91,3.91,False,0.772
+Vegan Matzah Ball Soup (frozen quart),fuzzy match,Cup Matzah Ball Soup,245898926,Soups & Salads,MENU,0.73,0.73,False,0.618
+Vegan Matzah Ball Soup (frozen quart),fuzzy match,Mushroom Barley Soup (retail quart),527932246,Freezer,MENU,3.5,3.5,False,0.588
+Vodka Pickled Cucumber Soda,fuzzy match,Pickled Cucumber Lemonade,842978234,Drinks,MENU,1.25,1.25,False,0.731
+Vodka Pickled Cucumber Soda,fuzzy match,Hoodie- Pickle the Great,413859830,Retail,MENU,13.75,13.75,False,0.52
+Vodka Pickled Cucumber Soda,fuzzy match,Cap- Pickles the Great,413859033,Retail,MENU,15,15,False,0.5
+Vodka Pickled Cucumber Soda,fuzzy match,Chai Spiced Whiskey and Cider,1022118352,Cocktail,BAR,1.84,1.84,True,0.5
+Vodka Pickled Cucumber Soda,fuzzy match,Kale Caesar Salad,1124637946,Appetizers,MENU,0.95,0.95,False,0.5
+Vodka Raspberry Lime Rickey,fuzzy match,Raspberry Lime Rickey (HQ/WS),417106209,Drinks,MENU,1.57,1.57,False,0.815
+Vodka Raspberry Lime Rickey,fuzzy match,Raspberry Lime Ricky (HSP),476126381,Drinks,MENU,0.7,0.7,False,0.784
+Vodka Raspberry Lime Rickey,fuzzy match,Valentine's Chocolate-Raspberry Heart Cake,1109531916,Pastries,MENU,3.76,3.76,False,0.559
+Vodka Raspberry Lime Rickey,fuzzy match,Raspberry Sufganiyot,316351508,Holiday Items,MENU,0.84,0.84,False,0.553
+Vodka Raspberry Lime Rickey,fuzzy match,"Rugelach, Raspberry - 1 each",338660566,Pastries,MENU,0.14,0.14,False,0.553
+"Vodka, GrandTen (1.5oz)",fuzzy match,Bloody Moira w/vodka,331240578,Cocktail,BAR,57.6,57.6,True,0.526
+"Vodka, GrandTen (1.5oz)",fuzzy match,Orange Juice - 8oz.,379458695,Drinks,MENU,1.8,1.8,False,0.5
+"Vodka, GrandTen (1.5oz)",fuzzy match,Oka Brand Dry Bermutto,727497762,Spirits,BAR,1.3,1.3,False,0.476
+"Vodka, GrandTen (1.5oz)",fuzzy match,Dill Vodka,298378983,Cocktail,BAR,1.38,1.38,False,0.467
+"Vodka, GrandTen (1.5oz)",fuzzy match,Ten To One 5 Origin Rum ,1161668907,Spirits,BAR,2.78,2.78,False,0.465
+Whole Chocolate Layer Cake (v),fuzzy match,Chocolate Layer Cake - Slice,401515594,Pastries,MENU,1.16,1.16,False,0.885
+Whole Chocolate Layer Cake (v),fuzzy match,"Whole Chocolate Cake - 6""",351507596,Pastries,MENU,5.39,5.39,False,0.816
+Whole Chocolate Layer Cake (v),fuzzy match,Chocolate Cake - Slice,621144826,Pastries,MENU,1.14,1.14,False,0.739
+Whole Chocolate Layer Cake (v),fuzzy match,Mamalehs Chocolate Cake,298769813,Pastries,MENU,2.03,2.03,False,0.735
+Whole Chocolate Layer Cake (v),fuzzy match,"Flourless Chocolate Cake - 6""",380168853,Holiday Items,MENU,3.4,3.4,True,0.717
+Zero Gravity / Little Wolf Pale Ale (16oz can),fuzzy match,Pint Zero Gravity Little Wolf PA,417307285,Draught Beer,BAR,1.29,1.29,True,0.771
+Zero Gravity / Little Wolf Pale Ale (16oz can),fuzzy match,Pitcher Zero Gravity Conehead,562622019,Draught Beer,BAR,4.99,4.99,False,0.567
+Zero Gravity / Little Wolf Pale Ale (16oz can),fuzzy match,Zero Gravity CH Haze Pitcher,736778646,Draught Beer,BAR,4.82,4.82,True,0.545
+Zero Gravity / Little Wolf Pale Ale (16oz can),fuzzy match,Belleflower Violet Palms 16oz Can,1176827003,Beer,BAR,3.19,3.19,False,0.533
+Zero Gravity / Little Wolf Pale Ale (16oz can),fuzzy match,Zero Gravity Conehead Haze,736777568,Draught Beer,BAR,1.29,1.29,True,0.531
+Zab's Hot Sauce (6oz),fuzzy match,Side Sauce- Nashville Hot Aioli,298739247,Big Dipper Sauces,MENU,0.34,0.34,False,0.542
+Zab's Hot Sauce (6oz),fuzzy match,Katsu Sauce Cocktail Shot,455881961,Cocktail,BAR,0,,True,0.512
+Zab's Hot Sauce (6oz),fuzzy match,"Bottle Spring Water, 16.9oz.",379447213,Drinks,MENU,0.24,0.24,False,0.5
+Zab's Hot Sauce (6oz),fuzzy match,Tanqueray Gin Shot,522468698,Spirits,BAR,1.43,1.43,False,0.5
+Zab's Hot Sauce (6oz),fuzzy match,Side Sauce- Garlic Aioli,298739336,Big Dipper Sauces,MENU,0.34,0.34,True,0.488

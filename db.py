@@ -1,15 +1,18 @@
 """Postgres access for the Sales pipeline (ADR 0003, ADR 0005).
 
 The connection string comes from a single environment variable, `DATABASE_URL`,
-so the same code runs from a laptop and from a GitHub Actions runner. Applying
-the schema is one command:
+so the same code runs from a laptop and from a GitHub Actions runner. Bringing a
+database up to date is one command:
 
-    python db.py            # or: python db.py apply-schema
+    python db.py            # or: python db.py migrate
 
-`schema.sql` is idempotent, so re-running it against an already-set-up database
-is harmless.
+The schema is an ordered list of `migrations/NNNN-<slug>.sql` files applied once
+each and recorded in `schema_migrations` (ADR 0015). Re-running `migrate` when
+nothing is pending does nothing. There is no down command: a mistake is
+corrected by writing the next migration, and a fresh database is built by
+running every migration from `0001`.
 
-The objects (see `schema.sql`):
+The objects (see `migrations/`):
 
 - `raw_toast_responses` --- raw Toast responses as `jsonb`, the replay/audit
   safety net. `insert_raw_response` saves one; `read_raw_responses` reads them
@@ -38,9 +41,10 @@ The objects (see `schema.sql`):
 way so the view's join lines up.
 """
 import datetime as dt
+import re
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Optional
+from typing import Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 import pandas as pd
 import psycopg
@@ -49,7 +53,28 @@ from psycopg.types.json import Jsonb
 import env
 
 CONNECTION_ENV_VAR = "DATABASE_URL"
-SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+MIGRATIONS_DIR = Path(__file__).parent / "migrations"
+
+# `NNNN-<slug>.sql`. The four-digit prefix is the version — the identity the
+# database records — and the slug is for the reader, so renaming a slug does not
+# re-apply a migration. The pattern is enforced rather than assumed: a file the
+# runner cannot parse is a file it would otherwise silently skip.
+MIGRATION_FILENAME = re.compile(r"^(\d{4})-[a-z0-9]+(?:-[a-z0-9]+)*\.sql$")
+
+# Bootstrap DDL for the ledger itself. This cannot be migration `0001` — the
+# runner needs the table to know what `0001` is — so it is created on demand,
+# idempotently, before anything is applied. RLS with no policies for the same
+# reason as every other table in `public` (see `0001-baseline.sql`): Supabase
+# exposes this schema through its Data API, and the pipeline's `postgres` role
+# bypasses RLS while `anon`/`authenticated` get nothing.
+MIGRATIONS_TABLE_DDL = """
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version    text        PRIMARY KEY,
+    filename   text        NOT NULL,
+    applied_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE schema_migrations ENABLE ROW LEVEL SECURITY;
+"""
 
 
 def connection_string(environ: Optional[Mapping[str, str]] = None) -> str:
@@ -75,10 +100,148 @@ def connect(environ: Optional[Mapping[str, str]] = None, **kwargs) -> psycopg.Co
     return psycopg.connect(connection_string(environ), **kwargs)
 
 
-def apply_schema(conn: psycopg.Connection) -> None:
-    """Create the tables and view from `schema.sql`. Idempotent: safe to run
-    against an already-set-up database."""
-    conn.execute(SCHEMA_PATH.read_text())
+# ---------------------------------------------------------------------------
+# Migrations (ADR 0015)
+# ---------------------------------------------------------------------------
+
+
+def migration_files(directory: Optional[Path] = None) -> List[Tuple[str, Path]]:
+    """Every migration in version order, as `(version, path)`.
+
+    Sorting is on the four-digit prefix, so ordering is the number and never the
+    slug — `0009-...` before `0010-...`, which a plain filename sort gets right
+    today and gets wrong the moment a version needs five digits. A `.sql` file
+    that does not match `NNNN-<slug>.sql` raises rather than being skipped: the
+    failure mode this guards against is a migration that looks committed, never
+    runs, and is noticed only when a later one fails against a schema that never
+    got its column. Duplicate versions raise for the same reason — two PRs each
+    adding `0007` merge cleanly in git and would leave one of them permanently
+    unapplied."""
+    directory = MIGRATIONS_DIR if directory is None else directory
+    found: Dict[str, Path] = {}
+    for path in sorted(directory.glob("*.sql")):
+        match = MIGRATION_FILENAME.match(path.name)
+        if match is None:
+            raise RuntimeError(
+                f"{path.name} is not a migration filename. Migrations are "
+                f"`NNNN-<slug>.sql`, e.g. 0002-add-selections-table.sql."
+            )
+        version = match.group(1)
+        if version in found:
+            raise RuntimeError(
+                f"Two migrations share version {version}: {found[version].name} "
+                f"and {path.name}. Renumber the later one."
+            )
+        found[version] = path
+    return sorted(found.items())
+
+
+def applied_versions(conn: psycopg.Connection) -> Set[str]:
+    """The versions `schema_migrations` records as applied. Creates the ledger
+    if it is not there yet, so a database that has never been migrated reads as
+    "nothing applied" rather than failing on a missing table."""
+    conn.execute(MIGRATIONS_TABLE_DDL)
+    rows = conn.execute("SELECT version FROM schema_migrations").fetchall()
+    return {row[0] for row in rows}
+
+
+def pending_migrations(
+    conn: psycopg.Connection, directory: Optional[Path] = None
+) -> List[Tuple[str, Path]]:
+    """The migrations on disk that this database has not applied, in order.
+
+    Two ways the repo and the database can disagree are refused here rather than
+    papered over. A pending version *below* the highest applied one means a
+    branch was merged out of order, and applying it now would run it against a
+    schema its author never saw. A recorded version with no file means the
+    database has run something this checkout does not contain — the schema is
+    ahead of the code, and every assumption the code makes about it is
+    unverified."""
+    applied = applied_versions(conn)
+    on_disk = migration_files(directory)
+    known = {version for version, _ in on_disk}
+
+    orphaned = sorted(applied - known)
+    if orphaned:
+        raise RuntimeError(
+            f"The database has applied {', '.join(orphaned)}, which this "
+            f"checkout has no file for. It is running a schema newer than this "
+            f"code — update the checkout rather than migrating."
+        )
+
+    pending = [(version, path) for version, path in on_disk if version not in applied]
+    if pending and applied:
+        newest_applied = max(applied)
+        late = [version for version, _ in pending if version < newest_applied]
+        if late:
+            raise RuntimeError(
+                f"Migration(s) {', '.join(late)} are pending but {newest_applied} "
+                f"has already been applied — a branch merged out of order. "
+                f"Renumber them above {newest_applied} so they run against the "
+                f"schema they were written for."
+            )
+    return pending
+
+
+def apply_migrations(
+    conn: psycopg.Connection, directory: Optional[Path] = None
+) -> List[str]:
+    """Apply every pending migration in order and return the versions applied.
+
+    Each file gets its own transaction, so a migration that fails partway leaves
+    nothing behind and the ones before it stay applied — Postgres has
+    transactional DDL, and this is the rollback that matters day to day (ADR
+    0015). The ledger row is written inside that same transaction, so a file
+    can never be recorded as applied without its statements having committed,
+    nor commit without being recorded.
+
+    The caveat that buys: statements Postgres refuses to run inside a
+    transaction block — `CREATE INDEX CONCURRENTLY`, `VACUUM` — cannot go in a
+    migration. `docs/postgres.md` says what to do instead."""
+    # Autocommit first, and only then read the ledger: `pending_migrations`
+    # creates `schema_migrations` if it is missing, which outside autocommit
+    # opens an implicit transaction that psycopg then refuses to switch out of.
+    # Autocommit here does not mean "no transactions" — it means *these*
+    # explicit `conn.transaction()` blocks are the only ones, one per file,
+    # rather than one ambient transaction spanning every migration.
+    was_autocommit = conn.autocommit
+    conn.autocommit = True
+    try:
+        pending = pending_migrations(conn, directory)
+        for version, path in pending:
+            with conn.transaction():
+                conn.execute(path.read_text())
+                conn.execute(
+                    "INSERT INTO schema_migrations (version, filename) VALUES (%s, %s)",
+                    (version, path.name),
+                )
+    finally:
+        conn.autocommit = was_autocommit
+    return [version for version, _ in pending]
+
+
+def baseline(
+    conn: psycopg.Connection, version: str, directory: Optional[Path] = None
+) -> None:
+    """Record `version` as applied without running it.
+
+    This exists for exactly one moment: the live database was built by applying
+    `schema.sql` long before migrations existed, so `0001` is already true of it
+    and running it would be a no-op at best. Marking it applied is what makes an
+    already-live schema migration zero (ADR 0015). No DDL runs and no row is
+    touched. Re-running is harmless — the insert is a no-op once the row is
+    there — so a half-finished baseline can simply be repeated."""
+    files = dict(migration_files(directory))
+    if version not in files:
+        raise RuntimeError(
+            f"No migration {version} to baseline. Known: {', '.join(files) or 'none'}."
+        )
+    conn.execute(MIGRATIONS_TABLE_DDL)
+    conn.execute(
+        "INSERT INTO schema_migrations (version, filename) VALUES (%s, %s) "
+        "ON CONFLICT (version) DO NOTHING",
+        (version, files[version].name),
+    )
     conn.commit()
 
 
@@ -497,15 +660,52 @@ def read_latest_forecasts(conn: psycopg.Connection, config_version: int) -> pd.D
     return pd.DataFrame(rows, columns=list(FORECAST_COLUMNS))
 
 
+USAGE = """usage: python db.py [migrate | status | baseline NNNN]
+
+  migrate         apply every pending migration, in order (the default)
+  status          list what is applied and what is pending, and change nothing
+  baseline NNNN   record NNNN as applied without running it, for a database
+                  that already has that schema
+
+There is no down command. Forward-only (ADR 0015): correct a mistake with the
+next migration; recover a catastrophe with Supabase point-in-time recovery;
+reset a local database by dropping it and migrating from 0001."""
+
+
 def main(argv: Optional[Iterable[str]] = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
-    command = args[0] if args else "apply-schema"
-    if command != "apply-schema":
-        print(f"usage: python db.py [apply-schema]\nunknown command: {command!r}")
+    command = args[0] if args else "migrate"
+
+    if command == "status":
+        with connect() as conn:
+            applied = applied_versions(conn)
+            pending = pending_migrations(conn)
+        for version, path in migration_files():
+            mark = "pending" if version in {v for v, _ in pending} else "applied"
+            print(f"  {mark:>7}  {path.name}")
+        print(f"{len(applied)} applied, {len(pending)} pending")
+        return 0
+
+    if command == "baseline":
+        if len(args) != 2:
+            print(USAGE)
+            print("\nbaseline needs a version, e.g. python db.py baseline 0001")
+            return 2
+        with connect() as conn:
+            baseline(conn, args[1])
+        print(f"recorded {args[1]} as applied; no DDL was run")
+        return 0
+
+    if command != "migrate":
+        print(USAGE)
+        print(f"\nunknown command: {command!r}")
         return 2
+
     with connect() as conn:
-        apply_schema(conn)
-    print(f"schema applied from {SCHEMA_PATH.name}")
+        applied = apply_migrations(conn)
+    for version in applied:
+        print(f"applied {version}")
+    print(f"{len(applied)} migration(s) applied" if applied else "nothing to apply")
     return 0
 
 

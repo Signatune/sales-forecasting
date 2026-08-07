@@ -148,7 +148,7 @@ class TestAgainstPostgres:
     @pytest.fixture()
     def conn(self):
         with psycopg.connect(TEST_DATABASE_URL) as c:
-            db.apply_schema(c)
+            db.apply_migrations(c)
             c.execute("TRUNCATE raw_toast_responses, sales, product_sources, products")
             db.seed_products(
                 c,

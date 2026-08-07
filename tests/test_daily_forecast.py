@@ -188,7 +188,7 @@ class TestAgainstPostgres:
     @pytest.fixture()
     def conn(self):
         with psycopg.connect(TEST_DATABASE_URL) as c:
-            db.apply_schema(c)
+            db.apply_migrations(c)
             c.execute(
                 # report_configs is listed because it references
                 # forecast_configs: Postgres refuses to truncate the referenced
