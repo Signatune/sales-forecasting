@@ -1,0 +1,472 @@
+toast_item,match_status,recipe_name,recipe_id,category,yield_qty,yield_unit,scale_numerator,scale_denominator,scale_decimal,cost,effective_cost,price,match_source
+12oz Black Iced Tea,confident,12oz Black Iced Tea,298395533,MENU,1,EACH,1,1,1,0.84,0.84,0.84,exact_name
+12oz Hot Coffee,confident,12oz Hot Coffee,298381189,MENU,1,EACH,1,1,1,1,1,1,exact_name
+12oz Iced Coffee,confident,12oz Iced Coffee,298386283,MENU,1,EACH,1,1,1,0.99,0.99,0.99,exact_name
+16oz Hot Coffee,confident,16oz Hot Coffee,298381803,MENU,1,EACH,1,1,1,1.26,1.26,1.26,exact_name
+20oz Black Iced Tea,confident,20oz Black Iced Tea,298396068,MENU,1,EACH,1,1,1,0.98,0.98,0.98,exact_name
+Apple Sauce (half pint),confident,Apple Sauce (half pint),236410029,MENU,1,EACH,1,1,1,1.21,1.21,1.21,exact_name
+"Bagel, Schmear, and Vegetables (v)",confident,"Bagel, Schmear, and Vegetables",247937282,MENU,1,EACH,1,1,1,1.45,1.45,1.45,exact_name
+Black & White Milkshake,confident,Black and White Milkshake,401527771,MENU,1,EACH,1,1,1,3.57,3.57,3.57,exact_name
+Black Cherry Float,confident,Black Cherry Float,401526461,MENU,1,EACH,1,1,1,3.36,3.36,3.36,exact_name
+Bubbe's Broth (12oz),confident,Bubbe's Broth - 12oz.,376421575,MENU,12,OUNCE,1,1,1,0.78,0.78,0.78,exact_name
+Build A Bagel (v),confident,Build a Bagel,377220586,MENU,1,EACH,1,1,1,0.58,0.58,0.58,exact_name
+Campari & OJ (for 1),confident,Campari & OJ for 1,401524529,MENU,1,EACH,1,1,1,4.02,4.02,4.02,exact_name
+Challah Rolls (bag of 4),confident,Challah Rolls (bag of 4),301912727,MENU,1,BAG,1,1,1,0.62,0.62,0.62,exact_name
+Chicken Salad (half pint),confident,Chicken Salad (half pint),239547824,MENU,1,EACH,1,1,1,1.39,1.39,1.39,exact_name
+Chicken Salad Sandwich,confident,Chicken Salad Sandwich,245861165,MENU,1,EACH,1,1,1,1.52,1.52,1.52,exact_name
+Chicken Schnitzel Sandwich,confident,Chicken Schnitzel Sandwich,245862457,MENU,1,EACH,1,1,1,2.8,2.8,2.8,exact_name
+Chocolate Layer Cake Slice (v),confident,Chocolate Layer Cake - Slice,401515594,MENU,1,SLICE,1,1,1,1.16,1.16,1.16,exact_name
+Chocolate Milkshake,confident,Chocolate Milkshake,298401036,MENU,1,CUP,1,1,1,3.31,3.31,3.31,exact_name
+Chopped Liver (half pint),confident,Chopped Liver (half pint),239549614,MENU,1,EACH,1,1,1,1.28,1.28,1.28,exact_name
+Chopped Liver Sandwich,confident,Chopped Liver Sandwich,240470423,MENU,1,EACH,1,1,1,2.61,2.61,2.61,exact_name
+Coke,confident,Coke,379457658,MENU,1,CAN,1,1,1,0.86,0.86,0.86,exact_name
+Coke Float,confident,Coke Float,401529065,MENU,1,EACH,1,1,1,3.42,3.42,3.42,exact_name
+Corned Beef Rachel,confident,Corned Beef Rachel,245344993,MENU,1,EACH,1,1,1,4.07,4.07,4.07,exact_name
+Corned Beef Reuben,confident,Corned Beef Reuben,240473398,MENU,1,EACH,1,1,1,4.27,4.27,4.27,exact_name
+Diet Coke,confident,Diet Coke,379457885,MENU,1,CAN,1,1,1,0.86,0.86,0.86,exact_name
+Dr. Brown's Ginger Ale,confident,Dr. Brown's - Ginger Ale,379453493,MENU,1,CAN,1,1,1,1.09,1.09,1.09,exact_name
+Dr. Browns Black Cherry,confident,Dr. Brown's - Black Cherry,379454137,MENU,1,CAN,1,1,1,0.94,0.94,0.94,exact_name
+Dr. Browns Cel-Ray,confident,Dr. Brown's - Cel-Ray,379456052,MENU,1,CAN,1,1,1,0.94,0.94,0.94,exact_name
+Dr. Browns Cream Soda,confident,Dr. Brown's - Cream Soda,379452051,MENU,1,CAN,1,1,1,0.94,0.94,0.94,exact_name
+Dr. Browns Diet Black Cherry,confident,Dr. Brown's - Diet Black Cherry,379455657,MENU,1,CAN,1,1,1,1.09,1.09,1.09,exact_name
+Dr. Browns Diet Cream Soda,confident,Dr. Brown's - Diet Cream Soda,379453143,MENU,1,CAN,1,1,1,0.94,0.94,0.94,exact_name
+Dr. Browns Root Beer,confident,Dr. Brown's - Root Beer,379456666,MENU,1,CAN,1,1,1,0.94,0.94,0.94,exact_name
+Egg and Cheese Sandwich (v),confident,Egg and Cheese Sandwich,245921399,MENU,1,EACH,1,1,1,0.56,0.56,0.56,exact_name
+Egg Salad (half pint),confident,Egg Salad (half pint),239549801,MENU,1,EACH,1,1,1,1.02,1.02,1.02,exact_name
+Egg Salad Sandwich (v),confident,Egg Salad Sandwich,245863877,MENU,1,EACH,1,1,1,1.13,1.13,1.13,exact_name
+Glass of Milk (12oz),confident,Glass of Milk - 12oz.,379461212,MENU,1,EACH,1,1,1,0.97,0.97,0.97,exact_name
+Hummus Sandwich (v+),confident,Hummus Sandwich,301805602,MENU,1,EACH,1,1,1,0.92,0.92,0.92,exact_name
+LEO,confident,LEO,301785092,MENU,1,EACH,1,1,1,1.56,1.56,1.56,exact_name
+Mamaleh's Big Salad,confident,Mamaleh's Big Salad,245887524,MENU,1,EACH,1,1,1,4.92,4.92,4.92,exact_name
+Martinelli's Apple Juice,confident,Martinelli's Apple Juice,411551508,MENU,1,EACH,1,1,1,1.77,1.77,1.77,exact_name
+Mimosa,confident,Mimosa,478055141,MENU,1,BOTTLE,1,1,1,5.3,5.3,5.3,exact_name
+"Mushroom, Egg, and Cheese (v)",confident,"Mushroom, Egg & Cheese",409362374,MENU,1,EACH,1,1,1,1.51,1.51,1.51,exact_name
+Nova Lox Sandwich,confident,Nova Lox Sandwich,247935973,MENU,1,EACH,1,1,1,3.41,3.41,3.41,exact_name
+NY Cheesecake Slice (v) (gf),confident,NY Cheesecake Slice,401561499,MENU,1,SLICE,1,1,1,1.2,1.2,1.2,exact_name
+Pastrami Chopped Liver Sandwich,confident,Pastrami/Chopped Liver Sandwich,240471167,MENU,1,EACH,1,1,1,4.01,4.01,4.01,exact_name
+Pastrami Rachel,confident,Pastrami Rachel,245803238,MENU,1,EACH,1,1,1,3.42,3.42,3.42,exact_name
+Pastrami Reuben,confident,Pastrami Reuben,245810170,MENU,1,EACH,1,1,1,3.63,3.63,3.63,exact_name
+Potato Latkes (frozen) (v),confident,Potato Latkes (Frozen),239723393,MENU,1,EACH,1,1,1,2.01,2.01,2.01,exact_name
+Potato Salad (half pint),confident,Potato Salad (half pint),239573598,MENU,1,EACH,1,1,1,0.78,0.78,0.78,exact_name
+Quart Matzah Ball Soup (hot),confident,Quart Matzah Ball Soup (hot),245899631,MENU,1,EACH,1,1,1,1.76,1.76,1.76,exact_name
+Root Beer Float,confident,Root Beer Float,401533092,MENU,1,EACH,1,1,1,3.61,3.61,3.61,exact_name
+sauerkraut (half pint),confident,Sauerkraut (half pint),301898755,MENU,1,EACH,1,1,1,1.12,1.12,1.12,exact_name
+Smoked Salmon & Chickpea Bowl,confident,Smoked Salmon & Chickpea Bowl,920931787,MENU,1,EACH,1,1,1,3.44,3.44,3.44,exact_name
+Sour Cream (half pint),confident,Sour Cream (half pint),236404696,MENU,1,EACH,1,1,1,0.92,0.92,0.92,exact_name
+The Ida (v),confident,The Ida,247938515,MENU,1,EACH,1,1,1,0.84,0.84,0.84,exact_name
+The Lastnamer,confident,The Lastnamer,247939626,MENU,1,EACH,1,1,1,3.28,3.28,3.28,exact_name
+Tuna Salad (half pint),confident,Tuna Salad (half pint),239553062,MENU,1,EACH,1,1,1,3.63,3.63,3.63,exact_name
+Tuna Salad Sandwich,confident,Tuna Salad Sandwich,245833379,MENU,1,EACH,1,1,1,3.11,3.11,3.11,exact_name
+Turkey Rachel,confident,Turkey Rachel,245804085,MENU,1,EACH,1,1,1,3.2,3.2,3.2,exact_name
+Turkey Reuben,confident,Turkey Reuben,245811336,MENU,1,EACH,1,1,1,3.28,3.28,3.28,exact_name
+Vanilla Milkshake,confident,Vanilla Milkshake,298400223,MENU,1,CUP,1,1,1,4.08,4.08,4.08,exact_name
+Vegan Egg Sandwich (v+),confident,Vegan Egg Sandwich,839533481,MENU,1,EACH,1,1,1,2.32,2.32,2.32,exact_name
+Whitefish Salad (half pint),confident,Whitefish Salad (half pint),239547019,MENU,1,EACH,1,1,1,2.84,2.84,2.84,exact_name
+Whitefish Salad Sandwich,confident,Whitefish Salad Sandwich,247942817,MENU,1,EACH,1,1,1,1.93,1.93,1.93,exact_name
+1 Bagel (v+),no_match,,,,,,,,,,,,
+1 Pickle,reviewed,Side of Pickles,301811410,MENU,,,,,,0.93,0.93,0.93,top3
+12oz Herbal Hibiscus Orange Iced Tea,reviewed,12oz Hibiscus Iced Tea,298395647,MENU,,,,,,0.87,0.87,0.87,top3
+16oz MEM Hot Tea,no_match,,,,,,,,,,,,
+20oz Herbal Hibiscus Orange Iced Tea,reviewed,20oz Hibiscus Iced Tea,298397909,MENU,,,,,,0.87,0.87,0.87,top3
+20oz Raspberry Lime Rickey,reviewed,Raspberry Lime Rickey (HQ/WS),417106209,MENU,,,,,,1.57,1.57,1.57,top3
+20oz Sparkling Pickle Cucumber Lemonade,reviewed,Pickled Cucumber Lemonade,842978234,MENU,,,,,,1.25,1.25,1.25,top3
+A&J King's Light Seeded Rye Bread  (half loaf),reviewed,Half Loaf A&J King Seeded Rye Bread,333484518,MENU,,,,,,3.8,3.8,3.8,top3
+add 1 matzah ball,reviewed,Commissary - Matzah Balls,303660971,PREPARED,120,EACH,1,120,0.008333333333333333,23.68,0.19733333333333333,23.68,search
+Artichoke Chickpea Tagine (frozen pint) (v+),reviewed,Eggplant and Chickpea Tagine (bulk),247963228,MENU,30,EACH,1,30,0.03333333333333333,74.19,2.473,74.19,top3
+Babka French Toast (v),reviewed,Babka French Toast (brunch),842797492,MENU,1,EACH,1,1,1,1.45,1.45,1.45,top3
+Babka Loaf (fresh-frozen),no_match,,,,,,,,,,,,
+Bag of Bubbe's Beans,no_match,,,,,,,,,,,,
+Baker's Dozen (v+),no_match,,,,,,,,,,,,
+Barrington Coffee Bubbe's Beans 5 lb regular,no_match,,,,,,,,,,,,
+Bottled Water,no_match,,,,,,,,,,,,
+Bourbon Vanilla Milkshake (boozy! 21+),reviewed,Bourbon-Vanilla Milkshake,401541711,MENU,1,EACH,1,1,1,5,5,5,top3
+"Bourbon, Four Roses (1.5oz)",reviewed,Four Roses Shot,562538428,BAR,1,SERVING,1,1,1,1.12,1.12,1.12,top3
+Brisket and Black Bean Chili (frozen pint),reviewed,Black Bean Chili (freezer retail),842799335,MENU,1,EACH,1,1,1,3.71,3.71,3.71,top3
+Challah Loaf (Fridays Only),reviewed,Challah Loaf,245860740,MENU,1,EACH,1,1,1,1.38,1.38,1.38,top3
+Challah Loaf (frozen),reviewed,Challah Loaf,245860740,MENU,1,EACH,1,1,1,1.38,1.38,1.38,top3
+Cheddar Cheese (1 lb),reviewed,Cheddar Cheese (retail 1/2#),301897827,MENU,1,BAG,2,1,2,2.27,4.54,2.27,top3
+Cheddar Cheese (1/2 lb),reviewed,Cheddar Cheese (retail 1/2#),301897827,MENU,1,BAG,1,1,1,2.27,2.27,2.27,top3
+Cheese Blintzes (frozen) (v),reviewed,Blintzes (frozen bag of 4),238013764,MENU,1,EACH,1,1,1,4.08,4.08,4.08,top3
+Cheese Blintzes (hot) (v),reviewed,Hot Blintzes,842814175,MENU,1,EACH,1,1,1,2.49,2.49,2.49,top3
+Chocolate Babka Slice (v),reviewed,"Babka Muffin, Chocolate",246966666,MENU,1,EACH,1,1,1,0.64,0.64,0.64,search
+Chocolate Rugelach each (v),reviewed,"Rugelach, Chocolate - 1 each",338646536,MENU,1,EACH,1,1,1,0.09,0.09,0.09,top3
+Choward's Lemon Mints,reviewed,"Candy,  C-Howard's Lemon Mints",413232677,MENU,1,EACH,1,1,1,0.9,0.9,0.9,top3
+Choward's Spearmint Mints,reviewed,"Candy, C-Howard's Spearmint Mints",413234058,MENU,1,EACH,1,1,1,0.9,0.9,0.9,top3
+Choward's Violet Mints,reviewed,"Candy, C-Howard's Violets",413235074,MENU,1,EACH,1,1,1,0.9,0.9,0.9,top3
+Choward’s Scented Gum,reviewed,"Candy, C-Howard's Scented Gum",413233021,MENU,1,EACH,1,1,1,0.9,0.9,0.9,top3
+Cinnamon Babka Slice (v),reviewed,"Babka Muffin, Cinnamon",246966550,MENU,1,EACH,1,1,1,0.37,0.37,0.37,top3
+Citizen Cider / Unified Press (16oz can),reviewed,Citizen Cider,499732131,BAR,1,SERVING,1,1,1,2.77,2.77,2.77,top3
+Coleslaw (half pint),reviewed,Coleslaw (1/2 pint),842853102,MENU,1,EACH,1,1,1,0.86,0.86,0.86,top3
+Cottage Cheese & Fresh Fruit Cup,no_match,,,,,,,,,,,,
+Cream Cheese (half pint),no_match,,,,,,,,,,,,
+Deli Mustard (10oz),reviewed,Commissary Retail - Bottle of Deli Mustard (9oz.),677012764,PREPARED,1,EACH,1,1,1,2.32,2.32,2.32,search
+Djuce Fizzy Rose,no_match,,,,,,,,,,,,
+Djuce White Wine,no_match,,,,,,,,,,,,
+Double Dogs,reviewed,Hot Dogs,301802477,MENU,1,EACH,1,1,1,2.73,2.73,2.73,top3
+Everything Spice (4oz),reviewed,Retail - Everything Spice,413836310,MENU,1,JAR,1,1,1,1.19,1.19,1.19,top3
+Farmers and Cooks Turkey (1/2 lb retail),reviewed,Commissary Retail - 1/2# Roasted Turkey,662171760,PREPARED,1,PACK,1,1,1,4.28,4.28,4.28,search
+Filthy / Tito's Bloody Mary,reviewed,Mamaleh's Bloody Mary,535295942,BAR,1,SERVING,1,1,1,1.26,1.26,1.26,top3
+Fooda Food,no_match,,,,,,,,,,,,
+Fox's U Bet (22oz),reviewed,Bubbe's Broth - 12oz.,376421575,MENU,12,OUNCE,1,1,1,0.78,0.78,0.78,search
+Fruit Slice Candy each,reviewed,"Candy, Fruit Slice",413230709,MENU,1,EACH,1,1,1,0.66,0.66,0.66,top3
+GG's Sprinkle Cookie (v),reviewed,Bakery - Sprinkle Cookies,785952253,PREPARED,1,EACH,1,1,1,0.11,0.11,0.11,search
+"Gin, Perry's Tot (1.5oz)",no_match,,,,,,,,,,,,
+Glorious Morning Muffin (v+),reviewed,Bakery - Glorious Morning Muffins,1256366359,PREPARED,1,BOX,1,12,0.08333333333333333,6.82,0.5683333333333334,6.82,search
+Goldenberg's Peanut Chews,reviewed,"Candy, Goldenberg's Peanut Chews",413235404,MENU,1,EACH,1,1,1,1.1,1.1,1.1,top3
+Gribenes (4oz bag),reviewed,Retail - Gribenes (4oz),465932917,MENU,1,BAG,1,1,1,0.66,0.66,0.66,top3
+Hal's Potato Chips,no_match,,,,,,,,,,,,
+Half Hot Corned Beef (1/4 lb),reviewed,Hot Corned Beef (4 oz.) Sandwich,240471688,MENU,1,EACH,1,1,1,3.6,3.6,3.6,top3
+Half Hot Pastrami (1/4 lb),reviewed,Hot Pastrami (4 oz.) Sandwich,240471448,MENU,1,EACH,1,1,1,3.36,3.36,3.36,top3
+Half Sour Pickles (quart),reviewed,1/2 Sour Pickles (retail Quart),301895879,MENU,1,QUART,1,1,1,4.08,4.08,4.08,top3
+Half-Dozen Assorted Bagels (fresh-frozen) (v+),reviewed,6-pack Assorted Bagels ,246304090,MENU,1,BAG,1,1,1,0.92,0.92,0.92,top3
+Half-Dozen Bialys (fresh-frozen) (v+),reviewed,1/2 Dozen Bialys,246657553,MENU,1,BAG,1,1,1,0.68,0.68,0.68,top3
+Half-Dozen Cinnamon Raisin Bagels (fresh-frozen) (v+),reviewed,1/2 doz Cinnamon Raisin Bagels,375806678,MENU,1,BAG,1,1,1,1.6,1.6,1.6,top3
+Half-Dozen Everything Bagels (fresh-frozen) (v+),reviewed,Everything Bagel,246271713,MENU,1,EACH,6,1,6,0.18,1.08,0.18,top3
+Half-Dozen Original Sunshine Gluten-Free Bagels (v+),no_match,,,,,,,,,,,,
+Half-Dozen Plain Bagels (fresh-frozen) (v+),reviewed,Bakery - Plain Bagels (fresh),773275320,PREPARED,1,EACH,6,1,6,0.1,0.6000000000000001,0.1,search
+Half-Dozen Pumpernickel Bagels (fresh-frozen) (v+),reviewed,"Pumpernickel Bagels, Frozen 6-pacl",246309288,MENU,1,BAG,1,1,1,1,1,1,top3
+Hot 50/50 (1/2 lb),reviewed,Hot 50/50 (8 oz),245831932,MENU,1,EACH,1,1,1,6.66,6.66,6.66,top3
+Hot Potato Latkes (v),reviewed,Latkes (hot from the kitchen),239726062,MENU,1,EACH,1,1,1,0.74,0.74,0.74,search
+Hot Tongue Sandwich (1/4 lb),reviewed,Hot Tongue (4 oz) Sandwich,245345490,MENU,1,EACH,1,1,1,4.89,4.89,4.89,top3
+Joyva Chocolate Covered Halvah Bar,reviewed,"Candy, Chocolate Covered Halvah",413232462,MENU,1,EACH,1,1,1,1.61,1.61,1.61,top3
+Joyva Jell Rings,reviewed,"Candy, Joyva Jelly Rings",413235773,MENU,1,EACH,1,1,1,1.21,1.21,1.21,top3
+Lactaid Pill,no_match,,,,,,,,,,,,
+Larger Whole Chocolate Layer Cakes  (v),no_match,,,,,,,,,,,,
+Lawson's Sip of Sunshine IPA,reviewed,Lawson's Sip of Sunshine,468682248,BAR,1,SERVING,1,1,1,3.15,3.15,3.15,top3
+Lemon Poppy Seed Muffin (v) (gf),reviewed,Lemon Poppyseed Cake Slice,286327031,MENU,1,SLICE,1,1,1,0.44,0.44,0.44,top3
+"Life Savers, Wint O Green",no_match,,,,,,,,,,,,
+Malted Brandy Alexander Milkshake (boozy! 21+),no_match,,,,,,,,,,,,
+Mamaleh's Corned Beef (1/2 lb retail),reviewed,1/2# Corned Beef,247932824,MENU,1,EACH,1,1,1,5.46,5.46,5.46,top3
+Mamaleh's Pastrami (1/2 lb retail),reviewed,1/2# Pastrami,247932478,MENU,1,EACH,1,1,1,4.97,4.97,4.97,top3
+Mamaleh's Raspberry Jam (10oz),reviewed,"Transfer - Retail, Raspberry Jams",312313244,PREPARED,1,CASE,1,1,1,1.33,1.33,1.33,search
+Mamaleh's Tongue (1/4 lb),reviewed,Hot Tongue (4 oz) Sandwich,245345490,MENU,1,EACH,1,1,1,4.89,4.89,4.89,search
+Mandel Bread (v),reviewed,Bakery - Mandel Bread,785951774,PREPARED,1,EACH,1,1,1,0.41,0.41,0.41,search
+MANISCHEWITZ (a whole bottle!),no_match,,,,,,,,,,,,
+Manischewitz Shpritz,reviewed,Manischewitz Spritz,478090009,MENU,20,FLUID_OUNCE,1,1,1,1.08,1.08,1.08,top3
+Mapleline Farm Chocolate Milk,reviewed,Chocolate Milk - Mapleline,379463189,MENU,1,BOTTLE,1,1,1,1.9,1.9,1.9,top3
+Matzah Ball Soup (frozen quart),reviewed,Commissary Retail - Matzah Ball Soup - Quart Frozen,255181905,PREPARED,1,QUART,1,1,1,2.12,2.12,2.12,search
+"Meat Knish (4, frozen)",reviewed,Meat Knish Frozen 4 Pack,375807978,MENU,1,BAG,1,1,1,3.38,3.38,3.38,top3
+Medusa Pilsner,no_match,,,,,,,,,,,,
+Mimosa (prosecco and OJ),no_match,,,,,,,,,,,,
+Mixed Up Classic Margarita,no_match,,,,,,,,,,,,
+Mixed Up Gin Grapefruit Mule,no_match,,,,,,,,,,,,
+Mixed Up Lemon Raspberry Mojito,no_match,,,,,,,,,,,,
+Mocha Milkshake (boozy! 21+),no_match,,,,,,,,,,,,
+Mushroom Barley Soup (frozen quart),reviewed,Mushroom Barley Soup (retail quart),527932246,MENU,1,EACH,1,1,1,3.5,3.5,3.5,top3
+"Need cutlery, napkins, or handle bag?",no_match,,,,,,,,,,,,
+Noodle Kugel (frozen) (v),reviewed,Noodle Kugel (retail),301909008,MENU,1,EACH,1,1,1,3.81,3.81,3.81,top3
+Nova Lox (1/2 lb hand-sliced),reviewed,1/2# Nova (hand-sliced),247931929,MENU,1,EACH,1,1,1,7.69,7.69,7.69,top3
+Nova Lox (1/2 lb retail package),reviewed,1/2# Nova (hand-sliced),247931929,MENU,1,EACH,1,1,1,7.69,7.69,7.69,search
+Nova Lox (1/4 lb retail package),reviewed,Pastrami Lox - Retail 1/4#,408874951,MENU,1,EACH,1,1,1,2.38,2.38,2.38,top3
+Orthodox Chew each,reviewed,"Candy, Orthodox Chews",413232050,MENU,1,EACH,1,1,1,0.01,0.01,0.01,top3
+"Pastrami Bolognese (frozen, pint)",reviewed,Pastrami Bolognese (bulk),1116877173,PREPARED,24,PINT,1,24,0.041666666666666664,58.83,2.45125,58.83,search
+"Pastrami, Egg, and Cheese",reviewed,"Pastrami, Egg, and Cheese Sandwich",245922083,MENU,1,EACH,1,1,1,1.95,1.95,1.95,top3
+Pickle Cotton Candy,reviewed,"Candy, Pickle Cotton Candy",413236627,MENU,1,EACH,1,1,1,2.54,2.54,2.54,top3
+Pickle Salt (4oz),reviewed,Commissary - Pickle Salt Jar,598392923,PREPARED,2,OUNCE,1,1,1,1.08,1.08,1.08,search
+Pickled Carrots (half pint),reviewed,Pickled Carrots - Retail,375801415,MENU,1,CONTAINER,1,1,1,0.57,0.57,0.57,top3
+Pickled Green Tomatoes (quart),reviewed,Pickled Green Tomatoes (retail Pint),301896777,MENU,1,PINT,1,1,1,3.29,3.29,3.29,top3
+Pickled Herring in Wine (half pint),reviewed,Herring in Wine (half pint),301905947,MENU,1,EACH,1,1,1,3.3,3.3,3.3,top3
+Pinot Project Pinot Grigio,no_match,,,,,,,,,,,,
+Pinot Project ROSE (Copy),no_match,,,,,,,,,,,,
+Polar Seltzer,reviewed,Polar Seltzer Water,379459268,MENU,1,CAN,1,1,1,0.64,0.64,0.64,top3
+Potato Knish (frozen) (v+),reviewed,Potato Knish Frozen 4 pack,375813038,MENU,1,BAG,1,1,1,1.13,1.13,1.13,top3
+Raspberry Walnut Rugelach each (v),reviewed,Bakery - Raspberry Rugelach - Frozen,785950924,PREPARED,1,EACH,1,1,1,0.14,0.14,0.14,search
+Redeemed Drink Ticket,no_match,,,,,,,,,,,,
+Rendez Vous Hard Candy,reviewed,"Candy, Rendez Vous Hard Candy",413237108,MENU,1,EACH,1,1,1,1.92,1.92,1.92,top3
+Rescue Club Pils (non-alcoholic),no_match,,,,,,,,,,,,
+Russian Dressing (10oz),reviewed,Russian Dressing (retail-12 oz squeeze bottle),297615674,MENU,1,EACH,1,1,1,2.08,2.08,2.08,top3
+Salad Bar Salad (v/v+),reviewed,Add Mixed Greens,412018710,PREPARED,1,EACH,3,1,3,0.1,0.30000000000000004,0.1,search
+"Salami, Egg, and Cheese",reviewed,"Salami, Egg, and Cheese Sandwich",245925260,MENU,1,EACH,1,1,1,1.8,1.8,1.8,top3
+Seed + Mill Chocolate Halva,reviewed,"Seed & Mill, Chocolate",413242300,MENU,1,EACH,1,1,1,6.35,6.35,6.35,top3
+Seed + Mill Pistachio Halva,reviewed,"Seed & Mill, Pistachio",413242624,MENU,1,EACH,1,1,1,6.35,6.35,6.35,top3
+Seedy Everything Crackers (9oz bag),reviewed,Retail - Seedy Everything Crackers,425513959,MENU,1,BAG,1,1,1,1.46,1.46,1.46,top3
+Sesame Crunch Candy each,reviewed,"Candy, Sesame Crunch",413237895,MENU,1,EACH,1,1,1,0.09,0.09,0.09,top3
+Sesame Tahini Cookie (v),reviewed,Bakery - Tahini Cookies,785952098,PREPARED,1,EACH,1,1,1,0.2,0.2,0.2,search
+Side of Bagel Topping Veggies,no_match,,,,,,,,,,,,
+Side of Cream Cheese (2oz),no_match,,,,,,,,,,,,
+Side of Deli Mustard,reviewed,Side of Mustard,301816892,MENU,1,EACH,1,1,1,0.28,0.28,0.28,top3
+Side of Homemade Russian Dressing,reviewed,Side of Russian Dressing,301818243,MENU,1,EACH,1,1,1,0.1,0.1,0.1,top3
+Side of Lox (2oz),reviewed,2oz. Lox OTS,410123013,PREPARED,2,OUNCE,1,1,1,1.88,1.88,1.88,search
+Slivovitz (1oz),no_match,,,,,,,,,,,,
+Smoked Fish Platter (serves 6),reviewed,Smoked Fish Platter (for 6),316850942,MENU,1,EACH,1,1,1,22.26,22.26,22.26,top3
+Smoked Fish Platter for Two,reviewed,Smoked FIsh Platter (for 2),316851975,MENU,1,EACH,1,1,1,11.7,11.7,11.7,top3
+Smoked Mushroom Rachel (v),reviewed,Mushroom Rachel,301808180,MENU,1,EACH,1,1,1,2.94,2.94,2.94,top3
+Smoked Mushroom Reuben (v),reviewed,Mushroom Reuben,301806339,MENU,1,EACH,1,1,1,3.14,3.14,3.14,top3
+Smoked Sable (1/4 lb hand sliced),reviewed,1/4# Sable,247932342,MENU,1,EACH,1,1,1,7.38,7.38,7.38,search
+Smoked Sable Sandwich,reviewed,Sable Sandwich,247940838,MENU,1,EACH,1,1,1,4.11,4.11,4.11,top3
+Soom Chocolate Tahini (11oz),reviewed,"Transfer - Retail, Soom Tahini Jars, Chocolate ",312317720,PREPARED,1,JAR,1,1,1,5.95,5.95,5.95,search
+Soom Sesame Tahini (11oz),reviewed,"Transfer - Retail, Soom Tahini Jars, Plain ",422372683,PREPARED,1,JAR,1,1,1,10.04,10.04,10.04,search
+Sour Cream Walnut Coffee Cake Slice (v),reviewed,Coffee Cake - Slice,472339488,MENU,1,EACH,1,1,1,0.53,0.53,0.53,top3
+Spindrift Grapefruit Sparkling Water,reviewed,Spindrift - Grapefruit,379449035,MENU,1,CAN,1,1,1,0.97,0.97,0.97,top3
+Spindrift Orange Mango Sparkling Water,reviewed,Sprindrift - Orange Mango,379450135,MENU,1,CAN,1,1,1,0.97,0.97,0.97,top3
+Spindrift Pineapple Sparkling Water,reviewed,Spindrift - Pineapple,379450542,MENU,1,CAN,1,1,1,0.97,0.97,0.97,top3
+Swiss Cheese (1 lb),reviewed,Swiss Cheese (retail 1/2#),301897650,MENU,1,BAG,2,1,2,1.45,2.9,1.45,top3
+Swiss Cheese (1/2 lb),reviewed,Swiss Cheese (retail 1/2#),301897650,MENU,1,BAG,1,1,1,1.45,1.45,1.45,top3
+Tea bags (from Box of Hot Water & MEM Tea bags),no_match,,,,,,,,,,,,
+"Tequila, TC Craft  (1.5oz)",no_match,,,,,,,,,,,,
+Tip Top Espresso Martini,no_match,,,,,,,,,,,,
+Tip Top Negroni,no_match,,,,,,,,,,,,
+Tip Top Old Fashioned,no_match,,,,,,,,,,,,
+Ukrainian Beef Borscht (frozen quart),reviewed,Beef Borscht (retail quart),301910878,MENU,1,QUART,1,1,1,5.22,5.22,5.22,top3
+Vegan Matzah Ball Soup (frozen quart),reviewed,Vegan Matzah Ball Soup,842800239,MENU,1,EACH,1,1,1,3.91,3.91,3.91,top3
+Vodka Pickled Cucumber Soda,no_match,,,,,,,,,,,,
+Vodka Raspberry Lime Rickey,no_match,,,,,,,,,,,,
+"Vodka, GrandTen (1.5oz)",no_match,,,,,,,,,,,,
+Whole Chocolate Layer Cake (v),reviewed,Chocolate Layer Cake - Slice,401515594,MENU,1,SLICE,1,1,1,1.16,1.16,1.16,top3
+Zab's Hot Sauce (6oz),no_match,,,,,,,,,,,,
+Zero Gravity / Little Wolf Pale Ale (16oz can),no_match,,,,,,,,,,,,
+Bartolomeo Prosecco (187ml btl),unresolved,,,,,,,,,,,,
+
+modifier_name,qty_last_60_days,last_seen,status,recipe_name,recipe_id,category,yield_qty,yield_unit,scale_numerator,scale_denominator,scale_decimal,cost,effective_cost,cost_sign,match_source
+toasted,11574,2026-08-06,excluded,,,,,,,,,,,,
+everything bagel,6756,2026-08-06,reviewed,Everything Bagel,246271713,MENU,1,EACH,1,1,1,0.18,0.18,add,top3
+plain bagel,4042,2026-08-05,reviewed,Plain Bagel,246264737,MENU,1,EACH,1,1,1,0.1,0.1,add,top3
+"everything, bulk",3758,2026-08-06,reviewed,Everything Bagel,246271713,MENU,1,EACH,1,1,1,0.18,0.18,add,top3
+sesame bagel,3567,2026-08-06,reviewed,Sesame Bagel,246303515,MENU,1,EACH,1,1,1,0.16,0.16,add,top3
+"plain, bulk",3334,2026-08-06,reviewed,Plain Bagel,246264737,MENU,1,EACH,1,1,1,0.1,0.1,add,top3
+"sesame, bulk",2830,2026-08-06,reviewed,Sesame Bagel,246303515,MENU,1,EACH,1,1,1,0.16,0.16,add,top3
+plain cc,2750,2026-08-06,reviewed,Add Plain Cream Cheese,412034239,PREPARED,1,EACH,1,1,1,0.4,0.4,add,search
+lightly toasted,2375,2026-08-05,excluded,,,,,,,,,,,,
+scallion cc,2141,2026-08-06,reviewed,Add Scallion Cream Cheese,412034788,PREPARED,1,EACH,1,1,1,0.4,0.4,add,search
+splash half & half,1887,2026-08-06,reviewed,Transfer - Half & Half,949480705,PREPARED,1,EACH,1,100,0.01,2.25,0.0225,add,search
+not toasted,1688,2026-08-05,excluded,,,,,,,,,,,,
+splash 2% milk,1538,2026-08-06,excluded,,,,,,,,,,,,
+add sliced tomato,1508,2026-08-05,reviewed,Add Tomato,412028702,PREPARED,1,EACH,1,1,1,0.23,0.23,add,search
+sliced,1441,2026-08-06,excluded,,,,,,,,,,,,
+splash oat milk,1275,2026-08-06,excluded,,,,,,,,,,,,
+just black,1250,2026-08-05,excluded,,,,,,,,,,,,
+add cucumber,1231,2026-08-05,reviewed,Add Cucumber,411561678,PREPARED,1,EACH,1,1,1,0.26,0.26,add,search
+no cream cheese,1023,2026-08-05,reviewed,Side of Cream Cheese,301813400,MENU,1,EACH,1,1,1,0.29,0.29,subtract,top3
+add avocado,1004,2026-08-06,reviewed,Avocado,1120291243,PREPARED,1,EACH,1,3,0.3333333333333333,1.46,0.48666666666666664,add,search
+add red onion,878,2026-08-05,reviewed,Add Red Onion,412021531,PREPARED,1,EACH,1,1,1,0.05,0.05,add,search
+unsliced,855,2026-08-05,excluded,,,,,,,,,,,,
+extra toasted,779,2026-08-06,excluded,,,,,,,,,,,,
+less cream cheese,748,2026-08-05,excluded,,,,,,,,,,,,
+hal's plain,745,2026-08-05,reviewed,Hal's Potato Chips - Salted,412111470,MENU,1,BAG,1,1,1,0.98,0.98,add,search
+scallion cc (v),740,2026-08-06,reviewed,Add Scallion Cream Cheese,412034788,PREPARED,1,EACH,1,1,1,0.4,0.4,add,search
+veggie cc (v),715,2026-08-06,reviewed,Add Veggie Cream Cheese,412039265,PREPARED,1,EACH,1,1,1,0.4,0.4,add,search
+plain cc (v),711,2026-08-06,reviewed,Add Plain Cream Cheese,412034239,PREPARED,1,EACH,1,1,1,0.4,0.4,add,search
+add nova lox (2oz),698,2026-08-05,reviewed,1/2# Nova (hand-sliced),247931929,MENU,1,EACH,1,4,0.25,7.69,1.9225,add,top3
+add crisp lettuce,654,2026-08-05,reviewed,Add Mixed Greens,412018710,PREPARED,1,EACH,1,1,1,0.1,0.1,add,search
+squeeze of simple syrup,623,2026-08-06,reviewed,Commissary - Simple Syrup,703325287,PREPARED,1,QUART,1,48,0.020833333333333332,1.01,0.021041666666666667,add,search
+no tomato,582,2026-08-05,reviewed,Add Tomato,412028702,PREPARED,1,EACH,1,1,1,0.23,0.23,subtract,search
+challah roll,570,2026-08-05,reviewed,Challah Roll,245858740,MENU,1,EACH,1,1,1,0.14,0.14,add,top3
+sugar in the raw,569,2026-08-06,reviewed,Transfer - Sugar in the Raw Packets,311028294,PREPARED,1,QUART,1,30,0.03333333333333333,3.65,0.12166666666666666,add,search
+light rye bread,560,2026-08-05,excluded,,,,,,,,,,,,
+sub scallion cream cheese,540,2026-08-05,excluded,,,,,,,,,,,,
+butter,491,2026-08-06,reviewed,Add Butter,411558102,PREPARED,1,EACH,1,1,1,0.28,0.28,add,search
+hal's salt and vinegar,483,2026-08-05,reviewed,Hal's Potato Chips - Salt & Vinegar,412112578,MENU,1,EACH,1,1,1,0.98,0.98,add,top3
+add capers,481,2026-08-05,reviewed,Add Capers,411558203,PREPARED,1,EACH,1,1,1,0.17,0.17,add,search
+add swiss (2 slices),474,2026-08-05,reviewed,Add 2 Slices Swiss,412027805,PREPARED,1,EACH,1,1,1,0.24,0.24,add,search
+no capers,442,2026-08-05,reviewed,Add Capers,411558203,PREPARED,1,EACH,1,1,1,0.17,0.17,subtract,search
+cream cheese on the side,431,2026-08-05,excluded,,,,,,,,,,,,
+"gluten-free everything bagel (original sunshine, contains wheat, must be toasted)",415,2026-08-05,reviewed,"Transfer - Bagel, Plain Gluten Free",555818095,PREPARED,1,BAG,1,6,0.16666666666666666,12.54,2.09,add,search
+"yes, include a table sign",406,2026-08-06,excluded,,,,,,,,,,,,
+add eggs scrambled,394,2026-08-05,reviewed,Add Scrambled Eggs,412011490,PREPARED,1,EACH,1,1,1,0.2,0.2,add,search
+no pickle,393,2026-08-05,reviewed,Side of Pickles,301811410,MENU,1,EACH,1,1,1,0.93,0.93,subtract,top3
+add organic vanilla syrup,388,2026-08-05,reviewed,Transfer - Vanilla Syrup (kakow),311037729,PREPARED,1,BOTTLE,1,48,0.020833333333333332,10.75,0.22395833333333331,add,search
+hal's sour cream and onion,378,2026-08-05,reviewed,"Hal's Potato Chips, Sour Cream & Onion",412112115,MENU,1,EACH,1,1,1,0.98,0.98,add,top3
+no onions,378,2026-08-05,reviewed,Add Red Onion,412021531,PREPARED,1,EACH,1,1,1,0.05,0.05,subtract,search
+"gluten-free plain bagel (original sunshine, contains wheat, must be toasted)",375,2026-08-05,reviewed,"Transfer - Bagel's, Plain Gluten Free",556584456,PREPARED,1,BAG,1,6,0.16666666666666666,12.54,2.09,add,search
+lox cc,369,2026-08-05,reviewed,Add Lox Cream Cheese,412033535,PREPARED,1,EACH,1,1,1,0.77,0.77,add,search
+add cheddar (2 slices),355,2026-08-05,reviewed,Add 2 Slices Cheddar,411558934,PREPARED,1,EACH,1,1,1,0.4,0.4,add,search
+add sliced turkey (2oz),316,2026-08-05,reviewed,Add Sliced Turkey 2oz.,412022768,PREPARED,1,EACH,1,1,1,1.02,1.02,add,search
+rotating: chili crisp cc,302,2026-08-05,excluded,,,,,,,,,,,,
+hot,290,2026-07-21,excluded,,,,,,,,,,,,
+add sliced pickles,273,2026-08-05,reviewed,Add Sliced Pickles,449485183,PREPARED,1,OUNCE,1,1,1,0.31,0.31,add,search
+add pickled carrots,263,2026-08-05,reviewed,Add Pickled Carrots,412020047,PREPARED,1,EACH,1,1,1,0.08,0.08,add,search
+add caramelized onions,256,2026-08-06,excluded,,,,,,,,,,,,
+add egg hard boiled,254,2026-08-05,reviewed,Commissary - Hard Boiled Eggs,272526595,PREPARED,30,EACH,1,30,0.03333333333333333,3.03,0.10099999999999999,add,search
+splenda,253,2026-08-05,reviewed,Transfer - Splenda Packets,311029832,PREPARED,1,QUART,1,30,0.03333333333333333,2.74,0.09133333333333334,add,search
+add a latke,245,2026-08-05,reviewed,Commissary - Latkes ,488957608,PREPARED,1,EACH,1,1,1,0.14,0.14,add,search
+no cheese,233,2026-08-05,reviewed,Add 2 Slices Cheddar,411558934,PREPARED,1,EACH,1,1,1,0.4,0.4,subtract,search
+russian dressing on side,226,2026-08-04,excluded,,,,,,,,,,,,
+scooped,221,2026-08-06,excluded,,,,,,,,,,,,
+cinnamon raisin bagel (wednesdays only!),217,2026-08-06,reviewed,Cinnamon Raisin Bagel - Fresh ,606317604,MENU,1,EACH,1,1,1,0.26,0.26,add,top3
+no russian dressing,209,2026-08-05,reviewed,Side of Russian Dressing,301818243,MENU,1,EACH,1,1,1,0.1,0.1,subtract,top3
+no crisp lettuce,207,2026-08-05,reviewed,Add Mixed Greens,412018710,PREPARED,1,EACH,1,1,1,0.1,0.1,subtract,search
+add sumac onions,197,2026-08-05,reviewed,Add Sumac Onions,412027003,PREPARED,1,EACH,1,1,1,0.11,0.11,add,search
+tofutti scallion (v+),195,2026-08-04,reviewed,Add Tofutti Scallion,412039116,PREPARED,1,EACH,1,1,1,0.35,0.35,add,search
+add hots,188,2026-08-05,reviewed,Add Hots,412015521,PREPARED,1,EACH,1,1,1,0.06,0.06,add,search
+add lemon,187,2026-08-05,excluded,,,,,,,,,,,,
+add mayo,186,2026-08-05,reviewed,Side Mayo ,854447371,MENU,1,SERVING,1,1,1,0.16,0.16,add,top3
+*gluten allergy* (cross contamination may occur),181,2026-08-05,excluded,,,,,,,,,,,,
+add mustard,178,2026-08-04,reviewed,Side of Mustard,301816892,MENU,1,EACH,1,1,1,0.28,0.28,add,top3
+light ice,164,2026-08-05,excluded,,,,,,,,,,,,
+add organic hazelnut syrup,158,2026-08-05,reviewed,Transfer - Hazelnut Syrup (kakow),311037900,PREPARED,1,BOTTLE,1,48,0.020833333333333332,10.75,0.22395833333333331,add,search
+add pastrami (2 oz),156,2026-08-05,reviewed,Add Pastrami 2oz.,412019353,PREPARED,1,EACH,1,1,1,1.2,1.2,add,search
+pumpernickel bagel (thursdays only!),153,2026-08-06,reviewed,Pumpernickel Bagel,246309202,MENU,1,EACH,1,1,1,0.16,0.16,add,top3
+no mustard,147,2026-08-05,reviewed,Side of Mustard,301816892,MENU,1,EACH,1,1,1,0.28,0.28,subtract,top3
+mustard on side,146,2026-08-05,excluded,,,,,,,,,,,,
+add cream cheese,143,2026-08-05,reviewed,Side of Cream Cheese,301813400,MENU,1,EACH,1,1,1,0.29,0.29,add,top3
+add coleslaw,141,2026-08-05,reviewed,Add Coleslaw,411560454,PREPARED,1,EACH,1,1,1,0.2,0.2,add,search
+"9"" (large)",141,2026-08-04,excluded,,,,,,,,,,,,
+add hummus (2 oz),133,2026-08-04,reviewed,Add Hummus 2oz.,412015847,PREPARED,1,EACH,1,1,1,0.48,0.48,add,search
+add radish,133,2026-08-05,reviewed,Add Radish,412020570,PREPARED,1,EACH,1,1,1,0.17,0.17,add,search
+add sauerkraut,127,2026-08-04,reviewed,Add Sauerkraut,412022603,PREPARED,1,EACH,1,1,1,0.11,0.11,add,search
+decaf (not available for black iced tea),126,2026-08-04,excluded,,,,,,,,,,,,
+ketchup packet,120,2026-08-05,reviewed,Side Ketchup,1234737342,MENU,2,OUNCE,1,1,1,0.07,0.07,add,search
+no red onion,120,2026-08-05,reviewed,Add Red Onion,412021531,PREPARED,1,EACH,1,1,1,0.05,0.05,subtract,search
+no sauerkraut,116,2026-08-05,reviewed,Add Sauerkraut,412022603,PREPARED,1,EACH,1,1,1,0.11,0.11,subtract,search
+i would like to add a discounted cup of soup,115,2026-08-04,reviewed,Cup Matzah Ball Soup,245898926,MENU,1,EACH,1,1,1,0.73,0.73,add,search
+tofutti plain (v+),115,2026-08-04,reviewed,Add Tofutti Plain,412038809,PREPARED,1,EACH,1,1,1,0.35,0.35,add,search
+add zhoug mayo (jalapeño and cilantro),113,2026-08-05,reviewed,Add Zhoug Mayo,412031791,PREPARED,1,EACH,1,1,1,0.17,0.17,add,search
+sub tofutti scallion (v+),107,2026-08-05,excluded,,,,,,,,,,,,
+add russian dressing,106,2026-08-04,reviewed,Side of Russian Dressing,301818243,MENU,1,EACH,1,1,1,0.1,0.1,add,top3
+fork,103,2026-08-05,reviewed,"Transfer - Fork, To Go",836293532,PREPARED,1,PACKAGE,1,50,0.02,2.22,0.0444,add,search
+knife,102,2026-08-05,reviewed,"Transfer - Knife, To Go",836290743,PREPARED,1,PACKAGE,1,50,0.02,2.17,0.0434,add,search
+add kippered salmon (2oz),102,2026-08-04,reviewed,Add Kippered Salmon 2oz.,412011969,PREPARED,1,EACH,1,1,1,2.16,2.16,add,search
+add mustardy mayo,96,2026-08-05,reviewed,Add Mustardy-Mayo,412019170,PREPARED,1,EACH,1,1,1,0.2,0.2,add,search
+squeeze of honey,95,2026-08-04,excluded,,,,,,,,,,,,
+*tree nut allergy* (cross contamination may occur),95,2026-08-03,excluded,,,,,,,,,,,,
+light mustard,94,2026-08-05,excluded,,,,,,,,,,,,
+add tuna salad (4oz),91,2026-08-04,reviewed,Add Tuna Salad 4oz.,412029031,PREPARED,1,EACH,1,1,1,1.69,1.69,add,search
+add smoked mushrooms (2oz),91,2026-08-05,reviewed,Add Smoked Mushrooms,412026866,PREPARED,1,EACH,1,1,1,0.52,0.52,add,search
+add raspberry jam,87,2026-08-05,reviewed,Add Raspberry Jam,412021275,PREPARED,1,EACH,1,1,1,0.47,0.47,add,search
+*peanut allergy* (cross contamination may occur),87,2026-08-05,excluded,,,,,,,,,,,,
+double sour cream (no applesauce),85,2026-08-05,excluded,,,,,,,,,,,,
+add corned beef (2oz),84,2026-08-04,reviewed,Add Corned Beef 2oz.,411561545,PREPARED,1,EACH,1,1,1,1.32,1.32,add,search
+double applesauce (no sour cream),84,2026-08-03,excluded,,,,,,,,,,,,
+no sliced pickles,82,2026-08-05,reviewed,Add Sliced Pickles,449485183,PREPARED,1,OUNCE,1,1,1,0.31,0.31,add,search
+add fox's u-bet chocolate syrup,80,2026-08-02,excluded,,,,,,,,,,,,
+add dill mayo,80,2026-08-05,reviewed,Add Dill Mayo,412010849,PREPARED,1,EACH,1,1,1,0.13,0.13,add,search
+add salami (2 oz),77,2026-08-05,reviewed,Add Salami 2oz.,412022180,PREPARED,1,EACH,1,1,1,0.84,0.84,add,search
+add chicken schnitzel,77,2026-08-05,reviewed,Add Schnitzel Chicken,411559165,PREPARED,1,EACH,1,1,1,1.43,1.43,add,search
+add egg salad (4oz),75,2026-08-05,reviewed,Add Egg Salad,412011085,PREPARED,1,EACH,1,1,1,0.39,0.39,add,search
+manischewitz vinaigrette (served on side),74,2026-08-05,reviewed,Commissary - Manischewitz Vinaigrette,272975681,PREPARED,4,QUART,1,32,0.03125,24.33,0.7603125,add,search
+tahini vinaigrette (served on side),74,2026-08-05,reviewed,Tahini Vinaigrette,451465566,PREPARED,208,OUNCE,1,104,0.009615384615384616,42.05,0.4043269230769231,add,search
+chocolate,73,2026-08-04,excluded,,,,,,,,,,,,
+rotating: funfetti cc,72,2026-07-02,excluded,,,,,,,,,,,,
+add herb marinated halloumi,72,2026-08-05,reviewed,Add Halloumi,412015193,PREPARED,1,EACH,1,1,1,1.19,1.19,add,search
+"6"" (small)",71,2026-07-20,excluded,,,,,,,,,,,,
+add butter,70,2026-08-05,reviewed,Add Butter,411558102,PREPARED,1,EACH,1,1,1,0.28,0.28,add,search
+china green jade,70,2026-08-04,excluded,,,,,,,,,,,,
+add chopped liver (2 oz),69,2026-08-04,reviewed,Add Chopped Liver,411559435,PREPARED,1,EACH,1,1,1,0.38,0.38,add,search
+i’m bringing my own cup!,66,2026-08-01,excluded,,,,,,,,,,,,
+add chicken salad (4oz),65,2026-08-03,reviewed,Add Chicken Salad,411559022,PREPARED,1,EACH,1,1,1,0.64,0.64,add,search
+sub latkes for bread,64,2026-08-04,excluded,,,,,,,,,,,,
+no turkey,61,2026-08-04,reviewed,Add Sliced Turkey 4oz.,412023063,PREPARED,1,EACH,1,1,1,2.05,2.05,subtract,search
+no ketchup,59,2026-08-05,excluded,,,,,,,,,,,,
+no dressing,58,2026-08-05,reviewed,Side of Russian Dressing,301818243,MENU,1,EACH,1,1,1,0.1,0.1,subtract,top3
+no zhoug mayo,57,2026-08-05,reviewed,Add Zhoug Mayo,412031791,PREPARED,1,EACH,1,1,1,0.17,0.17,subtract,search
+cold,55,2026-07-21,excluded,,,,,,,,,,,,
+*milk allergy* (cross contamination may occur),53,2026-08-03,excluded,,,,,,,,,,,,
+scallion tofutti (v+),51,2026-08-04,reviewed,Add Tofutti Scallion,412039116,PREPARED,1,EACH,1,1,1,0.35,0.35,add,search
+sub russian dressing,50,2026-08-05,excluded,,,,,,,,,,,,
+sub plain cream cheese,49,2026-08-02,excluded,,,,,,,,,,,,
+english breakfast,47,2026-08-05,excluded,,,,,,,,,,,,
+no cucumbers,46,2026-08-04,reviewed,Add Cucumber,411561678,PREPARED,1,EACH,1,1,1,0.26,0.26,subtract,search
+stevia in the raw,46,2026-08-05,excluded,,,,,,,,,,,,
+sub tofutti plain (v+),46,2026-08-04,excluded,,,,,,,,,,,,
+rotating: pickle cc,45,2026-08-05,excluded,,,,,,,,,,,,
+add sunflower seeds (fried),45,2026-08-05,reviewed,Add Fried Sunflower Seeds,449496440,PREPARED,1.5,TABLESPOON,1,1,1,0.05,0.05,add,search
+zhoug mayo on side,44,2026-08-05,excluded,,,,,,,,,,,,
+decaf (not available for iced coffee/tea),44,2026-08-04,excluded,,,,,,,,,,,,
+butter on the side,42,2026-08-04,excluded,,,,,,,,,,,,
+sub lox cream cheese,42,2026-08-04,excluded,,,,,,,,,,,,
+no coleslaw,40,2026-08-05,reviewed,Add Coleslaw,411560454,PREPARED,1,EACH,1,1,1,0.2,0.2,add,search
+rainbow bagel (6/1-6/7 only),40,2026-06-17,excluded,,,,,,,,,,,,
+spoon,39,2026-08-05,reviewed,"Transfer - Spoon, To Go",836291582,PREPARED,1,PACKAGE,1,50,0.02,1.49,0.0298,add,search
+cinnamon,37,2026-08-05,excluded,,,,,,,,,,,,
+heavy cream cheese,36,2026-08-05,reviewed,Side of Cream Cheese,301813400,MENU,1,EACH,1,1,1,0.29,0.29,add,top3
+raspberry jam on side,35,2026-08-05,excluded,,,,,,,,,,,,
+sub veggie cream cheese,35,2026-07-31,excluded,,,,,,,,,,,,
+earl grey,34,2026-08-03,excluded,,,,,,,,,,,,
+no avocado,31,2026-08-04,reviewed,Avocado,1120291243,PREPARED,1,EACH,1,3,0.3333333333333333,1.46,0.48666666666666664,subtract,search
+less butter,31,2026-08-01,reviewed,Add Butter,411558102,PREPARED,1,EACH,1,2,0.5,0.28,0.14,subtract,search
+add smoked whitefish salad (4oz),31,2026-08-02,reviewed,Add Whitefish Salad 4oz.,412029344,PREPARED,1,EACH,1,1,1,1.29,1.29,add,search
+no dill mayo,31,2026-08-02,reviewed,Add Dill Mayo,412010849,PREPARED,1,EACH,1,1,1,0.13,0.13,subtract,search
+add diced turkey (4oz),30,2026-08-05,reviewed,Add Sliced Turkey 4oz.,412023063,PREPARED,1,EACH,1,1,1,2.05,2.05,add,search
+no table sign,30,2026-08-06,excluded,,,,,,,,,,,,
+everything gluten-free,30,2026-08-04,reviewed,"Transfer - Bagels, Everything Gluten Free",555816534,PREPARED,1,BAG,1,6,0.16666666666666666,13.47,2.245,add,search
+no mustardy mayo,28,2026-08-05,unresolved,,,,,,,,,,,,
+cut in half,27,2026-08-04,unresolved,,,,,,,,,,,,
+add sour cream on side,25,2026-08-03,unresolved,,,,,,,,,,,,
+heavy butter,25,2026-08-01,unresolved,,,,,,,,,,,,
+no onion,25,2026-08-05,unresolved,,,,,,,,,,,,
+*seafood allergy* (cross contamination may occur),24,2026-08-01,unresolved,,,,,,,,,,,,
+plain tofutti (v+),22,2026-08-02,unresolved,,,,,,,,,,,,
+*sesame allergy* (cross contamination may occur),22,2026-07-31,unresolved,,,,,,,,,,,,
+no chicken / vegetables,22,2026-08-03,unresolved,,,,,,,,,,,,
+half & half and sugar,21,2026-08-05,unresolved,,,,,,,,,,,,
+plain gluten-free,20,2026-08-03,unresolved,,,,,,,,,,,,
+no matzah ball,20,2026-08-03,unresolved,,,,,,,,,,,,
+mint,20,2026-08-03,unresolved,,,,,,,,,,,,
+2% milk and sugar,20,2026-07-26,unresolved,,,,,,,,,,,,
+mustardy mayo on side,19,2026-08-02,unresolved,,,,,,,,,,,,
+add sable (2oz),17,2026-08-02,unresolved,,,,,,,,,,,,
+add tongue (2 oz),16,2026-07-27,unresolved,,,,,,,,,,,,
+no herb marinated halloumi,16,2026-08-04,unresolved,,,,,,,,,,,,
+handle bag,16,2026-07-31,unresolved,,,,,,,,,,,,
+*egg allergy* (cross contamination may occur),16,2026-08-02,unresolved,,,,,,,,,,,,
+no egg,15,2026-08-01,unresolved,,,,,,,,,,,,
+lemon chamomile,14,2026-08-03,unresolved,,,,,,,,,,,,
+oat milk and sugar,13,2026-08-04,unresolved,,,,,,,,,,,,
+m,13,2026-08-02,unresolved,,,,,,,,,,,,
+add an extra manischewitz vinaigrette,13,2026-07-31,unresolved,,,,,,,,,,,,
+add malt powder,13,2026-08-04,unresolved,,,,,,,,,,,,
+veggie cc,13,2026-07-29,unresolved,,,,,,,,,,,,
+extra nova lox (1 oz),13,2026-08-03,unresolved,,,,,,,,,,,,
+box,12,2026-08-06,unresolved,,,,,,,,,,,,
+add nova lox (1oz / leo portion),12,2026-07-20,unresolved,,,,,,,,,,,,
+l,12,2026-07-26,unresolved,,,,,,,,,,,,
+"inscription (written in chocolate only, provide text in request box below)",11,2026-08-06,unresolved,,,,,,,,,,,,
+"8"" chocolate cake (serves 10-14) (5 layers)",10,2026-08-06,unresolved,,,,,,,,,,,,
+add a blintz,10,2026-07-30,unresolved,,,,,,,,,,,,
+no discounted soup for me thanks,10,2026-08-01,unresolved,,,,,,,,,,,,
+no cheddar cheese,9,2026-08-04,unresolved,,,,,,,,,,,,
+no pickled carrots,8,2026-07-31,unresolved,,,,,,,,,,,,
+mazel tov,8,2026-08-05,unresolved,,,,,,,,,,,,
+xl,8,2026-08-03,unresolved,,,,,,,,,,,,
+decaf (not available for iced coffee),7,2026-07-21,unresolved,,,,,,,,,,,,
+no sunflower seeds,6,2026-08-03,unresolved,,,,,,,,,,,,
+10 inch layer cake (serves 15 to 20),6,2026-08-06,unresolved,,,,,,,,,,,,
+*soy allergy* (cross contamination may occur),5,2026-07-31,unresolved,,,,,,,,,,,,
+6 inch layer cake (serves 6 to 8),5,2026-07-16,unresolved,,,,,,,,,,,,
+no hard boiled egg,5,2026-07-31,unresolved,,,,,,,,,,,,
+"6"" chocolate cake (serves 6-8) (4 layers)",5,2026-07-29,unresolved,,,,,,,,,,,,
+no inscription,5,2026-07-18,unresolved,,,,,,,,,,,,
+*wheat allergy* (cross contamination may occur),5,2026-07-31,unresolved,,,,,,,,,,,,
+decaf english breakfast,4,2026-07-29,unresolved,,,,,,,,,,,,
+xxl,4,2026-07-31,unresolved,,,,,,,,,,,,
+4t,4,2026-07-30,unresolved,,,,,,,,,,,,
+large,4,2026-08-02,unresolved,,,,,,,,,,,,
+sub fomu,4,2026-06-27,unresolved,,,,,,,,,,,,
+no tahini ranch,4,2026-07-24,unresolved,,,,,,,,,,,,
+s,3,2026-07-22,unresolved,,,,,,,,,,,,
+sub matzah for bread,3,2026-08-04,unresolved,,,,,,,,,,,,
+no  radish,3,2026-08-01,unresolved,,,,,,,,,,,,
+youth l,3,2026-06-14,unresolved,,,,,,,,,,,,
+l'chaim,3,2026-07-24,unresolved,,,,,,,,,,,,
+half sheet cake (serves 40 to 60),3,2026-07-21,unresolved,,,,,,,,,,,,
+sliced into 8 pieces,3,2026-07-20,unresolved,,,,,,,,,,,,
+2t,2,2026-07-21,unresolved,,,,,,,,,,,,
+bulk (ingredients are plattered together by type),2,2026-07-26,unresolved,,,,,,,,,,,,
+tofutti scallion (non-dairy),2,2026-07-28,unresolved,,,,,,,,,,,,
+no salmon,2,2026-07-14,unresolved,,,,,,,,,,,,
+schmuck,2,2026-07-17,unresolved,,,,,,,,,,,,
+individual  (each platter has a mix of all ingredients),2,2026-08-04,unresolved,,,,,,,,,,,,
+no bulgur wheat,2,2026-08-03,unresolved,,,,,,,,,,,,
+add 1 matzah ball,2,2026-07-24,unresolved,,,,,,,,,,,,
+add vodka,1,2026-06-11,unresolved,,,,,,,,,,,,
+no mushrooms,1,2026-06-19,unresolved,,,,,,,,,,,,
+chili dog seasoned yellow mustard,1,2026-07-27,unresolved,,,,,,,,,,,,
+no raspberry jam,1,2026-07-13,unresolved,,,,,,,,,,,,
+challah rolls (bag of 4),1,2026-06-17,unresolved,,,,,,,,,,,,
+frozen,1,2026-07-31,unresolved,,,,,,,,,,,,
+small,1,2026-07-30,unresolved,,,,,,,,,,,,
+tempered,1,2026-07-08,unresolved,,,,,,,,,,,,
+nosh,1,2026-06-08,unresolved,,,,,,,,,,,,
+no chickpeas,1,2026-06-24,unresolved,,,,,,,,,,,,
+medium,1,2026-07-29,unresolved,,,,,,,,,,,,
+no strawberries,1,2026-06-14,unresolved,,,,,,,,,,,,
+adult xl,1,2026-06-20,unresolved,,,,,,,,,,,,
+8 inch layer cake (serves 10 to 14),1,2026-06-16,unresolved,,,,,,,,,,,,
+nova lox (1/2 lb hand-sliced),1,2026-06-16,unresolved,,,,,,,,,,,,
+no mixed greens,1,2026-07-12,unresolved,,,,,,,,,,,,
+"10"" whole chocolate layer cake (serves 15-20)",1,2026-08-01,unresolved,,,,,,,,,,,,
+tofutti plain (non-dairy),1,2026-06-20,unresolved,,,,,,,,,,,,
+mamaleh's raspberry jam (10oz),1,2026-08-03,unresolved,,,,,,,,,,,,
+adult small,1,2026-07-01,unresolved,,,,,,,,,,,,
+12 inch layer cake (serves 25 to 35),1,2026-07-14,unresolved,,,,,,,,,,,,
+(stale — not seen in 60 days),,,excluded,,,,,,,,,,,,bulk:1505_names
