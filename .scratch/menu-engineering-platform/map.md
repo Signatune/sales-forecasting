@@ -81,6 +81,18 @@ that is not stored and cannot be recovered by re-normalizing. Hence tickets 03,
   ledger.** Caveat it inherits: `CREATE INDEX CONCURRENTLY` cannot live in a
   migration.
 
+- [Decide the capture grain and its PII rule](issues/03-decide-the-capture-grain-and-its-pii-rule.md)
+  — New `selections` table, one row per Toast selection with Modifiers nested
+  as `jsonb`; `sales`/`product_sales` expected to become derived from it
+  (ticket 04). Keeps `price` + `preDiscountPrice` (comp vs. cheap-item falls
+  out of the two, no flag needed), drops `tax`, excludes voided selections.
+  PII kept out by an explicit field allowlist enforced at one extraction
+  function — no order/customer/delivery/employee data, ever; selections or
+  modifiers without a real Toast GUID are dropped. `raw_toast_responses`'s
+  retention gets bounded to a short rolling window since `selections` now
+  serves its replay role; `selections` itself stays unbounded for now. ADR
+  [0016](../../docs/adr/0016-selection-grain-capture-with-an-allowlisted-pii-boundary.md).
+
 ## Not yet specified
 
 - **Where the Toast↔MarginEdge product map lives in the schema.** Today it is
